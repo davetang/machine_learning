@@ -1,11 +1,11 @@
 Machine learning
 ================
 
-Machine learning with R and with a focus on biology.
+_Machine Learning is the study of computer algorithms that improve automatically through experience. --Tom Mitchell_
 
 # Resources
 
-A list of useful resources for learning about machine learning.
+A list of useful resources for learning about machine learning with an emphasis on biological applications.
 
 ## Courses
 
@@ -17,6 +17,7 @@ A list of useful resources for learning about machine learning.
 
 ## Papers
 
+* [What is Bayesian statistics](http://dx.doi.org/10.1038/nbt0904-1177) by Sean Eddy
 * [What is a support vector machine?](http://dx.doi.org/10.1038/nbt1206-1565) by William Noble
 * [What is a hidden Markov model?](http://dx.doi.org/10.1038/nbt1004-1315) by Sean Eddy
 * [What are artificial neural networks](http://dx.doi.org/10.1038/nbt1386) by Anders Krogh
@@ -36,5 +37,7 @@ A list of useful resources for learning about machine learning.
 
 ## Others
 
+* Tom Mitchell's [home page](http://www.cs.cmu.edu/~tom/)
 * [My notes on Random Forests](https://github.com/davetang/learning_random_forest)
+* [No Free Lunch Theorems](http://www.no-free-lunch.org/)
 
