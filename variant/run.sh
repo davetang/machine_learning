@@ -14,3 +14,10 @@ wget -c ftp://dbnsfp:dbnsfp@dbnsfp.softgenetics.com/dbNSFPv3.2a.zip
 unzip dbNSFPv3.2a.zip
 java search_dbNSFP32a -i kabuki_hg19.vcf -o kabuki_hg19_dbnsfp.out -v hg19
 
+# repeat steps above with variants causing Miller syndrome
+liftOver miller_hg18.bed ~/data/ucsc/hg18ToHg19.over.chain miller_hg19.bed unmapped.txt
+# bases are on the positive strand
+cat miller_hg19.bed | perl -nle '@a=split; if($a[3] =~ /([ACGT])\d+([ACGT])/){ print join("\t", @a[0..2], $1, $2) }' > miller_hg19.tsv
+~/github/learning_vcf_file/script/create_vcf.pl ~/genome/hg19/hg19.fa miller_hg19.tsv > miller_hg19.vcf
+java search_dbNSFP32a -i miller_hg19.vcf -o miller_hg19_dbnsfp.out -v hg19
+

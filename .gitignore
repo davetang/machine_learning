@@ -1,4 +1,4 @@
-variant/kabuki_hg19.bed
-variant/kabuki_hg19.tsv
-variant/kabuki_hg19.vcf
-variant/kabuki_hg19_dbnsfp.out.err
+variant/*_hg19.bed
+variant/*_hg19.tsv
+variant/*_hg19.vcf
+variant/*_hg19_dbnsfp.out.err
