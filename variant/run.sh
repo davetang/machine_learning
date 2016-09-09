@@ -21,3 +21,7 @@ cat miller_hg19.bed | perl -nle '@a=split; if($a[3] =~ /([ACGT])\d+([ACGT])/){ p
 ~/github/learning_vcf_file/script/create_vcf.pl ~/genome/hg19/hg19.fa miller_hg19.tsv > miller_hg19.vcf
 java search_dbNSFP32a -i miller_hg19.vcf -o miller_hg19_dbnsfp.out -v hg19
 
+# ClinVar variants
+
+wget -c ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar_20160831.vcf.gz
+
