@@ -90,6 +90,85 @@ bedtools intersect -a stdin -b clinvar_20160831.vcf.gz -u
 16      72057434        72057435        C1036T  0       +
 ~~~~
 
+# Benchmark dataset
+
+* [The evaluation of tools used to predict the impact of missense variants is hindered by two types of circularity](http://www.ncbi.nlm.nih.gov/pubmed/25684150); see related [blog post](http://cazencott.info/index.php/post/2015/03/27/Beware-of-circularity-Evaluating-SNV-deleteriousness-prediction-tools)
+
+~~~~{.bash}
+wget https://www.ethz.ch/content/dam/ethz/special-interest/bsse/borgwardt-lab/Projects/PathogenicityPrediction/DataS1.zip
+
+unzip DataS1.zip
+~~~~
+
+Some statistics and plots with R.
+
+~~~~{.r}
+df <- read.csv('swissvar_selected_tool_scores.csv')
+df$True.Label <- factor(df$True.Label)
+
+class_table <- function(x){
+  cat(names(df)[x-1])
+  print(table(df$True.Label, df[,x])/sum(table(df$True.Label, df[,x])))
+  cat("\n")
+}
+
+my_cols <- c(16, 18, 23, 25, 27, 35, 37, 39, 41)
+for(i in my_cols){
+  class_table(i)
+}
+
+MutationTaster    
+             -1          1
+  -1 0.35730415 0.27618551
+  1  0.07199931 0.29451103
+
+MutationAssessor    
+            -1         1
+  -1 0.4376731 0.1929825
+  1  0.1630991 0.2062453
+
+SIFT    
+            -1         1
+  -1 0.4179363 0.2177112
+  1  0.1399758 0.2243767
+
+LRT    
+            -1         1
+  -1 0.3664136 0.2476393
+  1  0.1096093 0.2763377
+
+FatHMM.U    
+            -1         1
+  -1 0.4799116 0.1648907
+  1  0.1775989 0.1775989
+
+Condel..PolyPhen2.MutationAssessor.SIFT.    
+             -1          1
+  -1 0.28383080 0.33858268
+  1  0.07489471 0.30269181
+
+Condel...PolyPhen2.MutationAssessor.SIFT.FatHMM.W.    
+            -1         1
+  -1 0.4608559 0.1739924
+  1  0.1344336 0.2307182
+
+Logit..PolyPhen2.MutationAssessor.SIFT.    
+            -1         1
+  -1 0.5144380 0.1247446
+  1  0.1595735 0.2012439
+
+Logit...PolyPhen2.MutationAssessor.SIFT.FatHMM.W.    
+             -1          1
+  -1 0.54984438 0.08937305
+  1  0.16238328 0.19839929
+
+boxplot(df$CADD ~ df$True.Label, main = 'Box plot of CADD scores by class')
+boxplot(df$GERP.. ~ df$True.Label, main = 'Box plot of GERP scores by class')
+~~~~
+
+![Box plot of CADD scores by class](image/swissvar_cadd.png)
+![Box plot of GERP scores by class](image/swissvar_gerp.png)
+
 # Further reading
 
 * Sarah Ng's [PhD thesis](https://digital.lib.washington.edu/researchworks/bitstream/handle/1773/21834/Ng_washington_0250E_11012.pdf)
