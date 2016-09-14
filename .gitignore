@@ -6,3 +6,4 @@ variant/clinvar_20160831.vcf.gz*
 *.swp
 DataS1*
 __*
+.Rhistory
