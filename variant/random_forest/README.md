@@ -44,7 +44,7 @@ It is not certain whether the above variants are really false negatives, as none
 
 Annotate with dbNSFP.
 
-~~~~{.bash
+~~~~{.bash}
 cat ../DataS1/ToolScores/*.csv |
 grep -v "^True" |
 grep -v "PATCH" |
