@@ -40,3 +40,44 @@ data[c(4015,6867,20187,22798,34844,36297,39089),c('CHR','Nuc.Pos','REF.Nuc','ALT
 
 It is not certain whether the above variants are really false negatives, as none of them are listed as only pathogenic in ClinVar.
 
+# Positive and negative training set
+
+Annotate with dbNSFP.
+
+~~~~{.bash
+cat ../DataS1/ToolScores/*.csv |
+grep -v "^True" |
+grep -v "PATCH" |
+grep -v "chrMT" |
+perl -anl -F/,/ -e '$F[2] =~ s/^chr//;
+next unless $F[0] == 1;
+print join("\t", "chr$F[2]", $F[3]-1, $F[3], $F[4], $F[5])' > positive.tsv
+
+cat ../DataS1/ToolScores/*.csv |
+grep -v "^True" |
+grep -v "PATCH" |
+grep -v "chrMT" |
+grep -v "HSCHR6" |
+grep -v "HSCHR19" |
+grep -v "chrGL000209" |
+perl -anl -F/,/ -e '$F[2] =~ s/^chr//;
+next unless $F[0] == -1;
+print join("\t", "chr$F[2]", $F[3]-1, $F[3], $F[4], $F[5])' > negative.tsv
+
+cat positive.tsv | sort -k1,1V -k2,2n > blah
+mv -f blah positive.tsv 
+cat negative.tsv | sort -k1,1V -k2,2n > blah
+mv -f blah negative.tsv 
+
+~/github/learning_vcf_file/script/create_vcf.pl ~/genome/hg19/hg19.fa positive.tsv > positive.vcf
+~/github/learning_vcf_file/script/create_vcf.pl ~/genome/hg19/hg19.fa negative.tsv > negative.vcf
+
+java search_dbNSFP32a -i positive.vcf -o positive_dbnsfp.out -v hg19
+# 36579 SNP(s) are found. Written to positive_dbnsfp.out
+# 40 SNP(s) are not found. Written to positive_dbnsfp.out.err
+
+java search_dbNSFP32a -i negative.vcf -o negative_dbnsft.out -v hg19
+# 41833 SNP(s) are found. Written to negative_dbnsft.out
+# 517 SNP(s) are not found. Written to negative_dbnsft.out.err
+~~~~
+
