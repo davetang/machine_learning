@@ -15,6 +15,11 @@ A list of useful resources for learning about machine learning with an emphasis 
 
 * [Some Things Every Biologist Should Know About Machine Learning](http://www.bioconductor.org/help/course-materials/2003/Milan/Lectures/MachineLearning.pdf) by Robert Gentleman
 
+## Tutorials
+
+* [How to Perform a Logistic Regression in R](http://datascienceplus.com/perform-logistic-regression-in-r/)
+* [Random Forest Regression and Classification in R and Python](http://blog.yhat.com/posts/comparing-random-forests-in-python-and-r.html)
+
 ## Papers
 
 * [What is Bayesian statistics](http://dx.doi.org/10.1038/nbt0904-1177) by Sean Eddy
@@ -23,6 +28,7 @@ A list of useful resources for learning about machine learning with an emphasis 
 * [What are artificial neural networks](http://dx.doi.org/10.1038/nbt1386) by Anders Krogh
 * [Deep learning for computational biology](http://dx.doi.org/10.15252/msb.20156651) by Angermueller et al.
 * [Machine learning applications in genetics and genomics](http://dx.doi.org/10.1038/nrg3920) by Maxwell Libbrecht and William Noble
+* [Conditional variable importance for random forests](http://www.ncbi.nlm.nih.gov/pubmed/18620558)
 
 ## Books
 
