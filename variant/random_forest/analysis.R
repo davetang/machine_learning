@@ -7,6 +7,7 @@ features <- c('MutationTaster','MutationAssessor','PolyPhen2','CADD','SIFT','LRT
 
 library(dplyr)
 
+# Select columns by vector of names using dplyr
 # see https://gist.github.com/djhocking/62c76e63543ba9e94ebe
 data_subset <- select_(data, .dots=c('True.Label', features))
 data_subset$True.Label <- factor(data_subset$True.Label)
@@ -110,4 +111,44 @@ colnames(blah) <- features
 rownames(blah) <- 10
 
 predict(r, blah)
+
+# read dbNSFP annotated variants
+
+negative <- read.table('negative_dbnsfp.out', header=TRUE, stringsAsFactors=FALSE, quote='', sep="\t", comment='')
+dim(negative)
+# [1] 42185   452
+positive <- read.table('positive_dbnsfp.out', header=TRUE, stringsAsFactors=FALSE, quote='', sep="\t", comment='')
+dim(positive)
+# [1] 37086   452
+
+# http://annovar.openbioinformatics.org/en/latest/user-guide/filter/
+# There are two databases for PolyPhen2: HVAR and HDIV. They are explained below:
+# ljb2_pp2hvar should be used for diagnostics of Mendelian diseases, which requires distinguishing mutations with drastic effects from all the remaining human variation, including abundant mildly deleterious alleles.
+# ljb2_pp2hdiv should be used when evaluating rare alleles at loci potentially involved in complex phenotypes, dense mapping of regions identified by genome-wide association studies, and analysis of natural selection from sequence data.
+features_dbnsfp <- c('MutationTaster_converted_rankscore', 'MutationAssessor_score_rankscore', 'Polyphen2_HDIV_rankscore', 'Polyphen2_HVAR_rankscore', 'CADD_raw_rankscore', 'SIFT_converted_rankscore', 'LRT_converted_rankscore', 'FATHMM_converted_rankscore', 'fathmm.MKL_coding_rankscore', 'GERP.._RS_rankscore', 'phyloP100way_vertebrate_rankscore', 'phyloP20way_mammalian_rankscore')
+
+dbnsfp_positive <- select_(positive, .dots=features_dbnsfp)
+dbnsfp_positive$True.Label <- rep(1, nrow(dbnsfp_positive))
+
+dbnsfp_negative <- select_(negative, .dots=features_dbnsfp)
+dbnsfp_negative$True.Label <- rep(-1, nrow(dbnsfp_negative))
+
+dbnsfp <- rbind(dbnsfp_positive, dbnsfp_negative)
+dbnsfp$True.Label <- factor(dbnsfp$True.Label)
+
+head(dbnsfp)
+dim(dbnsfp)
+# [1] 79271    13
+table(dbnsfp$True.Label)
+dbnsfp <- apply(dbnsfp, 2, function(x) as.numeric(gsub(x = x, pattern = '^\\.$', replacement = NA, perl = TRUE)))
+
+# r2 <- randomForest(True.Label ~ ., data=dbnsfp, importance=TRUE, do.trace=100, na.action=na.omit, ntree=1000)
+
+library(foreach)
+library(doSNOW)
+registerDoSNOW(makeCluster(10, type='SOCK'))
+
+system.time(r2 <- foreach(ntree = rep(100, 10), .combine = combine, .multicombine=TRUE, .packages = "randomForest") %dopar%  randomForest(True.Label ~ ., data=dbnsfp, proximity=TRUE, importance=TRUE, na.action=na.omit, ntree = ntree))
+
+varImpPlot(r2)
 
