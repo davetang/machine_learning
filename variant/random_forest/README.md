@@ -68,6 +68,47 @@ bcftools query -f '%CLNDBN\t%CLNREVSTAT\n' clinvar.vcf.gz | awk '$2=="exp" {prin
       2 aspirin_response_-_Efficacy     exp
 ~~~~
 
+Further annotation using dbNSFP.
+
+~~~~{.bash}
+gunzip clinvar.vcf.gz
+
+# only works with uncompressed VCF
+java search_dbNSFP32a -i clinvar.vcf -o clinvar.out -v hg19
+# 68888 SNP(s) are found.
+# 61254 SNP(s) are not found.
+
+bgzip clinvar.vcf
+
+# six variants with 4 stars could be annotated by dbNSFP
+cat clinvar.out | awk -F'\t' '$180==4 {print}'  | wc -l
+6
+~~~~
+
+## Expression specificity for ClinVar variants
+
+~~~~{.bash}
+# these are the six CF variants
+cat clinvar.out | awk -F'\t' '$180==4 {print $208}'
+TISSUE SPECIFICITY: Expressed in the respiratory airway, including bronchial epithelium, and in the female reproductive tract, including oviduct (at protein level). {ECO:0000269|PubMed:22207244}.; 
+TISSUE SPECIFICITY: Expressed in the respiratory airway, including bronchial epithelium, and in the female reproductive tract, including oviduct (at protein level). {ECO:0000269|PubMed:22207244}.; 
+TISSUE SPECIFICITY: Expressed in the respiratory airway, including bronchial epithelium, and in the female reproductive tract, including oviduct (at protein level). {ECO:0000269|PubMed:22207244}.; 
+TISSUE SPECIFICITY: Expressed in the respiratory airway, including bronchial epithelium, and in the female reproductive tract, including oviduct (at protein level). {ECO:0000269|PubMed:22207244}.; 
+TISSUE SPECIFICITY: Expressed in the respiratory airway, including bronchial epithelium, and in the female reproductive tract, including oviduct (at protein level). {ECO:0000269|PubMed:22207244}.; 
+TISSUE SPECIFICITY: Expressed in the respiratory airway, including bronchial epithelium, and in the female reproductive tract, including oviduct (at protein level). {ECO:0000269|PubMed:22207244}.;
+
+# ClinVar variants with expert panel assertion
+cat clinvar.out | awk -F'\t' '$180==3 {print $179,$208}' | sort -u
+Breast-ovarian cancer, familial 1 TISSUE SPECIFICITY: Isoform 1 and isoform 3 are widely expressed. Isoform 3 is reduced or absent in several breast and ovarian cancer cell lines.; 
+Breast-ovarian cancer, familial 2 TISSUE SPECIFICITY: Highest levels of expression in breast and thymus, with slightly lower levels in lung, ovary and spleen.; 
+Cystic fibrosis TISSUE SPECIFICITY: Expressed in the respiratory airway, including bronchial epithelium, and in the female reproductive tract, including oviduct (at protein level). {ECO:0000269|PubMed:22207244}.; 
+Lynch syndrome .
+Lynch syndrome I .
+Lynch syndrome I TISSUE SPECIFICITY: Colon, lymphocytes, breast, lung, spleen, testis, prostate, thyroid, gall bladder and heart.; 
+Lynch syndrome TISSUE SPECIFICITY: Colon, lymphocytes, breast, lung, spleen, testis, prostate, thyroid, gall bladder and heart.; 
+Lynch syndrome TISSUE SPECIFICITY: Ubiquitously expressed. {ECO:0000269|PubMed:10856833}.; 
+~~~~
+
 # Grimm et al.
 
 Using the variants provided by [Grimm et al.](https://www.ncbi.nlm.nih.gov/pubmed/25684150) as positive and negative sets of variants.
