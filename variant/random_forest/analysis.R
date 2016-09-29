@@ -17,6 +17,17 @@ table(data_subset$True.Label)
 library(randomForest)
 
 r <- randomForest(True.Label ~ ., data=data_subset, importance=TRUE, do.trace=100, na.action=na.omit, ntree=1000)
+# ntree      OOB      1      2
+#   100:  14.63% 15.32% 14.04%
+#   200:  14.47% 15.16% 13.88%
+#   300:  14.42% 15.15% 13.80%
+#   400:  14.35% 15.08% 13.73%
+#   500:  14.31% 15.01% 13.71%
+#   600:  14.30% 15.00% 13.70%
+#   700:  14.34% 15.06% 13.73%
+#   800:  14.37% 15.08% 13.77%
+#   900:  14.35% 15.04% 13.76%
+#  1000:  14.35% 15.06% 13.75%
 
 varImpPlot(r)
 
@@ -129,26 +140,70 @@ features_dbnsfp <- c('MutationTaster_converted_rankscore', 'MutationAssessor_sco
 
 dbnsfp_positive <- select_(positive, .dots=features_dbnsfp)
 dbnsfp_positive$True.Label <- rep(1, nrow(dbnsfp_positive))
-
 dbnsfp_negative <- select_(negative, .dots=features_dbnsfp)
 dbnsfp_negative$True.Label <- rep(-1, nrow(dbnsfp_negative))
-
 dbnsfp <- rbind(dbnsfp_positive, dbnsfp_negative)
-dbnsfp$True.Label <- factor(dbnsfp$True.Label)
 
-head(dbnsfp)
 dim(dbnsfp)
 # [1] 79271    13
-table(dbnsfp$True.Label)
+
 dbnsfp <- apply(dbnsfp, 2, function(x) as.numeric(gsub(x = x, pattern = '^\\.$', replacement = NA, perl = TRUE)))
+dbnsfp <- as.data.frame(dbnsfp)
+dbnsfp$True.Label <- factor(dbnsfp$True.Label)
 
-# r2 <- randomForest(True.Label ~ ., data=dbnsfp, importance=TRUE, do.trace=100, na.action=na.omit, ntree=1000)
+#################
+# Below doesn't work
+# library(foreach)
+# library(doSNOW)
+# registerDoSNOW(makeCluster(10, type='SOCK'))
+# system.time(r2 <- foreach(ntree = rep(100, 10), .combine = combine, .multicombine=TRUE, .packages = "randomForest") %dopar%  randomForest(True.Label ~ ., data=dbnsfp, proximity=TRUE, importance=TRUE, na.action=na.omit, ntree = ntree))
+# Error in randomForest(True.Label ~ ., data = dbnsfp, proximity = TRUE,  : 
+#   task 5 failed - "long vectors (argument 18) are not supported in .Fortran"
+# Timing stopped at: 0.14 0.064 38.082 
+#################
 
-library(foreach)
-library(doSNOW)
-registerDoSNOW(makeCluster(10, type='SOCK'))
-
-system.time(r2 <- foreach(ntree = rep(100, 10), .combine = combine, .multicombine=TRUE, .packages = "randomForest") %dopar%  randomForest(True.Label ~ ., data=dbnsfp, proximity=TRUE, importance=TRUE, na.action=na.omit, ntree = ntree))
+r2 <- randomForest(True.Label ~ ., data=dbnsfp, importance=TRUE, do.trace=100, na.action=na.omit, ntree=1000)
+# ntree      OOB      1      2
+#  100:  14.46% 13.26% 15.69%
+#  200:  14.31% 13.01% 15.64%
+#  300:  14.27% 12.89% 15.68%
+#  400:  14.19% 12.81% 15.59%
+#  500:  14.15% 12.76% 15.57%
+#  600:  14.18% 12.70% 15.70%
+#  700:  14.17% 12.71% 15.66%
+#  800:  14.12% 12.66% 15.61%
+#  900:  14.10% 12.60% 15.63%
+# 1000:  14.10% 12.60% 15.63%
 
 varImpPlot(r2)
+
+features_dbnsfp_expression <- c('MutationTaster_converted_rankscore', 'MutationAssessor_score_rankscore', 'Polyphen2_HDIV_rankscore', 'Polyphen2_HVAR_rankscore', 'CADD_raw_rankscore', 'SIFT_converted_rankscore', 'LRT_converted_rankscore', 'FATHMM_converted_rankscore', 'fathmm.MKL_coding_rankscore', 'GERP.._RS_rankscore', 'phyloP100way_vertebrate_rankscore', 'phyloP20way_mammalian_rankscore', grep('sample', names(positive), value=TRUE))
+
+dbnsfp_positive_exp <- select_(positive, .dots=features_dbnsfp_expression)
+dbnsfp_positive_exp$True.Label <- rep(1, nrow(dbnsfp_positive_exp))
+dbnsfp_negative_exp <- select_(negative, .dots=features_dbnsfp_expression)
+dbnsfp_negative_exp$True.Label <- rep(-1, nrow(dbnsfp_negative_exp))
+dbnsfp_exp <- rbind(dbnsfp_positive_exp, dbnsfp_negative_exp)
+
+dim(dbnsfp_exp)
+# [1] 79271    66
+
+dbnsfp_exp <- apply(dbnsfp, 2, function(x) as.numeric(gsub(x = x, pattern = '^\\.$', replacement = NA, perl = TRUE)))
+dbnsfp_exp <- as.data.frame(dbnsfp_exp)
+dbnsfp_exp$True.Label <- factor(dbnsfp_exp$True.Label)
+
+# performs slightly worst with expression data
+r3 <- randomForest(True.Label ~ ., data=dbnsfp_exp, importance=TRUE, do.trace=100, na.action=na.omit, ntree=1000)
+# ntree      OOB      1      2
+#   100:  17.24% 18.77% 15.69%
+#   200:  16.67% 17.83% 15.51%
+#   300:  16.54% 17.21% 15.85%
+#   400:  16.23% 16.41% 16.05%
+#   500:  16.29% 16.30% 16.28%
+#   600:  16.31% 16.51% 16.11%
+#   700:  16.27% 16.31% 16.23%
+#   800:  16.26% 16.31% 16.20%
+#   900:  16.24% 16.09% 16.40%
+#  1000:  16.14% 15.76% 16.53%
+
 
