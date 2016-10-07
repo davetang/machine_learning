@@ -7,7 +7,7 @@ Different performance measures for evaluating whether your model is good or not.
 
 Build confusion matrix and calculate accuracy, precision, and recall.
 
-![Confusion matrix](../image/confusion_matrix.png)
+![Confusion matrix](image/confusion_matrix.png)
 
 * Precision (first column) = TP / (TP + FP)
 * Recall (first row) = TP / (TP + FN)
@@ -17,7 +17,7 @@ Build confusion matrix and calculate accuracy, precision, and recall.
 
 Use Root Mean Squared Error (RMSE), which is the mean distance between estimates and the regression line.
 
-![Root Mean Squared Error (RMSE)](../image/rmse.png)
+![Root Mean Squared Error (RMSE)](image/rmse.png)
 
 # Clustering
 
