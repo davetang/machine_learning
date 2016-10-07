@@ -55,7 +55,60 @@ prob_passing(4)
 
 ## Survival on the Titanic
 
-See [How to Perform a Logistic Regression in R](http://datascienceplus.com/perform-logistic-regression-in-r/)
+Adapted from [How to Perform a Logistic Regression in R](http://datascienceplus.com/perform-logistic-regression-in-r/)
+
+~~~~{.r}
+setwd("~/github/machine_learning/logit_regression/")
+
+library(dplyr)
+
+data <- read.csv("../data/titanic.csv.gz", na.strings = '')
+
+# missing data
+sapply(data, function(x) sum(is.na(x)))
+PassengerId    Survived      Pclass        Name         Sex         Age       SibSp       Parch      Ticket        Fare 
+          0           0           0           0           0         177           0           0           0           0 
+      Cabin    Embarked 
+        687           2
+
+# install.packages('Amelia')
+library(Amelia)
+missmap(data)
+~~~~
+
+![Missingness map](image/missingness_map.png)
+
+~~~~{.r}
+# remove some features
+data_subset <- select(data, -PassengerId, -Ticket, -Cabin, -Name)
+
+# remove the two cases with missing embarked data
+data_subset <- filter(data_subset, !is.na(Embarked))
+
+# you can use the mean age for the missing ages
+# data_subset$Age[is.na(data_subset$Age)] <- mean(data_subset$Age, na.rm=TRUE)
+
+# subset into training and testing sets
+train <- data_subset[1:800,]
+test  <- data_subset[801:nrow(data_subset),]
+
+model <- glm(Survived ~.,
+             family=binomial(link='logit'),
+             data=train)
+
+fitted <- predict(model,
+                  newdata=test[,-1],
+                  type='response')
+
+library(ROCR)
+pr <- prediction(fitted, test$Survived)
+prf <- performance(pr, measure = "tpr", x.measure = "fpr")
+auc <- performance(pr, measure = "auc")
+plot(prf)
+legend(x = 0.75, y = 0.05, legend = paste("AUC = ", auc@y.values), bty = 'n')
+~~~~
+
+![ROC curve](image/roc.png)
 
 # Links
 
