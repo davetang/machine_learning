@@ -1,5 +1,9 @@
-setwd('~/github/machine_learning/tree/')
+Decision trees
+==============
 
+A [decision tree](https://en.wikipedia.org/wiki/Decision_tree) is a decision support tool that uses a tree-like graph or model of decisions and their possible consequences, including chance event outcomes, resource costs, and utility.
+
+~~~~{.r}
 # install packages if necessary
 # install.packages("tree")
 # install.packages('rpart')
@@ -12,7 +16,11 @@ library(rpart)
 tree1 <- tree(Species ~ Sepal.Width + Petal.Width, data = iris)
 summary(tree1)
 plot(tree1); text(tree1)
+~~~~
 
+![Decision tree for tree1](image/tree1.png)
+
+~~~~{.r}
 plot(iris$Petal.Width,
      iris$Sepal.Width,
      pch=19,
@@ -24,21 +32,23 @@ legend(2.3,4.5,
        col=1:length(levels(iris$Species)),
        pch=19,
        bty = 'n')
+~~~~
 
+![Paritioned scatter plot](image/partition.png)
+
+~~~~{.r}
 tree2 <- tree(Species ~ ., data = iris)
 summary(tree2)
 plot(tree2); text(tree2)
+~~~~
 
+![Decision tree for tree2](image/tree2.png)
+
+~~~~{.r}
 rpart <- rpart(Species ~ ., data=iris, method="class")
 summary(rpart)
 rpart.plot(rpart, type = 4, extra = 101)
+~~~~
 
-# Titanic
-titanic <- read.csv('../data/titanic.csv.gz')
-str(titanic)
+![Decision tree for rpart](image/rpart_tree.png)
 
-titanic$Pclass <- factor(titanic$Pclass)
-boxplot(Fare ~ Pclass, data = titanic)
-
-t <-  rpart(Survived ~ Sex + Fare + Age, data=titanic, method="class")
-rpart.plot(t)
