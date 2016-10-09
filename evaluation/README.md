@@ -66,3 +66,40 @@ names(km)
 
 ![4 fold cross validation](image/cross_validation.png)
 
+# Receiver Operator Characteristic Curve
+
+* The false positive rate (second row), FP / (FP + TN), is on the x-axis
+* The true positive rate (recall or first row), TP / (TP + FN), is on the y-axis
+* Use the R package called ROCR
+
+~~~~{.r}
+# split iris dataset into training and test
+set.seed(31)
+x     <- sample(1:nrow(iris), size = 0.8 * nrow(iris), replace = FALSE)
+x_hat <- setdiff(1:150, x)
+train <- iris[x,]
+test  <- iris[x_hat,]
+
+library(rpart)
+tree <- rpart(Species ~ ., train, method = "class")
+
+probs <- predict(tree, test, type = "prob")
+probs_setosa <- probs[,1]
+probs_versicolor <- probs[,2]
+
+library(ROCR)
+setosa <- as.numeric(grepl(pattern = 'setosa', x = test$Species))
+versicolor <- as.numeric(grepl(pattern = 'versicolor', x = test$Species))
+pred <- prediction(probs_setosa, setosa)
+pred <- prediction(probs_versicolor, versicolor)
+
+auc <- performance(pred, 'auc')
+auc_value <- auc@y.values[[1]]
+
+perf <- performance(pred, 'tpr', 'fpr')
+plot(perf, main='ROC for versicolor')
+legend('bottomright', legend = paste('AUC = ', auc_value))
+~~~~
+
+![ROC curve](image/roc_versicolor.png)
+
