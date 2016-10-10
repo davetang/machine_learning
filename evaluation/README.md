@@ -50,17 +50,59 @@ Measure the distance between points within a cluster and between clusters.
 
 * Within Sum of Squares (WSS) measures the within cluster similarity
 * Between cluster Sum of Squares (BSS) measures the between cluster similarity
-* Dunn's index is the minimal intercluster distance (between cluster measurement) divided by the maximal diameter (within cluster measurement)
+* The [Dunn index](https://en.wikipedia.org/wiki/Dunn_index) is the minimal intercluster distance (between cluster measurement) divided by the maximal diameter (within cluster measurement); a higher Dunn index indicates better clustering
 
 For K-means clustering, the measures for WSS and BSS can be found in the cluster object as tot.withinss and betweenss.
 
 ~~~~{.r}
-km <- kmeans(data, 3)
+km <- kmeans(iris[,-5], centers = 3, nstart = 1)
 
-names(km)
+km
+K-means clustering with 3 clusters of sizes 62, 50, 38
+
+Cluster means:
+  Sepal.Length Sepal.Width Petal.Length Petal.Width
+1     5.901613    2.748387     4.393548    1.433871
+2     5.006000    3.428000     1.462000    0.246000
+3     6.850000    3.073684     5.742105    2.071053
+
+Clustering vector:
+  [1] 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
+ [38] 2 2 2 2 2 2 2 2 2 2 2 2 2 1 1 3 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+ [75] 1 1 1 3 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 3 1 3 3 3 3 1 3 3 3 3
+[112] 3 3 1 1 3 3 3 3 1 3 1 3 1 3 3 1 1 3 3 3 3 3 1 3 3 3 3 1 3 3 3 1 3 3 3 1 3
+[149] 3 1
+
+Within cluster sum of squares by cluster:
+[1] 39.82097 15.15100 23.87947
+ (between_SS / total_SS =  88.4 %)
+
+Available components:
+
 [1] "cluster"      "centers"      "totss"        "withinss"     "tot.withinss"
-[6] "betweenss"    "size"         "iter"         "ifault" 
+[6] "betweenss"    "size"         "iter"         "ifault"
+
+# install.packages('clValid')
+library(clValid)
+d  <- dist(iris[,-5])
+dunn(d, km$cluster)
+[1] 0.09880739
+
+# my expanded example from clValid
+express <- mouse[1:25, -c(1,8)]
+rownames(express) <- mouse$ID[1:25]
+express_dist <- dist(express,method="euclidean")
+express_hclust <- hclust(express_dist, method="average")
+express_cluster <- cutree(express_hclust, k = 3)
+dunn(Dist, express_cluster)
+[1] 0.2315126
+
+# install.packages('dendextend')
+library(dendextend)
+plot(color_branches(express_hclust, k = 3))
 ~~~~
+
+![Coloured dendrogram of clustered probes](image/mouse_dendrogram.png)
 
 # Cross validation
 
@@ -68,8 +110,8 @@ names(km)
 
 # Receiver Operator Characteristic Curve
 
-* The false positive rate (second row), FP / (FP + TN), is on the x-axis
-* The true positive rate (recall or first row), TP / (TP + FN), is on the y-axis
+* The false positive rate (second row of confusion matrix), FP / (FP + TN), is on the x-axis
+* The true positive rate (recall or first row of confusion matrix), TP / (TP + FN), is on the y-axis
 * Use the R package called ROCR
 
 ~~~~{.r}
