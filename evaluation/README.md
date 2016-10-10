@@ -106,7 +106,73 @@ plot(color_branches(express_hclust, k = 3))
 
 # Cross validation
 
+Instead of a single instance of train/test, cross validation carries out n-fold train/test evaluations. For example, the example below illustrates a 4-fold cross validation.
+
 ![4 fold cross validation](image/cross_validation.png)
+
+The `caret` package in R supports many types of cross-validation, and you can specify which type of cross-validation and the number of cross-validation folds with the trainControl() function, which you pass to the trControl argument in train().
+
+~~~~{.r}
+# use the caret package
+# install.packages('caret')
+library(caret)
+
+# using the diamonds data set from ggplot2
+# ggplot2 is automatically loaded with caret
+model <- train(
+  price ~ ., diamonds,
+  method = "lm",
+  trControl = trainControl(
+    method = "cv", number = 10,
+    verboseIter = TRUE
+  )
+)
+
+model
+Linear Regression 
+
+53940 samples
+    9 predictors
+
+No pre-processing
+Resampling: Cross-Validated (10 fold) 
+Summary of sample sizes: 48547, 48546, 48546, 48546, 48546, 48546, ... 
+Resampling results:
+
+  RMSE      Rsquared 
+  1131.021  0.9196795
+
+Tuning parameter 'intercept' was held constant at a value of TRUE
+~~~~
+
+Using the `caret` package, you can perform 5 x 5-fold cross validations by adding the `repeats` parameter.
+
+~~~~{.r}
+model <- train(
+  price ~ ., diamonds,
+  method = "lm",
+  trControl = trainControl(
+    method = "cv", number = 5,
+    repeats = 5, verboseIter = TRUE
+  )
+)
+
+model
+Linear Regression 
+
+53940 samples
+    9 predictors
+
+No pre-processing
+Resampling: Cross-Validated (5 fold) 
+Summary of sample sizes: 43152, 43152, 43152, 43152, 43152 
+Resampling results:
+
+  RMSE      Rsquared 
+  1131.219  0.9196155
+
+Tuning parameter 'intercept' was held constant at a value of TRUE
+~~~~
 
 # Receiver Operator Characteristic Curve
 
