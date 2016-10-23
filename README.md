@@ -40,6 +40,7 @@ A list of useful resources for learning about machine learning with an emphasis 
 * [Medical Data for Machine Learning](https://github.com/beamandrew/medical-data) by Andrew Beam
 * [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/datasets.html)
 * [Kaggle Datasets](https://www.kaggle.com/datasets)
+* [A collection of microarray data](https://github.com/ramhiser/datamicroarray) by John Ramey
 
 ## Others
 
