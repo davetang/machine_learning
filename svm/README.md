@@ -3,13 +3,13 @@ Support Vector Machine
 
 A support vector machine (SVM) is a supervised machine learning algorithm that can be used for classification and regression. The essence of SVM classification is broken down into four main concepts:
 
-1. The separating hyperplane (a plane that can separate cases into their respective classes)
-2. The maximum-margin hyperplane or maximum-margin linear discriminants (the hyperplane that has maximal distance from the different classes)
+* The separating hyperplane (a plane that can separate cases into their respective classes)
+* The maximum-margin hyperplane or maximum-margin linear discriminants (the hyperplane that has maximal distance from the different classes)
 
 ![Example of the maximum-margin hyperplane](image/SVM_Example_of_Hyperplanes.png)
 
-3. The soft margin (allowing cases from another class to fall into the opposite class)
-4. The kernel function (adding an additional dimension)
+* The soft margin (allowing cases from another class to fall into the opposite class)
+* The kernel function (adding an additional dimension)
 
 SVMs rely on preprocessing the data to represent patterns in a high dimension using a kernel function, typically much higher than the original feature space.
 
