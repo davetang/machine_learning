@@ -18,6 +18,8 @@ A list of useful resources for learning about machine learning with an emphasis 
 ## Tutorials
 
 * [How to Perform a Logistic Regression in R](http://datascienceplus.com/perform-logistic-regression-in-r/)
+* [A gentle introduction to decision trees using R](https://eight2late.wordpress.com/2016/02/16/a-gentle-introduction-to-decision-trees-using-r/)
+* [A gentle introduction to random forests using R](https://eight2late.wordpress.com/2016/09/20/a-gentle-introduction-to-random-forests-using-r/)
 * [Random Forest Regression and Classification in R and Python](http://blog.yhat.com/posts/comparing-random-forests-in-python-and-r.html)
 
 ## Papers
@@ -40,6 +42,7 @@ A list of useful resources for learning about machine learning with an emphasis 
 * [Medical Data for Machine Learning](https://github.com/beamandrew/medical-data) by Andrew Beam
 * [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/datasets.html)
 * [Kaggle Datasets](https://www.kaggle.com/datasets)
+* [A collection of microarray data](https://github.com/ramhiser/datamicroarray) by John Ramey
 
 ## Others
 
