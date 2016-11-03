@@ -1,0 +1,97 @@
+---
+title: "Artificial Neural Networks"
+author: "Dave Tang"
+date: "3 November 2016"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Compare neural network regression with linear regression
+
+Following the example from [this tutorial](http://datascienceplus.com/fitting-neural-network-in-r/).
+
+```{r}
+set.seed(500)
+library(MASS)
+data <- Boston
+apply(data,2,function(x) sum(is.na(x)))
+
+index <- sample(1:nrow(data), round(0.75*nrow(data)))
+train <- data[index,]
+test <- data[-index,]
+lm.fit <- glm(medv ~ ., data=train)
+summary(lm.fit)
+pr.lm <- predict(lm.fit, test)
+MSE.lm <- sum((pr.lm - test$medv)^2)/nrow(test)
+```
+
+## Feature scaling
+
+[Feature scaling](https://en.wikipedia.org/wiki/Feature_scaling) using:
+
+$$ x' = \frac{x - min(x)}{max(x) - min(x)} $$
+
+```{r}
+x <- 1:20
+x_a <- (x - min(x)) / (max(x) - min(x))
+x_b <- as.vector(scale(x, center = min(x), scale = max(x) - min(x)))
+x_a
+identical(x_a, x_b)
+```
+
+Carrying out the normalisation.
+
+```{r}
+maxs <- apply(data, 2, max)
+mins <- apply(data, 2, min)
+
+scaled <- as.data.frame(scale(data, center = mins, scale = maxs - mins))
+
+train_ <- scaled[index,]
+test_ <- scaled[-index,]
+```
+
+## Training
+
+Manually create formula as `f` since neuralnet() doesn't recognise `medv ~ .`.
+
+```{r}
+# install if necessary
+library(neuralnet)
+n <- names(train_)
+f <- as.formula(paste("medv ~", paste(n[!n %in% "medv"], collapse = " + ")))
+
+nn <- neuralnet(f, data = train_, hidden=c(5,3), linear.output = TRUE)
+plot(nn)
+```
+
+## Prediction
+
+We need to unscale the predictions and test; remember the formula:
+
+$$ x' = \frac{x - min(x)}{max(x) - min(x)} $$
+
+```{r}
+x <- 1:20
+x_a <- (x - min(x)) / (max(x) - min(x))
+x_orig <- as.integer(x_a * (max(x) - min(x)) + (min(x)))
+identical(x, x_orig)
+```
+
+Compare RMS of neural network regression with linear regression.
+
+```{r}
+pr.nn <- compute(nn, test_[,1:13])
+pr.nn_ <- pr.nn$net.result * (max(data$medv) - min(data$medv)) + min(data$medv)
+test.r <- (test_$medv) * (max(data$medv) - min(data$medv)) + min(data$medv)
+
+MSE.nn <- sum((test.r - pr.nn_)^2)/nrow(test_)
+print(paste(MSE.lm,MSE.nn))
+```
+
+## Further reading
+
+The neuralnet [reference manual](https://cran.r-project.org/web/packages/neuralnet/neuralnet.pdf).
