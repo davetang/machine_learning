@@ -1,0 +1,79 @@
+---
+title: "Using the myvariant package to annotate variants"
+author: "Dave Tang"
+date: "3 November 2016"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Install necessary packages
+
+```{r, eval = FALSE}
+source("https://bioconductor.org/biocLite.R")
+biocLite('myvariant')
+biocLite('VariantAnnotation')
+```
+
+# Load libraries
+
+```{r}
+library(VariantAnnotation)
+library(myvariant)
+```
+
+# Download example file
+
+```{r}
+download.file(url = 'http://davetang.org/eg/Pfeiffer.vcf', destfile = 'Pfeiffer.vcf')
+my_vcf <- readVcf('Pfeiffer.vcf', genome = 'hg19')
+my_hgvs <- formatHgvs(my_vcf)
+head(my_hgvs)
+length(my_hgvs)
+```
+
+# Obtain annotations for your variants
+
+```{r}
+my_var <- getVariants(my_hgvs)
+```
+
+# Checking out the variant annotations
+
+```{r}
+class(my_var)
+
+dim(my_var)
+```
+
+```{r}
+library(dplyr)
+my_var_tbl <- tbl_df(my_var)
+dim(my_var_tbl)
+my_var_tbl %>% select(notfound) %>% count(notfound)
+```
+
+## Filtering cases that were not found
+
+```{r}
+my_var_tbl %>% filter (is.na(notfound)) %>% select(query, starts_with('evs')) %>% dim()
+```
+
+```{r}
+my_var_tbl %>% filter (is.na(notfound)) %>% select(query, starts_with('cadd')) %>% dim()
+```
+
+## ClinVar
+
+```{r}
+my_var_tbl %>% filter (is.na(notfound), !is.na(clinvar.omim)) %>% select(query, starts_with('clinvar'))
+```
+
+## dbSNP
+
+```{r}
+my_var_tbl %>% filter (is.na(notfound), dbsnp.validated == 'TRUE') %>% select(query, starts_with('dbsnp'))
+```
+
