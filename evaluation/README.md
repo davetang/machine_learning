@@ -5,7 +5,7 @@ Different performance measures for evaluating whether your model is good or not.
 
 # Classification
 
-Build confusion matrix and calculate accuracy, precision, and recall.
+Build confusion matrix and calculate accuracy, precision, and recall. Check out [this guide as well](http://www.dataschool.io/simple-guide-to-confusion-matrix-terminology/).
 
 ![Confusion matrix](image/confusion_matrix.png)
 
