@@ -23,6 +23,11 @@ A list of useful resources for learning about machine learning with an emphasis 
 * [Random Forest Regression and Classification in R and Python](http://blog.yhat.com/posts/comparing-random-forests-in-python-and-r.html)
 * [Fitting a Neural Network in R using the neuralnet package](http://datascienceplus.com/fitting-neural-network-in-r/)
 
+## Online content
+
+* [Comparing supervised learning algorithms](http://www.dataschool.io/comparing-supervised-learning-algorithms/)
+* [How to get better at data science](http://www.dataschool.io/how-to-get-better-at-data-science/)
+
 ## Papers
 
 * [What is Bayesian statistics](http://dx.doi.org/10.1038/nbt0904-1177) by Sean Eddy
