@@ -92,9 +92,10 @@ bedtools intersect -a stdin -b clinvar_20160831.vcf.gz -u
 
 # Benchmark dataset
 
-* [The evaluation of tools used to predict the impact of missense variants is hindered by two types of circularity](http://www.ncbi.nlm.nih.gov/pubmed/25684150); see related [blog post](http://cazencott.info/index.php/post/2015/03/27/Beware-of-circularity-Evaluating-SNV-deleteriousness-prediction-tools)
+The paper "[The evaluation of tools used to predict the impact of missense variants is hindered by two types of circularity](http://www.ncbi.nlm.nih.gov/pubmed/25684150)" and the related [blog post](http://cazencott.info/index.php/post/2015/03/27/Beware-of-circularity-Evaluating-SNV-deleteriousness-prediction-tools) is a must read. It provides useful benchmark datasets that only contains variants not used for training in various deleteriousness prediction programs and discusses a main problem of variant databases, which is that genes usually only contain a single type of variant. For example, gene *abc* contains only benign variants and gene *def* only contains pathogenic variants. Thus a classifier, which uses a metric that reflects the number of previously identified pathogenic in a given gene, will correctly classify another variant found in the same gene as pathogenic. This has some biological rationale, since some genes are less tolerant to mutations and are more likely to cause disease. However, if the benchmark data set has a mixture of variants in genes, i.e. gene *abc* had both benign and pathogenic variants, the classifier would not perform as well.
 
 ~~~~{.bash}
+# download Grimm et al. dataset
 wget https://www.ethz.ch/content/dam/ethz/special-interest/bsse/borgwardt-lab/Projects/PathogenicityPrediction/DataS1.zip
 
 unzip DataS1.zip
