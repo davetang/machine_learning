@@ -92,7 +92,9 @@ bedtools intersect -a stdin -b clinvar_20160831.vcf.gz -u
 
 # Benchmark dataset
 
-The paper "[The evaluation of tools used to predict the impact of missense variants is hindered by two types of circularity](http://www.ncbi.nlm.nih.gov/pubmed/25684150)" and the related [blog post](http://cazencott.info/index.php/post/2015/03/27/Beware-of-circularity-Evaluating-SNV-deleteriousness-prediction-tools) is a must read. It provides useful benchmark datasets that only contains variants not used for training in various deleteriousness prediction programs and discusses a main problem of variant databases, which is that genes usually only contain a single type of variant. For example, gene *abc* contains only benign variants and gene *def* only contains pathogenic variants. Thus a classifier, which uses a metric that reflects the number of previously identified pathogenic in a given gene, will correctly classify another variant found in the same gene as pathogenic. This has some biological rationale, since some genes are less tolerant to mutations and are more likely to cause disease. However, if the benchmark data set has a mixture of variants in genes, i.e. gene *abc* had both benign and pathogenic variants, the classifier would not perform as well.
+The paper "[The evaluation of tools used to predict the impact of missense variants is hindered by two types of circularity](http://www.ncbi.nlm.nih.gov/pubmed/25684150)" and the related [blog post](http://cazencott.info/index.php/post/2015/03/27/Beware-of-circularity-Evaluating-SNV-deleteriousness-prediction-tools) is a must read. The paper describes the evaluation of 10 pathogenicity prediction tools on five variant datasets, and discusses the difficulty in the evaluation due to two types of circularity. The first is due to an overlap of variants in the training and testing data; the second is due to the presence of "pure proteins", which are proteins that contain only benign or pathogenic variants. For example, protein *abc* contains only benign variants and protein *def* contains only pathogenic variants. To demonstrate how this can be a problem the paper discusses the strategy behind the prediction tool, FATHMM. Variants are weighted by FATHMM using two metrics, Wn and Wd, which represent the relative frequency of neutral and deleterious variants respectively in the relevant protein family. Thus a variant in "pure protein" with only deleterious variants will be weighted higher in terms of deleteriousness. Since this "pure protein" only contains deleterious variants, FATHMM will make a correct prediction. This is a problem because it seems very likely that neutral variants can occur in this "pure protein". Perhaps there is some biological rationale behind this, as some proteins are less tolerant to mutations and are more likely to cause disease, hence there is a greater ratio of deleterious variants in the protein. It may also be due to the fact that once a protein has been implicated in an disorder, there will be more reports of pathogenic variants in the protein.
+
+Grimm et al. also provides five benchmark datasets; three of the datasets only contain variants that have not been used for training in various pathogenicity prediction tools. To download the data:
 
 ~~~~{.bash}
 # download Grimm et al. dataset
@@ -100,6 +102,12 @@ wget https://www.ethz.ch/content/dam/ethz/special-interest/bsse/borgwardt-lab/Pr
 
 unzip DataS1.zip
 ~~~~
+
+The benchmark datasets are in the `ToolScores` folder of `DataS1`.
+
+* VariBench has an overlap of approximately 50% with both HumVar and ExoVar. Non-overlapping variants were used to build an independent evaluation dataset called VariBench-Selected (varibench_selected_tool_scores.csv)
+* The predictSNPSelected dataset (predictSNP_selected_tool_scores.csv) is the predictSNP dataset that has all variants that overlap with HumVar, ExoVar, and VariBench removed
+* The SwissVarSelected dataset (swissvar_selected_tool_scores.csv) was created by excluding from the latest SwissVar database (December 2014) all variants overlapping with the other four datasets: HumVar, ExoVar, VariBench, and predictSNP. SwissVarSelected should be the dataset containing the newest variants across all datasets
 
 Some statistics and plots with R.
 
