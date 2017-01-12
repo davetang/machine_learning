@@ -13,3 +13,4 @@ clinvar.vcf.gz*
 clinvar.out*
 .DS_Store
 Pfeiffer.vcf
+*.out
