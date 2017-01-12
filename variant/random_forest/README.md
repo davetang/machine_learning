@@ -78,7 +78,7 @@ CADD_phred                                   48
 ClinVar uses a "Review Status" to rank the significance of variants; the highest [Review Status](https://www.ncbi.nlm.nih.gov/clinvar/docs/review_guidelines/) is four gold stars. I wanted to select variants that have four gold stars but there are only 23 variants with four stars, all of which are for cystic fibrosis. [Cystic fibrosis](https://en.wikipedia.org/wiki/Cystic_fibrosis) (CF) is a genetic disorder that affects mostly the lungs, but also the pancreas, liver, kidneys, and intestine. Long-term issues include difficulty breathing and coughing up mucus as a result of frequent lung infections.
 
 * The one star review status refers to "single submitter - criteria provided" assertions
-* I'm not sure where two stars when
+* I'm not sure where two stars went
 * The three star review status refers to "expert panel" assertions
 * The four star review status refers to "practice guideline" assertions
 
@@ -396,7 +396,7 @@ cat negative.tsv | wc -l
 7736
 ~~~~
 
-I have a simply script in my [learning_vcf_file GitHub repository](https://github.com/davetang/learning_vcf_file) that can create a VCF file from TSV files containing the chromosome, start and end coordinates, reference and alternative bases. The script requires a FASTA copy of the reference genome to make sure that the provided reference base is correct.
+I have a simple script in my [learning_vcf_file GitHub repository](https://github.com/davetang/learning_vcf_file) that can create a VCF file from TSV files containing the chromosome, start and end coordinates, reference and alternative bases. The script requires a FASTA copy of the reference genome to make sure that the provided reference base is correct.
 
 ~~~~{.bash}
 ~/github/learning_vcf_file/script/create_vcf.pl ~/genome/hg19/hg19_no_chr.fa positive.tsv > positive.vcf
@@ -576,5 +576,180 @@ Confusion matrix:
      -1    1 class.error
 -1 3350  885   0.2089728
 1  1372 2353   0.3683221
+~~~~
+
+## Expression data
+
+dbNSFP provides GTEx (version 6) RPKM expression data (minimum, average, and maximum expression) for 53 tissues.
+
+~~~~{.bash}
+cat clinvar_20170104_class_5.out | head -1 | transpose | grep maximum 
+Adipose-Subcutaneousmaximum
+Adipose-Visceral(Omentum)maximum
+AdrenalGlandmaximum
+Artery-Aortamaximum
+Artery-Coronarymaximum
+Artery-Tibialmaximum
+Bladdermaximum
+Brain-Amygdalamaximum
+Brain-Anteriorcingulatecortex(BA24)maximum
+Brain-Caudate(basalganglia)maximum
+Brain-CerebellarHemispheremaximum
+Brain-Cerebellummaximum
+Brain-Cortexmaximum
+Brain-FrontalCortex(BA9)maximum
+Brain-Hippocampusmaximum
+Brain-Hypothalamusmaximum
+Brain-Nucleusaccumbens(basalganglia)maximum
+Brain-Putamen(basalganglia)maximum
+Brain-Spinalcord(cervicalc-1)maximum
+Brain-Substantianigramaximum
+Breast-MammaryTissuemaximum
+Cells-EBV-transformedlymphocytesmaximum
+Cells-Transformedfibroblastsmaximum
+Cervix-Ectocervixmaximum
+Cervix-Endocervixmaximum
+Colon-Sigmoidmaximum
+Colon-Transversemaximum
+Esophagus-GastroesophagealJunctionmaximum
+Esophagus-Mucosamaximum
+Esophagus-Muscularismaximum
+FallopianTubemaximum
+Heart-AtrialAppendagemaximum
+Heart-LeftVentriclemaximum
+Kidney-Cortexmaximum
+Livermaximum
+Lungmaximum
+MinorSalivaryGlandmaximum
+Muscle-Skeletalmaximum
+Nerve-Tibialmaximum
+Ovarymaximum
+Pancreasmaximum
+Pituitarymaximum
+Prostatemaximum
+Skin-NotSunExposed(Suprapubic)maximum
+Skin-SunExposed(Lowerleg)maximum
+SmallIntestine-TerminalIleummaximum
+Spleenmaximum
+Stomachmaximum
+Testismaximum
+Thyroidmaximum
+Uterusmaximum
+Vaginamaximum
+WholeBloodmaximum
+
+cat clinvar_20170104_class_5.out | head -1 | transpose | grep maximum | wc -l
+53
+~~~~
+
+Check the expression of the CF variants (reside inside the CFTR gene) in the GTEx catalogue; the expression pattern differs from the UniProt tissue specificity.
+
+~~~~{.bash}
+cat clinvar_20170104_class_5.out | head -1 > header
+cat clinvar_20170104.out | awk -F'\t' '$184==4 {print}' > cf_variant.out
+cat header cf_variant.out | head -2 | transpose | grep average | sort -k2n | column -t
+
+WholeBloodaverage                            0.0036149086681272805
+Muscle-Skeletalaverage                       0.006996180911461801
+Cells-Transformedfibroblastsaverage          0.01085608349506363
+AdrenalGlandaverage                          0.011440302866735847
+Cells-EBV-transformedlymphocytesaverage      0.018023277319162694
+Artery-Coronaryaverage                       0.021454312899885204
+Spleenaverage                                0.02225606850026032
+Esophagus-Muscularisaverage                  0.022517527245279202
+Esophagus-GastroesophagealJunctionaverage    0.022629875765833394
+Artery-Aortaaverage                          0.023764518536544137
+Artery-Tibialaverage                         0.028838505493322706
+Ovaryaverage                                 0.029311716842186666
+Nerve-Tibialaverage                          0.03636686750810201
+Cervix-Ectocervixaverage                     0.03683481427530447
+Thyroidaverage                               0.037302635315280906
+Brain-CerebellarHemisphereaverage            0.03743816538758221
+Heart-AtrialAppendageaverage                 0.040662475331139154
+Heart-LeftVentricleaverage                   0.048631225354807156
+Brain-Cerebellumaverage                      0.053185123421251784
+Adipose-Subcutaneousaverage                  0.05398133020415634
+Vaginaaverage                                0.05819370646107321
+Brain-Anteriorcingulatecortex(BA24)average   0.060733536147468146
+Brain-FrontalCortex(BA9)average              0.07253690807717958
+Breast-MammaryTissueaverage                  0.07720146304166169
+Pituitaryaverage                             0.1064697305662829
+Uterusaverage                                0.10976095637587088
+Brain-Cortexaverage                          0.1261858496071542
+Brain-Amygdalaaverage                        0.1325994936374223
+Brain-Hypothalamusaverage                    0.13937142544697662
+Esophagus-Mucosaaverage                      0.20638807516519006
+Brain-Hippocampusaverage                     0.21203509214869204
+Adipose-Visceral(Omentum)average             0.22012638875861787
+Stomachaverage                               0.23456299485677348
+Colon-Sigmoidaverage                         0.2555570169883287
+Brain-Nucleusaccumbens(basalganglia)average  0.26142109528315804
+Brain-Putamen(basalganglia)average           0.27408881053405326
+Brain-Caudate(basalganglia)average           0.293397515725631
+Brain-Substantianigraaverage                 0.3205392344426067
+FallopianTubeaverage                         0.3221308744202059
+Liveraverage                                 0.46641305774575514
+Brain-Spinalcord(cervicalc-1)average         0.4745033603738731
+Bladderaverage                               0.47810489938340406
+Cervix-Endocervixaverage                     0.6402266658842555
+Testisaverage                                0.8061348636483037
+Kidney-Cortexaverage                         0.829055939568207
+Skin-NotSunExposed(Suprapubic)average        0.8711740337610245
+Skin-SunExposed(Lowerleg)average             1.0035383151139783
+Prostateaverage                              1.4357716596492058
+Lungaverage                                  1.6606454007560387
+SmallIntestine-TerminalIleumaverage          3.88696820072999
+MinorSalivaryGlandaverage                    7.157264545298458
+Colon-Transverseaverage                      12.023628803739816
+Pancreasaverage                              49.320094894944575
+~~~~
+
+![CFTR expression in GTEx](image/CFTR.png)
+
+Include GTEx expression data as features for the SwissVarSelected variants.
+
+~~~~{.r}
+setwd("/Users/dtang/github/machine_learning/variant/random_forest")
+
+benign <- read.table('negative.out', header=TRUE, stringsAsFactors=FALSE, quote='', sep="\t", comment='')
+pathogenic <- read.table('positive.out', header=TRUE, stringsAsFactors=FALSE, quote='', sep="\t", comment='')
+
+negative <- benign[, grep('rankscore|average', names(benign))]
+negative$class <- rep(-1, nrow(negative))
+positive <- pathogenic[, grep('rankscore|average', names(pathogenic))]
+positive$class <- rep(1, nrow(positive))
+
+df <- rbind(positive, negative)
+df <- apply(df, 2, function(x) as.numeric(gsub(x = x, pattern = '^\\.$', replacement = NA, perl = TRUE)))
+df <- as.data.frame(df)
+df$class <- factor(df$class)
+
+library(randomForest)
+rf <- randomForest(class ~ ., data=df, importance=TRUE, do.trace=100, na.action=na.omit, ntree=1000)
+ntree      OOB      1      2
+  100:  24.90% 19.87% 30.59%
+  200:  24.40% 18.56% 31.00%
+  300:  24.10% 18.04% 30.95%
+  400:  24.10% 18.25% 30.70%
+  500:  24.25% 18.23% 31.06%
+  600:  23.97% 17.87% 30.87%
+  700:  24.07% 17.91% 31.03%
+  800:  23.98% 17.82% 30.95%
+  900:  23.93% 17.75% 30.92%
+ 1000:  23.89% 17.77% 30.81%
+
+rf
+
+Call:
+ randomForest(formula = class ~ ., data = df, importance = TRUE,      do.trace = 100, ntree = 1000, na.action = na.omit) 
+               Type of random forest: classification
+                     Number of trees: 1000
+No. of variables tried at each split: 8
+
+        OOB estimate of  error rate: 23.89%
+Confusion matrix:
+     -1    1 class.error
+-1 3415  738   0.1777029
+1  1132 2542   0.3081111
 ~~~~
 
