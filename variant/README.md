@@ -1,17 +1,26 @@
 Machine learning on variants
 ============================
 
-List of manually collected variants that are known to be pathogenic.
+There is a lot of interest in the classification of genetic variants for the purposes of identifying causative variants in monogenic disorders. Every individual contains a large number of neutral or benign variants, i.e. genetic changes that have no phenotypic effect. The UK10K project estimates that each individual has on average 3,222,597 single nucleotide variants (SNVs) and 705,684 insertion/deletion variants (INDELs). It is highly infeasible to investigate such a large number variants and thus various strategies have been developed to narrow down the number of potentially interesting variants. Machine learning approaches can help classify the large number of variants into potentially benign or pathogenic classes.
+
+In order to build a variant classifier, a training set is needed. [ClinVar](https://www.ncbi.nlm.nih.gov/clinvar/intro/) contains a database of variants along with information associated with the variants. Others have developed benchmark variant databases such as [VariBench](http://structure.bmc.lu.se/VariBench/), [predictSNP](http://loschmidt.chemi.muni.cz/predictsnp/), and [SwissVar](http://swissvar.expasy.org/) containing benign and pathogenic variants that can be used for training.
+
+# Manually collected pathogenic variants
+
+I have collected some pathogenic variants from various studies.
 
 * Known pathogenic variants for [Kabuki syndrome](https://en.wikipedia.org/wiki/Kabuki_syndrome) from the work of [Ng et al. in Nature Genetics 2010](http://www.ncbi.nlm.nih.gov/pubmed/20711175); variants available in [Supplementary Table 3](http://www.nature.com/ng/journal/v42/n9/extref/ng.646-S1.pdf)
 * Known pathogenic variants for [Miller syndrome](https://en.wikipedia.org/wiki/Miller_syndrome) from the work of [Ng et al. in Nature Genetics 2010](http://www.ncbi.nlm.nih.gov/pubmed/19915526); variants are available in Table 4
 
 # ClinVar variants
 
-Accessing and using data in [ClinVar](http://www.ncbi.nlm.nih.gov/clinvar/docs/maintenance_use/#download)
+Accessing and using data in [ClinVar](http://www.ncbi.nlm.nih.gov/clinvar/docs/maintenance_use/#download).
 
 ~~~~{.bash}
 # download and index data
+# clinvar.vcf.gz always points to the latest version
+# but I would lose track of which version I used
+# the URL below will be in the archive folder as time progresses
 wget -c ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar_20160831.vcf.gz
 gunzip clinvar_20160831.vcf.gz
 bgzip clinvar_20160831.vcf
@@ -109,18 +118,35 @@ The benchmark datasets are in the `ToolScores` folder of `DataS1`.
 * The predictSNPSelected dataset (predictSNP_selected_tool_scores.csv) is the predictSNP dataset that has all variants that overlap with HumVar, ExoVar, and VariBench removed
 * The SwissVarSelected dataset (swissvar_selected_tool_scores.csv) was created by excluding from the latest SwissVar database (December 2014) all variants overlapping with the other four datasets: HumVar, ExoVar, VariBench, and predictSNP. SwissVarSelected should be the dataset containing the newest variants across all datasets
 
-Some statistics and plots with R.
+Load the SwissVarSelected data and get some statistics on the numbers.
 
 ~~~~{.r}
-df <- read.csv('swissvar_selected_tool_scores.csv')
+setwd("~/github/machine_learning/variant/")
+df <- read.csv('DataS1/ToolScores/swissvar_selected_tool_scores.csv', stringsAsFactors = FALSE)
+dim(df)
+[1] 12729    41
+
+# turn the labels into factors
 df$True.Label <- factor(df$True.Label)
 
+# negative are benign variants
+table(df$True.Label)
+
+  -1    1 
+8203 4526
+~~~~
+
+How did each tool perform?
+
+~~~~{.r}
+# function to create confusion matrix
 class_table <- function(x){
   cat(names(df)[x-1])
   print(table(df$True.Label, df[,x])/sum(table(df$True.Label, df[,x])))
   cat("\n")
 }
 
+# the columns refer to the predicted labels for the various tools
 my_cols <- c(16, 18, 23, 25, 27, 35, 37, 39, 41)
 for(i in my_cols){
   class_table(i)
