@@ -36,15 +36,24 @@ Options (not necessary):
 -s
    will search attached database(s) dbscSNV (and SPIDEX, if available)
    will be outputed to output_file_name.dbscSNV (and output_file_name.SPIDEX)
+~~~~
 
-# example running in the directory where you unzipped dbNSFPv3.3a.zip
-java search_dbNSFP33a -i ~/github/machine_learning/variant/kabuki_hg19.vcf -o ~/github/machine_learning/variant/kabuki_hg19_dbnsfp.out -v hg19
+To run `search_dbNSFP33a` from another directory, you need to specify the classpath (-cp for short); this is the directory where you extracted dbNSFPv3.3a.zip.
+
+~~~~{.bash}
+java -cp ~/data/dbnsfp/3.3/ search_dbNSFP33a -i test.vcf -o test.out -v hg19
+~~~~
+
+Now run `search_dbNSFP33a` on our Kabuki syndrome VCF file.
+
+~~~~{.bash}
+java -cp ~/data/dbnsfp/3.3/ search_dbNSFP33a -i kabuki_hg19.vcf -o kabuki_hg19_dbnsfp.out -v hg19
 Searching based on hg19 coordinates:
         Searching chr12
 
-6 SNP(s) are found. Written to ~/github/machine_learning/variant/kabuki_hg19_dbnsfp.out
+6 SNP(s) are found. Written to kabuki_hg19_dbnsfp.out
 
-cat ~/github/machine_learning/variant/kabuki_hg19_dbnsfp.out | head -2 | transpose | column -t | head -20
+cat kabuki_hg19_dbnsfp.out | head -2 | transpose | column -t | head -20
 #chr                                         12
 pos(1-based)                                 49026348
 ref                                          A
@@ -67,7 +76,7 @@ Denisova                                     A/A
 Ensembl_geneid                               ENSG00000167548
 
 # CADD scores
-cat ~/github/machine_learning/variant/kabuki_hg19_dbnsfp.out | head -2 | transpose | column -t | grep CADD
+cat kabuki_hg19_dbnsfp.out | head -2 | transpose | column -t | grep CADD
 CADD_raw                                     14.894778
 CADD_raw_rankscore                           0.99788
 CADD_phred                                   48
@@ -221,7 +230,7 @@ cat clinvar_20170104.vcf| grep reference=
 ##reference=GRCh37.p13
 
 # run dbNSFP
-java search_dbNSFP33a -i ~/github/machine_learning/variant/random_forest/clinvar_20170104.vcf -o ~/github/machine_learning/variant/random_forest/clinvar_20170104.out -v hg19
+java -cp ~/data/dbnsfp/3.3/ search_dbNSFP33a -i clinvar_20170104.vcf -o clinvar_20170104.out -v hg19
 96860 SNP(s) are found. Written to ~/github/machine_learning/variant/random_forest/clinvar_20170104.out
 135028 SNP(s) are not found. Written to ~/github/machine_learning/variant/random_forest/clinvar_20170104.out.err
 ~~~~
@@ -271,11 +280,11 @@ Re-run dbNSFP
 ./stratify.pl clinvar_20170104.vcf 2 > clinvar_20170104_class_2.vcf
 ./stratify.pl clinvar_20170104.vcf 5 > clinvar_20170104_class_5.vcf
 
-java search_dbNSFP33a -i ~/github/machine_learning/variant/random_forest/clinvar_20170104_class_2.vcf -o ~/github/machine_learning/variant/random_forest/clinvar_20170104_class_2.out -v hg19
+java -cp ~/data/dbnsfp/3.3/ search_dbNSFP33a -i clinvar_20170104_class_2.vcf -o clinvar_20170104_class_2.out -v hg19
 6586 SNP(s) are found. Written to ~/github/machine_learning/variant/random_forest/clinvar_20170104_class_2.out
 22784 SNP(s) are not found. Written to ~/github/machine_learning/variant/random_forest/clinvar_20170104_class_2.out.err
 
-java search_dbNSFP33a -i ~/github/machine_learning/variant/random_forest/clinvar_20170104_class_5.vcf -o ~/github/machine_learning/variant/random_forest/clinvar_20170104_class_5.out -v hg19
+java -cp ~/data/dbnsfp/3.3/ search_dbNSFP33a -i clinvar_20170104_class_5.vcf -o clinvar_20170104_class_5.out -v hg19
 23132 SNP(s) are found. Written to ~/github/machine_learning/variant/random_forest/clinvar_20170104_class_5.out
 17149 SNP(s) are not found. Written to ~/github/machine_learning/variant/random_forest/clinvar_20170104_class_5.out.err
 ~~~~
@@ -406,11 +415,11 @@ I have a simple script in my [learning_vcf_file GitHub repository](https://githu
 Now we can annotate the SwissVarSelected variants using dbNSFP.
 
 ~~~~{.bash}
-java search_dbNSFP33a -i ~/github/machine_learning/variant/random_forest/positive.vcf -o ~/github/machine_learning/variant/random_forest/positive.out -v hg19
+java -cp ~/data/dbnsfp/3.3/ search_dbNSFP33a -i positive.vcf -o positive.out -v hg19
 4387 SNP(s) are found. Written to ~/github/machine_learning/variant/random_forest/positive.out
 6 SNP(s) are not found. Written to ~/github/machine_learning/variant/random_forest/positive.out.err
 
-java search_dbNSFP33a -i ~/github/machine_learning/variant/random_forest/negative.vcf -o ~/github/machine_learning/variant/random_forest/negative.out -v hg19
+java -cp ~/data/dbnsfp/3.3/ search_dbNSFP33a -i negative.vcf -o negative.out -v hg19
 7563 SNP(s) are found. Written to ~/github/machine_learning/variant/random_forest/negative.out
 143 SNP(s) are not found. Written to ~/github/machine_learning/variant/random_forest/negative.out.err
 ~~~~
@@ -430,6 +439,7 @@ cat clinvar_20170104_class_5.out | grep -v "^#" | wc -l
 cat positive.out | grep -v "^#" | wc -l
 4432
 cat negative.out | grep -v "^#" | wc -l
+7636
 ~~~~
 
 Conveniently, dbNSFP has created a normalised rank score for 27 tools.
@@ -482,7 +492,7 @@ dim(pathogenic)
 [1] 23410   456
 
 negative <- benign[, grep('rankscore', names(benign))]
-negative$class <- rep(-1, nrow(negative))
+negative$class <- rep(0, nrow(negative))
 positive <- pathogenic[, grep('rankscore', names(pathogenic))]
 positive$class <- rep(1, nrow(positive))
 
@@ -537,7 +547,7 @@ dim(pathogenic)
 [1] 4432  456
 
 negative <- benign[, grep('rankscore', names(benign))]
-negative$class <- rep(-1, nrow(negative))
+negative$class <- rep(0, nrow(negative))
 positive <- pathogenic[, grep('rankscore', names(pathogenic))]
 positive$class <- rep(1, nrow(positive))
 
@@ -715,7 +725,7 @@ benign <- read.table('negative.out', header=TRUE, stringsAsFactors=FALSE, quote=
 pathogenic <- read.table('positive.out', header=TRUE, stringsAsFactors=FALSE, quote='', sep="\t", comment='')
 
 negative <- benign[, grep('rankscore|average', names(benign))]
-negative$class <- rep(-1, nrow(negative))
+negative$class <- rep(0, nrow(negative))
 positive <- pathogenic[, grep('rankscore|average', names(pathogenic))]
 positive$class <- rep(1, nrow(positive))
 
