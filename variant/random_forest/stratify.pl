@@ -28,6 +28,7 @@ VARIANT: while(<IN>){
          if (scalar(@clnsig) == 1){
             if ($clnsig == $code){
                print "$current_line\n";
+               next VARIANT;
             }
          }
 

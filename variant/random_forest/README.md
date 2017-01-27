@@ -259,19 +259,19 @@ Usage: ./stratify.pl <clinvar.vcf> <significance code>
 
 # pathogenic
 ./stratify.pl clinvar_20170104.vcf 5  | grep -v "^#" | wc -l
-69940
+40651
 
 # benign
 ./stratify.pl clinvar_20170104.vcf 2  | grep -v "^#" | wc -l
-44919
+29534
 
 # likely pathogenic
 ./stratify.pl clinvar_20170104.vcf 4  | grep -v "^#" | wc -l
-15827
+9296
 
 # likely benign
 ./stratify.pl clinvar_20170104.vcf 3  | grep -v "^#" | wc -l
-73175
+45870
 ~~~~
 
 Re-run dbNSFP
@@ -281,12 +281,12 @@ Re-run dbNSFP
 ./stratify.pl clinvar_20170104.vcf 5 > clinvar_20170104_class_5.vcf
 
 java -cp ~/data/dbnsfp/3.3/ search_dbNSFP33a -i clinvar_20170104_class_2.vcf -o clinvar_20170104_class_2.out -v hg19
-6586 SNP(s) are found. Written to ~/github/machine_learning/variant/random_forest/clinvar_20170104_class_2.out
-22784 SNP(s) are not found. Written to ~/github/machine_learning/variant/random_forest/clinvar_20170104_class_2.out.err
+6586 SNP(s) are found. Written to clinvar_20170104_class_2.out
+22784 SNP(s) are not found. Written to clinvar_20170104_class_2.out.err
 
 java -cp ~/data/dbnsfp/3.3/ search_dbNSFP33a -i clinvar_20170104_class_5.vcf -o clinvar_20170104_class_5.out -v hg19
-23132 SNP(s) are found. Written to ~/github/machine_learning/variant/random_forest/clinvar_20170104_class_5.out
-17149 SNP(s) are not found. Written to ~/github/machine_learning/variant/random_forest/clinvar_20170104_class_5.out.err
+23132 SNP(s) are found. Written to clinvar_20170104_class_5.out
+17149 SNP(s) are not found. Written to clinvar_20170104_class_5.out.err
 ~~~~
 
 As expected, more pathogenic variants are non-synonymous. (Though the numbers returned by dbNSFP do not correspond to the total number of SNVs in the VCF files.)
