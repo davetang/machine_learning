@@ -9,9 +9,16 @@ Build confusion matrix and calculate accuracy, precision, and recall. Check out 
 
 ![Confusion matrix](image/confusion_matrix.png)
 
-* Precision (first column) = TP / (TP + FP)
-* Recall (first row) = TP / (TP + FN)
+* Sensitivity or True Positive Rate (TPR) or Recall or Hit Rate = TP / (TP + FN)
+* Specificity or True Negative Rate (TNR) = TN / (TN + FP)
+* Precision or Positive Predictive Value (PPV) = TP / (TP + FP)
+* Negative Predictive Value (NPV) = TN / (TN + FN)
+* Fall-out or False Positive Rate (FPR) = FP / (FP + TN) = 1 - specificity
+* False Negative Rate (FNR) = FN / (FN + TP) = 1 - TPR
+* False Discovery Rate (FDR) = TP / (TP + FP) = 1 - PPV
 * Accuracy = (TP + TN) / (TP + FP + FN + TN)
+
+The formulae for TPR, TNR, FPR, and FNR are easy to remember. For example, if we are calculating the TPR, use TPs as the numerator and the denominator will be TPs + the opposite of TPs, which are the FNs. For the TNR, use TNs as the numerator and the denominator will be TNs + the opposite of TNs, which are the FPs. Why is this so? It's because a FN is really a TP that was misclassified as a negative, a FP is really a TN that was misclassified as a positive, and so on.
 
 In R:
 
