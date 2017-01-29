@@ -218,3 +218,38 @@ legend('bottomright', legend = paste('AUC = ', auc_value))
 
 ![ROC curve](image/roc_versicolor.png)
 
+Another example using [spam data](https://archive.ics.uci.edu/ml/machine-learning-databases/spambase/spambase.names) and plotting a ROC curve with the verification package.
+
+~~~~{.r}
+df <- read.csv('https://archive.ics.uci.edu/ml/machine-learning-databases/spambase/spambase.data', header = FALSE)
+names(df) <- c('make', 'address', 'all', 'x3d', 'our', 'over', 'remove', 'internet', 'order', 'mail', 'receive', 'will', 'people', 'report', 'addresses', 'free', 'business', 'email', 'you', 'credit', 'your', 'font', 'x000', 'money', 'hp', 'hpl', 'george', 'x650', 'lab', 'labs', 'telnet', 'x857', 'data', 'x415', 'x85', 'technology', 'x1999', 'parts', 'pm', 'direct', 'cs', 'meeting', 'original', 'project', 're', 'edu', 'table', 'conference', 'semicolon', 'left_par', 'left_square', 'exclamation', 'dollar', 'hash', 'capital_average', 'capital_longest', 'capital_total', 'class')
+df$class <- factor(df$class)
+dim(df)
+[1] 4601   58
+
+table(df$class)
+
+   0    1 
+2788 1813
+
+library(randomForest)
+set.seed(31)
+system.time(rf <- randomForest(class ~ ., data = df, importance=TRUE, proximity=TRUE, do.trace=100))
+ntree      OOB      1      2
+  100:   4.48%  2.87%  6.95%
+  200:   4.61%  2.87%  7.28%
+  300:   4.67%  2.94%  7.34%
+  400:   4.56%  2.80%  7.28%
+  500:   4.50%  2.76%  7.17%
+   user  system elapsed 
+ 50.524   0.464  51.641 
+
+library(verification)
+auc <- roc.area(as.integer(df$class==1), rf$votes[,2])$A
+roc.plot(as.integer(df$class==1), rf$votes[,2], main="", threshold = seq(0, 1, 0.1))
+legend("bottomright", bty="n", sprintf("Area Under the Curve (AUC) = %1.4f", auc))
+title(main="OOB ROC Curve")
+~~~~
+
+![ROC curve](image/roc_verification.png)
+
