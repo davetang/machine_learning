@@ -253,3 +253,15 @@ title(main="OOB ROC Curve")
 
 ![ROC curve](image/roc_verification.png)
 
+Plotting with confidence intervals, which are calculated by bootstrapping the observations and prediction, then calculating probability of detection yes (PODy) and probability of detection no (PODn) values. The default CI is 95%.
+
+~~~~{.r}
+system.time(roc.plot(as.integer(df$class==1), rf$votes[,2], main="", threshold = seq(0, 1, 0.1), CI = TRUE))
+   user  system elapsed 
+ 12.197   1.828  14.076
+legend("bottomright", bty="n", sprintf("Area Under the Curve (AUC) = %1.4f", auc))
+title(main="OOB ROC Curve")
+~~~~
+
+![ROC curve](image/roc_verification_ci.png)
+
