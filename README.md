@@ -3,13 +3,28 @@ Machine learning
 
 _Machine Learning is the study of computer algorithms that improve automatically through experience. --Tom Mitchell_
 
+# A brief history of machine learning
+
+Adapted from the section 1.2 of the book "Deep Learning with R".
+
+* Probabilistic modelling was one of the earliest forms of machine learning, where the principles of statistics were applied to data analysis
+* The Naive Bayes algorithm is one of the best known methods for carrying out probabilistic modelling
+* Logistic regression is an algorithm with roots that date back to the early 19th century
+* The core ideas of neural networks were investigated back in the 1950s
+* In the 1970s, the backpropagation algorithm was originally introduced
+* Kernel methods, especially Support Vector Machines (SVMs), become popular in the 90s
+* Decision trees [date back in the 1960s](http://washstat.org/presentations/20150604/loh_slides.pdf)
+* The first algorithm for random decision trees was created in 1995 and an extension of the algorithm, called Random Forests, was created in 2001
+* Gradient boosting is a machine-learning technique based on ensembling weak prediction models, generally decision trees, which originated in 1997
+* In 2012, the SuperVision team led by Alex Krizhevsky and advised by Geoffrey Hinton was able to achieve a top-five accuracy of [83.6% on the ImageNet challenge](http://www.image-net.org/challenges/LSVRC/2012/results.html)
+
 # Resources
 
 A list of useful resources for learning about machine learning with an emphasis on biological applications.
 
 ## Courses
 
-* [Introduction to Machine Learning](https://www.datacamp.com/courses/introduction-to-machine-learning-with-r) on DataCamp
+* [Machine Learning with R skill track](https://www.datacamp.com/tracks/machine-learning) on DataCamp
 
 ## Presentations
 
@@ -25,6 +40,7 @@ A list of useful resources for learning about machine learning with an emphasis 
 
 ## Online content
 
+* [A Tour of The Top 10 Algorithms for Machine Learning Newbies](https://towardsdatascience.com/a-tour-of-the-top-10-algorithms-for-machine-learning-newbies-dde4edffae11)
 * [Comparing supervised learning algorithms](http://www.dataschool.io/comparing-supervised-learning-algorithms/)
 * [How to get better at data science](http://www.dataschool.io/how-to-get-better-at-data-science/)
 
@@ -42,6 +58,7 @@ A list of useful resources for learning about machine learning with an emphasis 
 
 * [An Introduction to Statistical Learning](http://www-bcf.usc.edu/~gareth/ISL/) by Gareth James, Daniela Witten, Trevor Hastie, and Robert Tibshirani
 * [Introduction to Machine Learning](https://mitpress.mit.edu/books/introduction-machine-learning) by Ethem Alpaydin
+* [Deep Learning with R](https://www.manning.com/books/deep-learning-with-r) by François Chollet with J. J. Allaire
 
 ## Datasets
 

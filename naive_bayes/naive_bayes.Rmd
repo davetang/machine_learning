@@ -1,0 +1,55 @@
+---
+title: "Naive Bayes"
+output:
+  html_document:
+    df_print: paged
+---
+
+Classifiers based on Bayesian methods utilise training data to calculate an observed probability of each class based on feature values. The classifier uses observed probabilities from unlabelled data to predict the most likely class.
+
+To get started, install the [e1071](https://cran.r-project.org/web/packages/e1071/index.html) package, if it hasn't already been installed.
+
+```{r install}
+if(!"e1071" %in% installed.packages()[,1]){
+  install.packages("e1071")
+}
+```
+
+We'll use the iris dataset.
+
+```{r begin, message = FALSE}
+library(e1071)
+dim(iris)
+```
+
+Use the `naiveBayes()` function from the `e1071` package to perform [Gaussian naive Bayes](https://en.wikipedia.org/wiki/Naive_Bayes_classifier#Gaussian_naive_Bayes). Divide the dataset in 80% training and 20% testing.
+
+```{r naive_bayes}
+set.seed(1984)
+my_index <- sample(x = 1:nrow(iris), size = .8*(nrow(iris)))
+
+my_train <- iris[my_index, -5]
+my_train_label <- iris[my_index, 5]
+
+my_test <- iris[!1:nrow(iris) %in% my_index, -5]
+my_test_label <- iris[!1:nrow(iris) %in% my_index, 5]
+
+m <- naiveBayes(my_train, my_train_label)
+
+m
+```
+
+The values are the mean and variance for each feature stratified by class.
+
+```{r mean_and_var, message = FALSE, warnings = FALSE}
+library(dplyr)
+iris[my_index,] %>%
+  group_by(Species) %>%
+  summarise(mean = mean(Petal.Width), var = var(Petal.Width))
+```
+
+Classify the test set and tabulate based on the real labels; only one misclassification of a virginica as a versicolor.
+
+```{r classify}
+table(predict(m, my_test), my_test_label)
+```
