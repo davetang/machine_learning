@@ -1,0 +1,92 @@
+---
+title: "Self Organising Maps"
+output:
+  html_document:
+    df_print: paged
+---
+
+Self Organising Maps (SOMs) consist of nodes that are first initialised with random weights that match the length of the input vector. Over many iterations, each node is adjusted to more closely resemble an input vector. The algorithm is described below:
+
+1. Select number of nodes and the type of node (e.g. square, hexagon, circle, etc.)
+2. Initialise all node weight vectors randomly
+3. Choose a random data point from your training data and compare it to all nodes (e.g. Euclidean distance)
+4. Find the Best Matching Unit (BMU) in the map, which is the mode similar node based on the distance metric used
+5. Determine the nodes within the neighbourhood of the BMU
+6. Adjust weights of nodes in the BMU neighbourhood towards the chosen data point; weights are adjusted according to the distance of the node to the BMU
+
+We'll use the [kohonen](https://cran.r-project.org/web/packages/kohonen/index.html) package.
+
+```{r install_package}
+if (!"kohonen" %in% installed.packages()[,1]){
+  install.packages("kohonen")
+}
+
+library(kohonen)
+```
+
+Build a SOM using the iris dataset; we'll use 64 nodes, perform 1,000 iterations using the default learning rate.
+
+```{r build_som}
+data(iris)
+
+data_train_matrix <- as.matrix(scale(iris[, -5]))
+
+data_train <- list(measurement = data_train_matrix,
+                   species = iris[, 5])
+
+som_grid <- somgrid(xdim = 8, ydim = 8, topo="hexagonal")
+
+# som_model <- som(data_train_matrix, 
+som_model <- supersom(data_train,
+                      grid = som_grid, 
+                      rlen = 1000,
+                      alpha = c(0.05, 0.01), 
+                      keep.data = TRUE)
+
+names(som_model)
+
+summary(som_model)
+```
+
+First, we'll check for convergence.
+
+```{r check_convergence}
+plot(som_model, type = "changes")
+```
+
+We can check the number of samples that are mapped to each node. (I tested different node numbers and 64 nodes gave us a good uniform distribution of samples mapped to each node.)
+
+```{r node_count}
+plot(som_model, type="count", main="Node Counts")
+```
+
+The code plot is a nice visualisation of the weighted values across all nodes.
+
+```{r code_plot}
+plot(som_model, type="codes")
+```
+
+The setosa species have longer sepal widths.
+
+```{r species_vs_sepal_width}
+library(ggplot2)
+ggplot(iris, aes(x = Species, y = Sepal.Width)) +
+  geom_violin() +
+  theme_bw()
+```
+
+We can create a heatmap of the sepal width weights across all nodes.
+
+```{r heatmap_sepal_width}
+my_var <- "Sepal.Width"
+
+plot(som_model,
+     type = "property",
+     property = som_model$codes$measurement[, my_var],
+     main = my_var)
+```
+
+## Further reading
+
+* [Tutorial](https://www.shanelynn.ie/self-organising-maps-for-customer-segmentation-using-r/) for building SOMs in R 
+* [Tutorial on SOMs and on their implementation](http://www.ai-junkie.com/ann/som/som1.html)
