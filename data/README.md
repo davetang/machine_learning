@@ -19,3 +19,7 @@ File downloaded from <https://www.kaggle.com/c/titanic/data?train.csv>
 # Embarked        Port of Embarkation (C = Cherbourg; Q = Queenstown; S = Southampton)
 ```
 
+# NBA
+
+`Seasons_Stats.csv.gz` downloaded from <https://www.kaggle.com/drgilermo/nba-players-stats>
+

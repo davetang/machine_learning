@@ -1,0 +1,193 @@
+---
+title: "K-means clustering"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Packages
+
+Install and load necessary packages.
+
+```{r install_and_load, message=FALSE, warning=FALSE}
+my_package <- c("purrr", "tidyr", "cluster", "dplyr", "ggplot2", "plotly", "ggrepel", "factoextra")
+
+for (package in my_package){
+  if(!package %in% installed.packages()){
+    install.packages(package)
+  }
+  library(package, character.only = TRUE)
+}
+```
+
+## Data set
+
+We will use NBA [data set](https://www.kaggle.com/drgilermo/nba-players-stats) downloaded from Kaggle and create a subsetted data set using stats from the year 2017 and consisting of:
+
+* FG - Field Goals
+* FGA - Field Goal Attempts
+* FT - Free Throws
+* FTA - Free Throw Attempts
+* 3P3 - Point Field Goals
+* 3PA3 - Point Field Goal Attempts
+* PTS - Points
+* TRB - Total Rebounds
+* AST - Assists
+* STL - Steals
+* BLK - Blocks
+* TOV - Turnovers
+
+Some players were traded during the season and thus have stats for different teams. The "TOT" team is a summation of stats from different teams but since we will perform our own summation, we will exclude that row of data.
+
+We will scale the statistics by the number of games each player has played, since not everyone has played the same number of games. We will also standardise the data to ensure so that all the stats are on the same scale.
+
+```{r prepare_data}
+season_stat <- read.csv("../data/Seasons_Stats.csv.gz")
+
+# some players played in different teams
+season_stat %>%
+  filter(Year == 2017, Tm != "TOT", G > 50) %>%
+  select(Player, Pos, G, FG, FGA, FT, FTA, X3P, X3PA, PTS, TRB, AST, STL, BLK, TOV) -> data_subset
+
+data_subset %>%
+  group_by(Player, Pos) %>%
+  summarise_all(sum) -> data_subset
+
+# scale stats by number of games played and normalise
+data_subset[, -(1:3)] <- data_subset[, -(1:3)] / data_subset$G
+data_subset[, -(1:3)] <- scale(data_subset[, -(1:3)])
+
+str(data_subset)
+```
+
+We'll plot histograms of all standardised statistics to visualise the distributions.
+
+```{r plot_hist}
+data_subset[, -(1:3)] %>%
+  gather() %>%
+  ggplot(., aes(value)) +
+  geom_histogram(bins = 20) +
+  facet_wrap(~key)
+```
+
+## K-means
+
+The idea behind k-means clustering is to define clusters such that the total within-cluster variation is minimised. The within-cluster variation is calculated as the sum of squared Euclidean distances between observations and the centroid of a cluster. The total within-cluster variation is the sum of all within-cluster calculations for _k_ clusters.
+
+We will use `kmeans` to perform k-means clustering with a _k_ of 5 since there are 5 positions in basketball.
+
+```{r kmeans}
+my_kmeans <- kmeans(x = data_subset[, -(1:3)], centers = 5)
+my_kmeans
+```
+
+The cluster assignments are in `cluster` and since we set _k_ to 5 each player is assigned to 1 of 5 possible clusterings.
+
+```{r kmeans_cluster_table}
+table(my_kmeans$cluster)
+```
+
+The total within-cluster variation is stored in `tot.withinss`.
+
+```{r kmeans_tot_withinss}
+my_kmeans$tot.withinss
+```
+
+We can use `fviz_cluster` to visualise the clusters in a scatter plot of the first two principal components.
+
+```{r fviz_cluster}
+fviz_cluster(my_kmeans, data = data_subset[, -(1:3)])
+```
+
+In our example above, we chose a _k_ of 5 simply because we assume that each player position produces distinctive statistics. For example, a centre will have more rebounds and blocks, and a guard will have more assists and steals. However, this may not be the ideal number of clusters.
+
+One way for determining an optimal number of clusters is to plot the total within-cluster variation for a range of _k_ values and find the "elbow" point in the plot. This point is where the total within-cluster variation has a steep drop and forms a "visual elbow" in the plot.
+
+```{r elbow_plot}
+# Use map_dbl to run many models with varying value of k (centers)
+tot_withinss <- map_dbl(2:30,  function(k){
+  model <- kmeans(x = data_subset[, -(1:3)], centers = k)
+  model$tot.withinss
+})
+
+# Generate a data frame containing both k and tot_withinss
+elbow_df <- data.frame(
+  k = 2:30,
+  tot_withinss = tot_withinss
+)
+
+ggplot(elbow_df, aes(x = k, y = tot_withinss)) +
+  geom_line() +
+  geom_point(aes(x = k, y = tot_withinss)) +
+  scale_x_continuous(breaks = 2:30)
+```
+
+Another method for determining a suitable _k_ is the silhouette approach, which measures the within cluster distance of an observation to all other observations within its cluster and to all other observations in the closest neighbour cluster. A value close to 1 indicates that an observation is well matched to its cluster; a value of 0 indicates that the observation is on the border between two clusters; and a value of -1 indicates that the observation has a better fit in the neighbouring cluster.
+
+```{r silhouette_analysis}
+# Use map_dbl to run many models with varying value of k
+sil_width <- map_dbl(2:30,  function(k){
+  model <- pam(x = data_subset[, -(1:3)], k = k)
+  model$silinfo$avg.width
+})
+
+# Generate a data frame containing both k and sil_width
+sil_df <- data.frame(
+  k = 2:30,
+  sil_width = sil_width
+)
+
+# Plot the relationship between k and sil_width
+ggplot(sil_df, aes(x = k, y = sil_width)) +
+  geom_line() +
+  geom_point(aes(x = k, y = sil_width)) +
+  scale_x_continuous(breaks = 2:30)
+```
+
+The silhouette approach suggests that a _k_ of 2 is optimal.
+
+```{r kmeans_k_2}
+my_kmeans_k_2 <- kmeans(data_subset[, -(1:3)], centers = 2)
+fviz_cluster(my_kmeans_k_2, data = data_subset[, -(1:3)])
+```
+
+## Extra
+
+Below I perform a Principal Component Analysis and use the Plotly package to produce an interactive plot for those who are interested in the players who have much more variable statistics.
+
+```{r pca}
+my_pca <- prcomp(data_subset[, -(1:3)], center = FALSE, scale = FALSE)
+
+summary(my_pca)
+
+my_pca_df <- as.data.frame(my_pca$x)
+my_pca_df$pos <- data_subset$Pos
+my_pca_df$name <- data_subset$Player
+
+p <- ggplot(my_pca_df, aes(x = PC1, y = PC2, colour = pos, text = name)) +
+  geom_point()
+
+ggplotly(p)
+```
+
+If we label the points, we can clearly see that the players with more variable statistics consist of many NBA All-Stars.
+
+```{r pca_figure, fig.width=6, fig.height=5}
+p <- ggplot(my_pca_df, aes(x = PC1, y = PC2, colour = pos, label = name)) +
+  geom_text_repel(
+    data = my_pca_df %>% filter(PC1 > 5 | PC2 < -3.7)
+  ) +
+  geom_point() +
+  theme_classic()
+
+p
+
+ggsave(filename = "nba_pca.png", plot = p)
+```
+
+## Future reading
+
+* https://uc-r.github.io/kmeans_clustering
+* https://www.datacamp.com/community/tutorials/k-means-clustering-r
