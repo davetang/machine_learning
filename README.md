@@ -22,10 +22,6 @@ Adapted from the section 1.2 of the book "Deep Learning with R".
 
 A list of useful resources for learning about machine learning with an emphasis on biological applications.
 
-## Courses
-
-* [Machine Learning with R skill track](https://www.datacamp.com/tracks/machine-learning) on DataCamp
-
 ## Presentations
 
 * [Some Things Every Biologist Should Know About Machine Learning](http://www.bioconductor.org/help/course-materials/2003/Milan/Lectures/MachineLearning.pdf) by Robert Gentleman
@@ -56,6 +52,7 @@ A list of useful resources for learning about machine learning with an emphasis 
 
 ## Books
 
+* [The Elements of Statistical Learning](https://web.stanford.edu/~hastie/ElemStatLearn/) by Trevor Hastie, Robert Tibshirani, and Jerome Friedman
 * [An Introduction to Statistical Learning](http://www-bcf.usc.edu/~gareth/ISL/) by Gareth James, Daniela Witten, Trevor Hastie, and Robert Tibshirani
 * [Introduction to Machine Learning](https://mitpress.mit.edu/books/introduction-machine-learning) by Ethem Alpaydin
 * [Deep Learning with R](https://www.manning.com/books/deep-learning-with-r) by François Chollet with J. J. Allaire
