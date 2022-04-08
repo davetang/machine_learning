@@ -6,12 +6,6 @@ output: md_document
 ```{r setup, include=FALSE}
 library(tidyverse)
 theme_set(theme_bw())
-theme_update(
-   panel.background = element_blank(),
-   plot.background  = element_rect(fill = "grey10"),
-   panel.grid.major = element_line(color = "grey30"),
-   panel.grid.minor = element_line(color = "grey30")
-)
 knitr::opts_chunk$set(cache = FALSE)
 knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_chunk$set(fig.path = "img/")
