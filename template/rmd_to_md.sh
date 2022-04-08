@@ -27,7 +27,7 @@ check_depend (){
    fi
 }
 
-dependencies=(Rscript)
+dependencies=(docker)
 for tool in ${dependencies[@]}; do
    check_depend ${tool}
 done
@@ -41,8 +41,25 @@ SECONDS=0
 >&2 printf "[ %s %s ] Start job" $(now)
 
 img_dir=$(cat ${infile} | grep "knitr::opts_chunk\$set(fig.path" | cut -f2 -d '=' | sed 's/[")]//g;s/\/\n$//')
-r_version=4.1.2
-Rscript -e ".libPaths('${HOME}/r_packages_${r_version}/'); rmarkdown::render('${infile}', output_file = 'README.md')"
+
+r_version=4.1.3
+docker_image=davetang/r_build:${r_version}
+package_dir=${HOME}/r_packages_${r_version}
+
+if [[ ! -d ${package_dir} ]]; then
+   mkdir ${package_dir}
+fi
+
+docker run \
+   --rm \
+   -v ${package_dir}:/packages \
+   -v $(pwd):$(pwd) \
+   -w $(pwd) \
+   -e USERID=$(id -u) \
+   -e GROUPID=$(id -g) \
+   ${docker_image} \
+   Rscript -e "rmarkdown::render('${infile}', output_file = 'README.md')"
+#   Rscript -e ".libPaths('packages/'); rmarkdown::render('${infile}', output_file = 'README.md')"
 
 >&2 printf "\n[ %s %s ] Work complete\n" $(now)
 
