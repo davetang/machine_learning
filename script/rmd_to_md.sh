@@ -38,7 +38,7 @@ now(){
 
 SECONDS=0
 
->&2 printf "[ %s %s ] Start job" $(now)
+>&2 printf "[ %s %s ] Start job\n\n" $(now)
 
 img_dir=$(cat ${infile} | grep "knitr::opts_chunk\$set(fig.path" | cut -f2 -d '=' | sed 's/[")]//g;s/\/\n$//')
 
@@ -59,7 +59,6 @@ docker run \
    -e GROUPID=$(id -g) \
    ${docker_image} \
    Rscript -e "rmarkdown::render('${infile}', output_file = 'README.md')"
-#   Rscript -e ".libPaths('packages/'); rmarkdown::render('${infile}', output_file = 'README.md')"
 
 >&2 printf "\n[ %s %s ] Work complete\n" $(now)
 
