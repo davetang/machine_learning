@@ -1,9 +1,17 @@
 ---
-title: "Self Organising Maps"
-output:
-  html_document:
-    df_print: paged
+title: "Self-organising map"
+output: md_document
 ---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+theme_set(theme_bw())
+knitr::opts_chunk$set(cache = FALSE)
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.path = "img/")
+```
+
+## Introduction
 
 Self Organising Maps (SOMs) consist of nodes that are first initialised with random weights that match the length of the input vector. Over many iterations, each node is adjusted to more closely resemble an input vector. The algorithm is described below:
 
@@ -16,19 +24,26 @@ Self Organising Maps (SOMs) consist of nodes that are first initialised with ran
 
 We'll use the [kohonen](https://cran.r-project.org/web/packages/kohonen/index.html) package.
 
-```{r install_package}
-if (!"kohonen" %in% installed.packages()[,1]){
-  install.packages("kohonen")
-}
+```{r load_package, message=FALSE, warning=FALSE}
+.libPaths('/packages')
+my_packages <- 'kohonen'
 
-library(kohonen)
+for (my_package in my_packages){
+   if(!require(my_package, character.only = TRUE)){
+      install.packages(my_package, '/packages')
+      library(my_package, character.only = TRUE)
+   }
+}
 ```
+
+## Getting started
 
 Build a SOM using the iris dataset; we'll use 64 nodes, perform 1,000 iterations using the default learning rate.
 
 ```{r build_som}
 data(iris)
 
+# normalise and  convert to matrix
 data_train_matrix <- as.matrix(scale(iris[, -5]))
 
 data_train <- list(measurement = data_train_matrix,
@@ -46,6 +61,14 @@ som_model <- supersom(data_train,
 names(som_model)
 
 summary(som_model)
+```
+
+Explore `som_model`.
+
+```{r explore_som_model}
+str(som_model)
+
+str(som_model$grid)
 ```
 
 First, we'll check for convergence.
@@ -90,3 +113,18 @@ plot(som_model,
 
 * [Tutorial](https://www.shanelynn.ie/self-organising-maps-for-customer-segmentation-using-r/) for building SOMs in R 
 * [Tutorial on SOMs and on their implementation](http://www.ai-junkie.com/ann/som/som1.html)
+
+## Session info
+
+Time built.
+
+```{r time, echo=FALSE}
+Sys.time()
+```
+
+Session info.
+
+```{r session_info, echo=FALSE}
+sessionInfo()
+```
+
