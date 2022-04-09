@@ -1,12 +1,30 @@
 ---
 title: "Artificial Neural Networks"
-author: "Dave Tang"
-date: "3 November 2016"
-output: pdf_document
+output: md_document
 ---
 
 ```{r setup, include=FALSE}
+library(tidyverse)
+theme_set(theme_bw())
+knitr::opts_chunk$set(cache = FALSE)
 knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.path = "img/")
+```
+
+## Introduction
+
+Install packages if missing and load.
+
+```{r load_package, message=FALSE, warning=FALSE}
+.libPaths('/packages')
+my_packages <- c('MASS', 'neuralnet')
+
+for (my_package in my_packages){
+   if(!require(my_package, character.only = TRUE)){
+      install.packages(my_package, '/packages')
+      library(my_package, character.only = TRUE)
+   }
+}
 ```
 
 ## Compare neural network regression with linear regression
@@ -15,7 +33,6 @@ Following the example from [this tutorial](http://datascienceplus.com/fitting-ne
 
 ```{r}
 set.seed(500)
-library(MASS)
 data <- Boston
 apply(data,2,function(x) sum(is.na(x)))
 
@@ -59,8 +76,6 @@ test_ <- scaled[-index,]
 Manually create formula as `f` since neuralnet() doesn't recognise `medv ~ .`.
 
 ```{r}
-# install if necessary
-library(neuralnet)
 n <- names(train_)
 f <- as.formula(paste("medv ~", paste(n[!n %in% "medv"], collapse = " + ")))
 
@@ -95,3 +110,18 @@ print(paste(MSE.lm,MSE.nn))
 ## Further reading
 
 The neuralnet [reference manual](https://cran.r-project.org/web/packages/neuralnet/neuralnet.pdf).
+
+## Session info
+
+Time built.
+
+```{r time, echo=FALSE}
+Sys.time()
+```
+
+Session info.
+
+```{r session_info, echo=FALSE}
+sessionInfo()
+```
+
