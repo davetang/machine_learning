@@ -1,0 +1,90 @@
+---
+title: "Decision trees"
+output: md_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+theme_set(theme_bw())
+knitr::opts_chunk$set(cache = FALSE)
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.path = "img/")
+```
+
+## Introduction
+
+A [decision tree](https://en.wikipedia.org/wiki/Decision_tree) is a decision support tool that uses a tree-like graph or model of decisions and their possible consequences, including chance event outcomes, resource costs, and utility.
+
+```{r load_package, message=FALSE, warning=FALSE}
+.libPaths('/packages')
+my_packages <- c('tree', 'rpart', 'rpart.plot')
+
+for (my_package in my_packages){
+   if(!require(my_package, character.only = TRUE)){
+      install.packages(my_package, '/packages')
+      library(my_package, character.only = TRUE)
+   }
+}
+```
+
+
+```{r}
+tree1 <- tree(Species ~ Sepal.Width + Petal.Width, data = iris)
+summary(tree1)
+plot(tree1)
+text(tree1)
+```
+
+```{r}
+plot(iris$Petal.Width,
+     iris$Sepal.Width,
+     pch=19,
+     col=as.numeric(iris$Species))
+
+partition.tree(tree1, label="Species", add=TRUE)
+legend(2.3,4.5,
+       legend=levels(iris$Species),
+       col=1:length(levels(iris$Species)),
+       pch=19,
+       bty = 'n')
+```
+
+```{r}
+tree2 <- tree(Species ~ ., data = iris)
+summary(tree2)
+plot(tree2); text(tree2)
+```
+
+```{r}
+rpart <- rpart(Species ~ ., data=iris, method="class")
+summary(rpart)
+rpart.plot(rpart, type = 4, extra = 101)
+```
+
+## Titanic data
+
+```{r}
+titanic <- read.csv('../data/titanic.csv.gz')
+str(titanic)
+
+titanic$Pclass <- factor(titanic$Pclass)
+boxplot(Fare ~ Pclass, data = titanic)
+
+t <-  rpart(Survived ~ Sex + Fare + Age, data=titanic, method="class")
+rpart.plot(t)
+```
+
+## Session info
+
+Time built.
+
+```{r time, echo=FALSE}
+Sys.time()
+```
+
+Session info.
+
+```{r session_info, echo=FALSE}
+sessionInfo()
+```
+
