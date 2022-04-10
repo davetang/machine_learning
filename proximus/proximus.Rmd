@@ -1,0 +1,67 @@
+---
+title: "Proximus"
+output: md_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+theme_set(theme_bw())
+knitr::opts_chunk$set(cache = FALSE)
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.path = "img/")
+```
+
+## Introduction
+
+https://en.wikibooks.org/wiki/Data_Mining_Algorithms_In_R/Clustering/Proximus
+
+Install packages if missing and load.
+
+```{r load_package, message=FALSE, warning=FALSE}
+.libPaths('/packages')
+my_packages <- 'cba'
+
+for (my_package in my_packages){
+   if(!require(my_package, character.only = TRUE)){
+      install.packages(my_package, '/packages')
+      library(my_package, character.only = TRUE)
+   }
+}
+```
+
+## Results
+
+https://www.rdocumentation.org/packages/cba/versions/0.2-21/topics/proximus
+
+x: a logical matrix. 
+max.radius: the maximum number of bits a member in a row set may deviate from its dominant pattern. 
+min.size: the minimum split size of a row set. 
+min.retry: number of retries to split a pure rank-one approximation (translates into a resampling rate). 
+max.iter: the maximum number of iterations for finding a local rank-one approximation. 
+debug: optional debugging output.
+
+```{r}
+x <- rlbmat()
+pr <- proximus(x, max.radius=8, debug=TRUE)
+op <- par(mfrow=c(1,2), pty="s")
+lmplot(x, main="Data")
+box()
+lmplot(fitted(pr)$x, main="Approximation")
+box()
+par(op)
+```
+
+## Session info
+
+Time built.
+
+```{r time, echo=FALSE}
+Sys.time()
+```
+
+Session info.
+
+```{r session_info, echo=FALSE}
+sessionInfo()
+```
+
