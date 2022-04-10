@@ -1,0 +1,101 @@
+---
+title: "Hierarchical clustering"
+output: md_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+theme_set(theme_bw())
+knitr::opts_chunk$set(cache = FALSE)
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.path = "img/")
+```
+
+## Introduction
+
+Here's a [good post](http://datascienceplus.com/hierarchical-clustering-in-r/) on hierarchical clustering. Using data from the `datamicroarray` package.
+
+```{r load_package, message=FALSE, warning=FALSE}
+.libPaths('/packages')
+my_packages <- c('dendextend', 'remotes', 'datamicroarray')
+
+for (my_package in my_packages){
+   if(!require(my_package, character.only = TRUE)){
+      if (my_package == 'datamicroarray'){
+         install_github('ramhiser/datamicroarray')
+      } else {
+         install.packages(my_package, '/packages')
+      }
+      library(my_package, character.only = TRUE)
+   }
+}
+```
+
+## Using microarray data
+
+I will use the `yeoh` data set.
+
+```{r}
+data('yeoh', package = "datamicroarray")
+
+dim(yeoh$x)
+
+table(yeoh$y)
+```
+
+Calculate distance between all samples.
+
+```{r}
+choose(248, 2)
+
+my_dist <- dist(yeoh$x)
+
+summary(my_dist)
+```
+
+Perform hierarchical clustering using complete (maximum) linkage, which is the default.
+
+```{r}
+my_hclust <- hclust(my_dist)
+```
+
+Form six clusters based on the clustering.
+
+```{r}
+my_clus <- cutree(my_hclust, k = 6)
+
+table(my_clus, yeoh$y)
+
+cluster_one <- yeoh$y[my_clus == 1]
+```
+
+Form `n` clusters based on arbitrary distance.
+
+```{r}
+my_clus_two <- cutree(my_hclust, h = 25)
+# much more homogeneous
+table(my_clus_two, yeoh$y)
+```
+
+Plot.
+
+```{r}
+my_hclust_mod <- my_hclust
+my_hclust_mod$labels <- as.vector(yeoh$y)
+plot(color_branches(my_hclust_mod, h = 25, groupLabels = TRUE))
+```
+
+## Session info
+
+Time built.
+
+```{r time, echo=FALSE}
+Sys.time()
+```
+
+Session info.
+
+```{r session_info, echo=FALSE}
+sessionInfo()
+```
+

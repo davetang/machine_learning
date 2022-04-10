@@ -1,9 +1,10 @@
-all: template som ann tree
+all: template som ann tree hclust
 
 template: template/README.md
 som: som/README.md
 ann: ann/README.md
 tree: tree/README.md
+hclust: hclust/README.md
 
 template/README.md: template/template.Rmd
 	script/rmd_to_md.sh template/template.Rmd
@@ -16,4 +17,7 @@ ann/README.md: ann/ann.Rmd
 
 tree/README.md: tree/tree.Rmd
 	script/rmd_to_md.sh tree/tree.Rmd
+
+hclust/README.md: hclust/hclust.Rmd
+	script/rmd_to_md.sh hclust/hclust.Rmd
 
