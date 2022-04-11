@@ -1,0 +1,98 @@
+---
+title: "Naive Bayes"
+output: md_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+theme_set(theme_bw())
+knitr::opts_chunk$set(cache = FALSE)
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.path = "img/")
+```
+
+## Introduction
+
+Naive Bayes is based on [Bayes' theorem](https://en.wikipedia.org/wiki/Bayes%27_theorem) 
+
+![Bayes' theorem](https://latex.codecogs.com/gif.latex?P(A|B)=\frac{P(B|A)P(A)}{P(B)};\bg{white})
+
+where A and B are events and P(B) is not equal to 0.
+
+* The formula can be interpreted as the chance of a true positive result divided by the chance of any positive result (true positive + false positive)
+* P(A|B) is a conditional probability: the likelihood of event A occurring given that B is true; this is known as the posterior probability
+* P(B|A) is also a conditional probability: the likelihood of event B occurring given that A is true
+* P(A) and P(B) are the probabilities of observing A and B independently of each other; this is known as the marginal probability and are the prior probabilities
+
+Classifiers based on Bayesian methods utilise training data to calculate an observed probability of each class based on feature values. An example is using Bayes' theorem to classify emails; we can use known ham and spam emails to tally up the occurrence of words to obtain prior and conditional probabilities, and use these probabilities to classify new emails. Bayesian classifiers utilise all available evidence to come up with a classification thus they are best applied to problems where the information from numerous attributes should be considered simultaneously
+
+* The "naive" part of the method refers to a assumption that all features in a dataset are equally important and independent, which is usually not true; despite this, the method performs quite well in certain applications like spam classification
+
+Install packages if missing and load.
+
+```{r load_package, message=FALSE, warning=FALSE}
+.libPaths('/packages')
+my_packages <- 'e1071'
+
+for (my_package in my_packages){
+   if(!require(my_package, character.only = TRUE)){
+      install.packages(my_package, '/packages')
+      library(my_package, character.only = TRUE)
+   }
+}
+```
+
+## Example
+
+Classifiers based on Bayesian methods utilise training data to calculate an observed probability of each class based on feature values. The classifier uses observed probabilities from unlabelled data to predict the most likely class.
+
+Use the `naiveBayes()` function from the `e1071` package to perform [Gaussian naive Bayes](https://en.wikipedia.org/wiki/Naive_Bayes_classifier#Gaussian_naive_Bayes). Divide the dataset in 80% training and 20% testing.
+
+```{r naive_bayes}
+set.seed(1984)
+my_index <- sample(x = 1:nrow(iris), size = .8*(nrow(iris)))
+
+my_train <- iris[my_index, -5]
+my_train_label <- iris[my_index, 5]
+
+my_test <- iris[!1:nrow(iris) %in% my_index, -5]
+my_test_label <- iris[!1:nrow(iris) %in% my_index, 5]
+
+m <- naiveBayes(my_train, my_train_label)
+
+m
+```
+
+The values are the mean and variance for each feature stratified by class.
+
+```{r mean_and_var, message = FALSE, warnings = FALSE}
+iris[my_index,] %>%
+  group_by(Species) %>%
+  summarise(mean = mean(Petal.Width), var = var(Petal.Width))
+```
+
+Classify the test set and tabulate based on the real labels; only one misclassification of a virginica as a versicolor.
+
+```{r classify}
+table(predict(m, my_test), my_test_label)
+```
+
+## Further reading
+
+* [An Intuitive (and Short) Explanation of Bayes' Theorem](https://betterexplained.com/articles/an-intuitive-and-short-explanation-of-bayes-theorem/)
+* [Naive Bayes for Machine Learning](https://machinelearningmastery.com/naive-bayes-for-machine-learning/)
+
+## Session info
+
+Time built.
+
+```{r time, echo=FALSE}
+Sys.time()
+```
+
+Session info.
+
+```{r session_info, echo=FALSE}
+sessionInfo()
+```
+
