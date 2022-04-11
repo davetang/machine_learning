@@ -59,8 +59,6 @@ my_split <- rbinom(
 
 train <- data[my_split,]
 test <- data[!my_split,]
-
-data
 ```
 
 ## Results
