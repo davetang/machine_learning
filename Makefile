@@ -1,4 +1,4 @@
-all: template som ann tree hclust logit svm kmeans knn naive_bayes
+all: template som ann tree hclust logit svm kmeans knn naive_bayes xgboost
 
 template: template/README.md
 som: som/README.md
@@ -10,6 +10,7 @@ svm: svm/README.md
 kmeans: kmeans/README.md
 knn: knn/README.md
 naive_bayes: naive_bayes/README.md
+xgboost: xgboost/README.md
 
 template/README.md: template/readme.Rmd
 	script/rmd_to_md.sh template/readme.Rmd
@@ -40,4 +41,7 @@ knn/README.md: knn/readme.Rmd
 
 naive_bayes/README.md: naive_bayes/readme.Rmd
 	script/rmd_to_md.sh naive_bayes/readme.Rmd
+
+xgboost/README.md: xgboost/readme.Rmd
+	script/rmd_to_md.sh xgboost/readme.Rmd
 

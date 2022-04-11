@@ -1,0 +1,157 @@
+---
+title: "Extreme Gradient Boosting"
+output: md_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+theme_set(theme_bw())
+knitr::opts_chunk$set(cache = FALSE)
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.path = "img/")
+```
+
+## Introduction
+
+[Gradient boosting](https://en.wikipedia.org/wiki/Gradient_boosting) is a machine learning technique for regression, classification and other tasks, which produces a prediction model in the form of an ensemble of weak prediction models, typically decision trees. When a decision tree is the weak learner, the resulting algorithm is called gradient boosted trees, which usually outperforms random forest. It builds the model in a stage-wise fashion like other boosting methods do, and it generalises them by allowing optimisation of an arbitrary differentiable loss function.
+
+XGBoost is one of the implementations of the Gradient Boosting concept but uses a more regularised model formalisation to control over-fitting, which gives it better performance.
+
+In this notebook we will be following [this tutorial](https://xgboost.readthedocs.io/en/latest/R-package/xgboostPresentation.html).
+
+Install packages if missing and load.
+
+```{r load_package, message=FALSE, warning=FALSE}
+.libPaths('/packages')
+my_packages <- c('xgboost', 'SHAPforxgboost')
+
+for (my_package in my_packages){
+   if(!require(my_package, character.only = TRUE)){
+      install.packages(my_package, '/packages')
+      library(my_package, character.only = TRUE)
+   }
+}
+```
+
+## Breast cancer data
+
+Using the [Breast Cancer Wisconsin (Diagnostic) Data Set](https://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+(Diagnostic)).
+
+```{r prepare_data}
+data <- read.table(
+   "../data/breast_cancer_data.csv",
+   stringsAsFactors = FALSE,
+   sep = ',',
+   header = TRUE
+)
+data$class <- factor(data$class)
+data <- data[,-1]
+```
+
+Separate into training (80%) and testing (20%).
+
+```{r split_data}
+set.seed(31)
+my_prob <- 0.8
+my_split <- as.logical(
+  rbinom(
+    n = nrow(data),
+    size = 1,
+    p = my_prob
+  )
+)
+
+train <- list(
+   data = as.matrix(data[my_split, -10]),
+   label = as.numeric(data[my_split, 10] == 4)
+)
+test <- list(
+   data = as.matrix(data[!my_split, -10]),
+   label = as.numeric(data[!my_split, 10] == 4)
+)
+```
+
+## Training
+
+Train decision tree model using the following parameters:
+
+* `objective`: "binary:logistic", train a binary classification model
+* `max.depth`: "2", use low depth because this case study is simple
+* `nthread`: "2", use two CPU threads
+* `nrounds`: "2" there will be two passes on the data, the second will enhance the model by further reducing the difference between the ground truth and prediction
+
+```{r train}
+bst <- xgboost(data = train$data,
+               label = train$label,
+               max.depth = 2,
+               eta = 1,
+               nthread = 2,
+               nrounds = 2,
+               objective = "binary:logistic")
+```
+
+## Prediction
+
+Predict.
+
+```{r predict}
+pred <- predict(bst, test$data)
+
+prediction <- as.numeric(pred > 0.5)
+
+err <- mean(as.numeric(pred > 0.5) != test$label)
+
+print(paste("test-error =", err))
+```
+
+Compare real labels with the predictions.
+
+```{r table}
+prop.table(table(test$label, prediction))
+```
+
+## Feature importance
+
+A benefit of using ensembles of decision tree methods like gradient boosting is that they can automatically provide estimates of feature importance from a trained predictive model. Generally, importance provides a score that indicates how useful or valuable each feature was in the construction of the boosted decision trees within the model. The more an attribute is used to make key decisions, the higher its relative importance.
+
+Importance is calculated for a single decision tree by the amount that each attribute split point improves the performance measure, weighted by the number of observations the node is responsible for. The performance measure may be the purity (Gini index) used to select the split points or another more specific error function. Finally, the feature importance are then averaged across all of the decision trees within the model.
+
+```{r feature_importance}
+importance_matrix <- xgb.importance(model = bst)
+print(importance_matrix)
+xgb.plot.importance(importance_matrix = importance_matrix)
+```
+
+## SHAP
+
+[SHAP](https://shap.readthedocs.io/en/latest/) (SHapley Additive exPlanations) is a game theoretic approach to explain the output of any machine learning model. It connects optimal credit allocation with local explanations using the classic Shapley values from game theory and their related extensions.
+
+Following this [blog post](https://liuyanguu.github.io/post/2019/07/18/visualization-of-shap-for-xgboost/).
+
+
+```{r shap_values}
+# To return the SHAP values and ranked features by mean|SHAP|
+shap_values <- shap.values(xgb_model = bst, X_train = train$data)
+
+# The ranked features by mean |SHAP|
+head(shap_values$mean_shap_score)
+```
+
+## Useful links
+
+* [Introduction to Extreme Gradient Boosting](https://blog.exploratory.io/introduction-to-extreme-gradient-boosting-in-exploratory-7bbec554ac7)
+
+## Session info
+
+Time built.
+
+```{r time, echo=FALSE}
+Sys.time()
+```
+
+Session info.
+
+```{r session_info, echo=FALSE}
+sessionInfo()
+```
+
