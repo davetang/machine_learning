@@ -5,7 +5,7 @@ Naive Bayes is based on [Bayes’
 theorem](https://en.wikipedia.org/wiki/Bayes%27_theorem)
 
 ![Bayes’
-theorem](https://latex.codecogs.com/gif.latex?P(A%7CB)=\frac%7BP(B%7CA)P(A)%7D%7BP(B)%7D;\bg%7Bwhite%7D)
+theorem](https://latex.codecogs.com/png.image?\large&space;\dpi%7B110%7D\bg%7Bwhite%7D\frac%7BP(B%7CA)P(A)%7D%7BP(B)%7D)
 
 where A and B are events and P(B) is not equal to 0.
 
@@ -147,7 +147,7 @@ Session info
 
 Time built.
 
-    ## [1] "2022-04-11 02:05:35 UTC"
+    ## [1] "2022-04-11 02:08:16 UTC"
 
 Session info.
 

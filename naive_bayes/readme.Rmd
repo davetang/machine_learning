@@ -15,7 +15,7 @@ knitr::opts_chunk$set(fig.path = "img/")
 
 Naive Bayes is based on [Bayes' theorem](https://en.wikipedia.org/wiki/Bayes%27_theorem) 
 
-![Bayes' theorem](https://latex.codecogs.com/gif.latex?P(A|B)=\frac{P(B|A)P(A)}{P(B)};\bg{white})
+![Bayes' theorem](https://latex.codecogs.com/png.image?\large&space;\dpi{110}\bg{white}\frac{P(B|A)P(A)}{P(B)})
 
 where A and B are events and P(B) is not equal to 0.
 
