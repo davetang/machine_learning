@@ -69,9 +69,9 @@ resource costs, and utility.
     ##   n= 150 
     ## 
     ##     CP nsplit rel error xerror       xstd
-    ## 1 0.50      0      1.00   1.21 0.04836666
-    ## 2 0.44      1      0.50   0.82 0.06096994
-    ## 3 0.01      2      0.06   0.10 0.03055050
+    ## 1 0.50      0      1.00   1.23 0.04705316
+    ## 2 0.44      1      0.50   0.72 0.06118823
+    ## 3 0.01      2      0.06   0.09 0.02908608
     ## 
     ## Variable importance
     ##  Petal.Width Petal.Length Sepal.Length  Sepal.Width 
@@ -161,7 +161,7 @@ Session info
 
 Time built.
 
-    ## [1] "2022-04-10 03:22:04 UTC"
+    ## [1] "2022-04-11 00:23:09 UTC"
 
 Session info.
 

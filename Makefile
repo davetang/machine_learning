@@ -1,23 +1,27 @@
-all: template som ann tree hclust
+all: template som ann tree hclust logit
 
 template: template/README.md
 som: som/README.md
 ann: ann/README.md
 tree: tree/README.md
 hclust: hclust/README.md
+logit: logit_regression/README.md
 
-template/README.md: template/template.Rmd
-	script/rmd_to_md.sh template/template.Rmd
+template/README.md: template/readme.Rmd
+	script/rmd_to_md.sh template/readme.Rmd
 
-som/README.md: som/som.Rmd
-	script/rmd_to_md.sh som/som.Rmd
+som/README.md: som/readme.Rmd
+	script/rmd_to_md.sh som/readme.Rmd
 
-ann/README.md: ann/ann.Rmd
-	script/rmd_to_md.sh ann/ann.Rmd
+ann/README.md: ann/readme.Rmd
+	script/rmd_to_md.sh ann/readme.Rmd
 
-tree/README.md: tree/tree.Rmd
-	script/rmd_to_md.sh tree/tree.Rmd
+tree/README.md: tree/readme.Rmd
+	script/rmd_to_md.sh tree/readme.Rmd
 
-hclust/README.md: hclust/hclust.Rmd
-	script/rmd_to_md.sh hclust/hclust.Rmd
+hclust/README.md: hclust/readme.Rmd
+	script/rmd_to_md.sh hclust/readme.Rmd
+
+logit_regression/README.md: logit_regression/readme.Rmd
+	script/rmd_to_md.sh logit_regression/readme.Rmd
 
