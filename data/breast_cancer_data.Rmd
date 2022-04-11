@@ -1,0 +1,93 @@
+---
+title: "Breast cancer data"
+output: md_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache = FALSE)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Using the [Breast Cancer Wisconsin (Diagnostic) Data Set](https://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+(Diagnostic)).
+
+```{r save_data}
+my_link <- 'https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/breast-cancer-wisconsin.data'
+data <- read.table(url(my_link), stringsAsFactors = FALSE, header = FALSE, sep = ',')
+names(data) <- c('id','ct','ucsize','ucshape','ma','secs','bn','bc','nn','miti','class')
+head(data)
+```
+
+Any missing data?
+
+```{r any_missing_data}
+any(is.na(data))
+```
+
+Data structure.
+
+```{r str}
+str(data)
+```
+
+Bare nuclei (`bn`) was stored as characters because of question marks.
+
+```{r bn}
+table(data$bn)
+```
+
+Change the question marks into NA's and then into median values.
+
+```{r convert_na}
+data$bn <- as.integer(gsub(pattern = '\\?', replacement = NA, x = data$bn))
+
+data$bn[is.na(data$bn)] <- median(data$bn, na.rm = TRUE)
+
+str(data)
+```
+
+Convert `class` into a factor with levels `2` for benign and `4` for malignant.
+
+```{r factor_class}
+data$class <- factor(data$class)
+```
+
+The `id` column is duplicated and it is not clear why they are duplicated.
+
+```{r dup_data}
+dup_idx <- which(duplicated(data$id))
+dup_data <- data[data$id %in% data[dup_idx, 'id'], ]
+
+head(dup_data[order(dup_data$id), ])
+```
+
+We will remove duplicated IDs.
+
+```{r remove_dup_id}
+dim(data)
+
+data <- data[! data$id %in% data[dup_idx, 'id'], ]
+
+dim(data)
+
+write.csv(
+  x = data,
+  file = "breast_cancer_data.csv",
+  quote = FALSE,
+  row.names = FALSE
+)
+```
+
+## Session info
+
+Time built.
+
+```{r time, echo=FALSE}
+Sys.time()
+```
+
+Session info.
+
+```{r session_info, echo=FALSE}
+sessionInfo()
+```
+
