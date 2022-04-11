@@ -201,7 +201,7 @@ MeanDecreaseGini is a measure of variable importance based on the Gini impurity 
 
 The Gini impurity index is defined as:
 
-![](https://latex.codecogs.com/svg.image?\large&space;\bg{white}G&space;=&space;\sum^{n_c}_{i=1}&space;p_i&space;(1&space;-&space;p_i))
+![](https://latex.codecogs.com/png.image?\large&space;\bg{white}G&space;=&space;\sum^{n_c}_{i=1}&space;p_i&space;(1&space;-&space;p_i))
 
 where n<sub>c</sub> is the number of classes in the target variable and p<sub>i</sub> is the ratio of this class.
 

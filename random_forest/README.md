@@ -315,7 +315,7 @@ package written by Breiman and Cutler:
 
 The Gini impurity index is defined as:
 
-![](https://latex.codecogs.com/svg.image?\large&space;\bg%7Bwhite%7DG&space;=&space;\sum%5E%7Bn_c%7D_%7Bi=1%7D&space;p_i&space;(1&space;-&space;p_i))
+![](https://latex.codecogs.com/png.image?\large&space;\bg%7Bwhite%7DG&space;=&space;\sum%5E%7Bn_c%7D_%7Bi=1%7D&space;p_i&space;(1&space;-&space;p_i))
 
 where n<sub>c</sub> is the number of classes in the target variable and
 p<sub>i</sub> is the ratio of this class.
@@ -325,7 +325,7 @@ Session info
 
 Time built.
 
-    ## [1] "2022-04-11 05:43:34 UTC"
+    ## [1] "2022-04-11 05:45:04 UTC"
 
 Session info.
 
