@@ -1,0 +1,220 @@
+---
+title: "Random Forest"
+output: md_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+theme_set(theme_bw())
+knitr::opts_chunk$set(cache = FALSE)
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.path = "img/")
+```
+
+## Introduction
+
+Install packages if missing and load.
+
+```{r load_package, message=FALSE, warning=FALSE}
+.libPaths('/packages')
+my_packages <- c('randomForest')
+
+for (my_package in my_packages){
+   if(!require(my_package, character.only = TRUE)){
+      install.packages(my_package, '/packages')
+      library(my_package, character.only = TRUE)
+   }
+}
+```
+
+## Breast cancer data
+
+Using the [Breast Cancer Wisconsin (Diagnostic) Data Set](https://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+(Diagnostic)).
+
+```{r prepare_data}
+data <- read.table(
+   "../data/breast_cancer_data.csv",
+   stringsAsFactors = FALSE,
+   sep = ',',
+   header = TRUE
+)
+data$class <- factor(data$class)
+data <- data[,-1]
+```
+
+Separate into training (80%) and testing (20%).
+
+```{r split_data}
+set.seed(31)
+my_prob <- 0.8
+my_split <- as.logical(
+   rbinom(
+      n = nrow(data),
+      size = 1,
+      p = my_prob
+   )
+)
+
+train <- data[my_split,]
+test <- data[!my_split,]
+```
+
+## Analysis
+
+Parameters:
+
+* `data` = an optional data frame containing the variables in the model
+* `importance` = calculate the importance of predictors
+* `do.trace` = give a more verbose output as randomForest is running
+* `proximity` = calculate the proximity measure among the rows
+
+```{r analysis}
+set.seed(31)
+r <- randomForest(class ~ ., data=train, importance=TRUE, do.trace=100, proximity = TRUE)
+```
+
+## Predict
+
+Predict testing data.
+
+```{r predict}
+table(
+   test$class, predict(object = r, newdata = test)
+)
+```
+
+## Plots
+
+Variable importance.
+
+```{r var_imp_plot}
+varImpPlot(r)
+```
+
+## Random Forest object
+
+```{r class}
+class(r)
+```
+
+Names.
+
+```{r names}
+names(r)
+```
+
+The original call to randomForest
+
+```{r call}
+r$call
+```
+
+One of regression, classification, or unsupervised
+
+```{r type}
+r$type
+```
+
+The predicted values of the input data based on out-of-bag samples
+
+```{r predicted}
+table(r$predicted, train$class)
+```
+
+A matrix with number of classes + 2 (for classification) or two (for regression) columns for classification:
+
+* the first two columns are the class-specific measures computed as mean decrease in accuracy
+* the `MeanDecreaseAccuracy` column is the mean decrease in accuracy over all classes
+* the `MeanDecreaseGini` is the mean decrease in Gini index
+
+```{r importance}
+r$importance
+```
+
+The "standard errors" of the permutation-based importance measure.
+
+```{r importance_sd}
+r$importanceSD
+```
+
+Number of trees grown.
+
+```{r ntree}
+r$ntree
+```
+
+Number of predictors sampled for spliting at each node.
+
+```{r mtry}
+r$mtry
+```
+
+A list that contains the entire forest.
+
+```{r forest}
+r$forest[[1]]
+```
+
+Use `getTree` to obtain an individual tree.
+
+```{r get_tree}
+head(getTree(r, k = 1))
+```
+
+Vector error rates (classification only) of the prediction on the input data, the i-th element being the (OOB) error rate for all trees up to the i-th.
+
+```{r err_rate}
+head(r$err.rate)
+```
+
+The confusion matrix (classification only) of the prediction (based on OOB data).
+
+```{r confusion}
+r$confusion
+```
+
+A matrix with one row for each input data point and one column for each class, giving the fraction or number of (OOB) ‘votes’ from the random forest (classification only).
+
+```{r votes}
+head(r$votes)
+```
+
+Number of times cases are "out-of-bag" (and thus used in computing OOB error estimate).
+
+```{r oob_times}
+r$oob.times
+```
+
+If proximity=TRUE when `randomForest` is called, a matrix of proximity measures among the input (based on the frequency that pairs of data points are in the same terminal nodes).
+
+```{r proximity}
+dim(r$proximity)
+```
+
+## On importance
+
+Notes from [Stack Exchange](http://stats.stackexchange.com/questions/92419/relative-importance-of-a-set-of-predictors-in-a-random-forests-classification-in>):
+
+MeanDecreaseGini is a measure of variable importance based on the Gini impurity index used for the calculation of splits during training. A common misconception is that the variable importance metric refers to the Gini used for asserting model performance which is closely related to AUC, but this is wrong. Here is the explanation from the randomForest package written by Breiman and Cutler:
+
+> Every time a split of a node is made on variable m the gini impurity criterion for the two descendent nodes is less than the parent node. Adding up the gini decreases for each individual variable over all trees in the forest gives a fast variable importance that is often very consistent with the permutation importance measure.
+
+The Gini impurity index is defined as:
+
+![](https://latex.codecogs.com/svg.image?\large&space;\bg{white}G&space;=&space;\sum^{n_c}_{i=1}&space;p_i&space;(1&space;-&space;p_i))
+
+where n<sub>c</sub> is the number of classes in the target variable and p<sub>i</sub> is the ratio of this class.
+
+## Session info
+
+Time built.
+
+```{r time, echo=FALSE}
+Sys.time()
+```
+
+Session info.
+
+```{r session_info, echo=FALSE}
+sessionInfo()
+```
