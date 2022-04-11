@@ -1,0 +1,125 @@
+---
+title: "Logistic regression"
+output: md_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+theme_set(theme_bw())
+knitr::opts_chunk$set(cache = FALSE)
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.path = "img/")
+```
+
+## Introduction
+
+Logistic regression is a regression model where the dependent variable (DV) is categorical. Example from Wikipedia: "Logistic regression may be used to predict whether a patient has a given disease (e.g. diabetes; coronary heart disease), based on observed characteristics of the patient (age, sex, body mass index, results of various blood tests, etc.)."
+
+Install packages if missing and load.
+
+```{r load_package, message=FALSE, warning=FALSE}
+.libPaths('/packages')
+my_packages <- c('Amelia', 'ROCR')
+
+for (my_package in my_packages){
+   if(!require(my_package, character.only = TRUE)){
+      install.packages(my_package, '/packages')
+      library(my_package, character.only = TRUE)
+   }
+}
+```
+
+## Hours of study
+
+Using the example from Wikipedia: [Probability of passing an exam versus hours of study](https://en.wikipedia.org/wiki/Logistic_regression#Example:_Probability_of_passing_an_exam_versus_hours_of_study)
+
+```{r}
+d <- data.frame(
+   hours = c(0.50,0.75,1.00,1.25,1.50,1.75,1.75,2.00,2.25,2.50,2.75,3.00,3.25,3.50,4.00,4.25,4.50,4.75,5.00,5.50),
+   pass = factor(c(0,0,0,0,0,0,1,0,1,0,1,0,1,0,1,1,1,1,1,1))
+)
+
+model <- glm(
+   pass ~ hours,
+   family=binomial(link='logit'),
+   data=d
+)
+summary(model)
+```
+
+The output indicates that hours studying is significantly associated with the probability of passing the exam (p=0.0167, Wald test). The output also provides the coefficients for Intercept = -4.0777 and Hours = 1.5046.
+
+Probability of passing as a function of hours of study.
+
+```{r}
+prob_passing <- function(hours){
+  1 / (1 + exp(-(-4.0777 + 1.5046 * hours)))
+}
+
+prob_passing(4)
+```
+
+## Survival on the Titanic
+
+Adapted from [How to Perform a Logistic Regression in R](https://datascienceplus.com/perform-logistic-regression-in-r/).
+
+```{r}
+data <- read.csv("../data/titanic.csv.gz", na.strings = '')
+
+# missing data
+sapply(data, function(x) sum(is.na(x)))
+
+missmap(data)
+```
+
+Remove some features
+
+```{r}
+data_subset <- select(data, -PassengerId, -Ticket, -Cabin, -Name)
+
+# remove the two cases with missing embarked data
+data_subset <- filter(data_subset, !is.na(Embarked))
+
+# you can use the mean age for the missing ages
+data_subset$Age[is.na(data_subset$Age)] <- mean(data_subset$Age, na.rm=TRUE)
+
+# subset into training and testing sets
+train <- data_subset[1:800,]
+test  <- data_subset[801:nrow(data_subset),]
+
+model <- glm(Survived ~.,
+             family=binomial(link='logit'),
+             data=train)
+
+fitted <- predict(model,
+                  newdata=test[,-1],
+                  type='response')
+```
+
+```{r}
+pr <- prediction(fitted, test$Survived, )
+prf <- performance(pr, measure = "tpr", x.measure = "fpr")
+auc <- performance(pr, measure = "auc")
+plot(prf)
+legend(x = 0.75, y = 0.05, legend = paste("AUC = ", auc@y.values), bty = 'n')
+```
+
+## Links
+
+* [Simple logistic regression](http://www.biostathandbook.com/simplelogistic.html)
+* [Multiple logistic regression](http://www.biostathandbook.com/multiplelogistic.html)
+
+## Session info
+
+Time built.
+
+```{r time, echo=FALSE}
+Sys.time()
+```
+
+Session info.
+
+```{r session_info, echo=FALSE}
+sessionInfo()
+```
+
