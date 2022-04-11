@@ -61,6 +61,14 @@ resource costs, and utility.
 
 ![](img/unnamed-chunk-3-1.png)
 
+Each node shows:
+
+1.  The predicted class (setosa, versicolor, and virginica)
+2.  The numbers of each class (in the order above)
+3.  The percentage of all samples
+
+<!-- -->
+
     rpart <- rpart(Species ~ ., data=iris, method="class")
     summary(rpart)
 
@@ -69,9 +77,9 @@ resource costs, and utility.
     ##   n= 150 
     ## 
     ##     CP nsplit rel error xerror       xstd
-    ## 1 0.50      0      1.00   1.23 0.04705316
-    ## 2 0.44      1      0.50   0.72 0.06118823
-    ## 3 0.01      2      0.06   0.09 0.02908608
+    ## 1 0.50      0      1.00   1.22 0.04772141
+    ## 2 0.44      1      0.50   0.69 0.06104097
+    ## 3 0.01      2      0.06   0.07 0.02583280
     ## 
     ## Variable importance
     ##  Petal.Width Petal.Length Sepal.Length  Sepal.Width 
@@ -151,17 +159,63 @@ Titanic data
 
 ![](img/unnamed-chunk-5-1.png)
 
+Each node shows:
+
+1.  The predicted class (0 or 1)
+2.  The predicted probability of survival
+3.  The percentage of all samples
+
+<!-- -->
+
     t <-  rpart(Survived ~ Sex + Fare + Age, data=titanic, method="class")
     rpart.plot(t)
 
-![](img/unnamed-chunk-5-2.png)
+![](img/unnamed-chunk-6-1.png)
+
+For example the 0.74 indicates that 74% of females survived.
+
+    prop.table(
+       table(
+          titanic$Sex, titanic$Survived
+       ), margin = 1
+    )
+
+    ##         
+    ##                  0         1
+    ##   female 0.2579618 0.7420382
+    ##   male   0.8110919 0.1889081
+
+Breast cancer data
+------------------
+
+    data <- read.table(
+       "../data/breast_cancer_data.csv",
+       stringsAsFactors = FALSE,
+       sep = ',',
+       header = TRUE
+    )
+    data$class <- factor(data$class)
+    data <- data[,-1]
+
+Each node shows:
+
+1.  The predicted class (0 or 1)
+2.  The predicted probability of malignancy
+3.  The percentage of all samples
+
+<!-- -->
+
+    t <- rpart(class ~ ., data = data, method="class")
+    rpart.plot(t)
+
+![](img/unnamed-chunk-9-1.png)
 
 Session info
 ------------
 
 Time built.
 
-    ## [1] "2022-04-11 00:23:09 UTC"
+    ## [1] "2022-04-11 06:32:55 UTC"
 
 Session info.
 

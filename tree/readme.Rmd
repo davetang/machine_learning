@@ -55,6 +55,12 @@ summary(tree2)
 plot(tree2); text(tree2)
 ```
 
+Each node shows:
+
+1. The predicted class (setosa, versicolor, and virginica)
+2. The numbers of each class (in the order above)
+3. The percentage of all samples
+
 ```{r}
 rpart <- rpart(Species ~ ., data=iris, method="class")
 summary(rpart)
@@ -69,8 +75,50 @@ str(titanic)
 
 titanic$Pclass <- factor(titanic$Pclass)
 boxplot(Fare ~ Pclass, data = titanic)
+```
 
+Each node shows:
+
+1. The predicted class (0 or 1)
+2. The predicted probability of survival
+3. The percentage of all samples
+
+```{r}
 t <-  rpart(Survived ~ Sex + Fare + Age, data=titanic, method="class")
+rpart.plot(t)
+```
+
+For example the 0.74 indicates that 74% of females survived.
+
+```{r}
+prop.table(
+   table(
+      titanic$Sex, titanic$Survived
+   ), margin = 1
+)
+```
+
+## Breast cancer data
+
+```{r}
+data <- read.table(
+   "../data/breast_cancer_data.csv",
+   stringsAsFactors = FALSE,
+   sep = ',',
+   header = TRUE
+)
+data$class <- factor(data$class)
+data <- data[,-1]
+```
+
+Each node shows:
+
+1. The predicted class (0 or 1)
+2. The predicted probability of malignancy
+3. The percentage of all samples
+
+```{r}
+t <- rpart(class ~ ., data = data, method="class")
 rpart.plot(t)
 ```
 
