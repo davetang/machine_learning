@@ -51,10 +51,12 @@ Separate into training (80%) and testing (20%).
 ```{r split_data}
 set.seed(31)
 my_prob <- 0.8
-my_split <- rbinom(
-   n = nrow(data),
-   size = 1,
-   p = my_prob
+my_split <- as.logical(
+  rbinom(
+    n = nrow(data),
+    size = 1,
+    p = my_prob
+  )
 )
 
 train <- data[my_split,]

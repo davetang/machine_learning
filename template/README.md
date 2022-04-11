@@ -37,10 +37,12 @@ Separate into training (80%) and testing (20%).
 
     set.seed(31)
     my_prob <- 0.8
-    my_split <- rbinom(
-       n = nrow(data),
-       size = 1,
-       p = my_prob
+    my_split <- as.logical(
+      rbinom(
+        n = nrow(data),
+        size = 1,
+        p = my_prob
+      )
     )
 
     train <- data[my_split,]
@@ -59,7 +61,7 @@ Session info
 
 Time built.
 
-    ## [1] "2022-04-11 04:16:01 UTC"
+    ## [1] "2022-04-11 05:27:11 UTC"
 
 Session info.
 
