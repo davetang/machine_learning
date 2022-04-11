@@ -1,5 +1,5 @@
 ---
-title: "my_title"
+title: "Template"
 output: md_document
 ---
 
@@ -31,12 +31,43 @@ for (my_package in my_packages){
 }
 ```
 
+## Breast cancer data
+
+Using the [Breast Cancer Wisconsin (Diagnostic) Data Set](https://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+(Diagnostic)).
+
+```{r prepare_data}
+data <- read.table(
+   "../data/breast_cancer_data.csv",
+   stringsAsFactors = FALSE,
+   sep = ',',
+   header = TRUE
+)
+data$class <- factor(data$class)
+data <- data[,-1]
+```
+
+Separate into training (80%) and testing (20%).
+
+```{r split_data}
+set.seed(31)
+my_prob <- 0.8
+my_split <- rbinom(
+   n = nrow(data),
+   size = 1,
+   p = my_prob
+)
+
+train <- data[my_split,]
+test <- data[!my_split,]
+
+data
+```
+
 ## Results
 
 ```{r plot}
-ggplot(mtcars, aes(hp, mpg)) +
-   geom_point() +
-   labs(x = "Gross horsepower", y = "Miles per gallon")
+ggplot(data, aes(class, ucsize)) +
+   geom_boxplot()
 ```
 
 ## Session info
