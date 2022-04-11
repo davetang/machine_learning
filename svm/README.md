@@ -56,82 +56,13 @@ Breast cancer data
 Using the [Breast Cancer Wisconsin (Diagnostic) Data
 Set](http://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+(Diagnostic)).
 
-    my_link <- 'http://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/breast-cancer-wisconsin.data'
-    data <- read.table(url(my_link), stringsAsFactors = FALSE, header = FALSE, sep = ',')
-    names(data) <- c('id','ct','ucsize','ucshape','ma','secs','bn','bc','nn','miti','class')
-    head(data)
-
-    ##        id ct ucsize ucshape ma secs bn bc nn miti class
-    ## 1 1000025  5      1       1  1    2  1  3  1    1     2
-    ## 2 1002945  5      4       4  5    7 10  3  2    1     2
-    ## 3 1015425  3      1       1  1    2  2  3  1    1     2
-    ## 4 1016277  6      8       8  1    3  4  3  7    1     2
-    ## 5 1017023  4      1       1  3    2  1  3  1    1     2
-    ## 6 1017122  8     10      10  8    7 10  9  7    1     4
-
-Any missing data?
-
-    dim(data)[1] * dim(data)[2]
-
-    ## [1] 7689
-
-    table(is.na.data.frame(data))
-
-    ## 
-    ## FALSE 
-    ##  7689
-
-What’s the structure?
-
-    str(data)
-
-    ## 'data.frame':    699 obs. of  11 variables:
-    ##  $ id     : int  1000025 1002945 1015425 1016277 1017023 1017122 1018099 1018561 1033078 1033078 ...
-    ##  $ ct     : int  5 5 3 6 4 8 1 2 2 4 ...
-    ##  $ ucsize : int  1 4 1 8 1 10 1 1 1 2 ...
-    ##  $ ucshape: int  1 4 1 8 1 10 1 2 1 1 ...
-    ##  $ ma     : int  1 5 1 1 3 8 1 1 1 1 ...
-    ##  $ secs   : int  2 7 2 3 2 7 2 2 2 2 ...
-    ##  $ bn     : chr  "1" "10" "2" "4" ...
-    ##  $ bc     : int  3 3 3 3 3 9 3 3 1 2 ...
-    ##  $ nn     : int  1 2 1 7 1 7 1 1 1 1 ...
-    ##  $ miti   : int  1 1 1 1 1 1 1 1 5 1 ...
-    ##  $ class  : int  2 2 2 2 2 4 2 2 2 2 ...
-
-Why is the bare nuclei (bn) stored as characters instead of integers?
-
-    table(data$bn)
-
-    ## 
-    ##   ?   1  10   2   3   4   5   6   7   8   9 
-    ##  16 402 132  30  28  19  30   4   8  21   9
-
-Change the question marks into NA’s and then into median values.
-
-    data$bn <- gsub(pattern = '\\?', replacement = NA, x = data$bn)
-    data$bn <- as.integer(data$bn)
-    my_median <- median(data$bn, na.rm = TRUE)
-    data$bn[is.na(data$bn)] <- my_median
-    str(data)
-
-    ## 'data.frame':    699 obs. of  11 variables:
-    ##  $ id     : int  1000025 1002945 1015425 1016277 1017023 1017122 1018099 1018561 1033078 1033078 ...
-    ##  $ ct     : int  5 5 3 6 4 8 1 2 2 4 ...
-    ##  $ ucsize : int  1 4 1 8 1 10 1 1 1 2 ...
-    ##  $ ucshape: int  1 4 1 8 1 10 1 2 1 1 ...
-    ##  $ ma     : int  1 5 1 1 3 8 1 1 1 1 ...
-    ##  $ secs   : int  2 7 2 3 2 7 2 2 2 2 ...
-    ##  $ bn     : int  1 10 2 4 1 10 10 1 1 1 ...
-    ##  $ bc     : int  3 3 3 3 3 9 3 3 1 2 ...
-    ##  $ nn     : int  1 2 1 7 1 7 1 1 1 1 ...
-    ##  $ miti   : int  1 1 1 1 1 1 1 1 5 1 ...
-    ##  $ class  : int  2 2 2 2 2 4 2 2 2 2 ...
+    data <- read.table("../data/breast_cancer_data.csv", stringsAsFactors = FALSE, sep = ',', header = TRUE)
 
 The class should be a factor; 2 is benign and 4 is malignant.
 
     data$class <- factor(data$class)
 
-Finally remove id the row name, which was not unique anyway.
+Finally remove id column.
 
     data <- data[,-1]
 
@@ -143,7 +74,7 @@ Separate into training (80%) and testing (20%).
 
     ## my_decider
     ##   0   1 
-    ## 151 548
+    ## 122 477
 
     train <- data[as.logical(my_decider),]
     test <- data[!as.logical(my_decider),]
@@ -160,30 +91,30 @@ Using the `e1071` package.
     ## 
     ## - best parameters:
     ##  gamma cost
-    ##    0.1    1
+    ##   0.01    1
     ## 
-    ## - best performance: 0.02555556 
+    ## - best performance: 0.03554965 
     ## 
     ## - Detailed performance results:
     ##    gamma cost      error dispersion
-    ## 1  1e-06  0.1 0.34319865 0.04711347
-    ## 2  1e-05  0.1 0.34319865 0.04711347
-    ## 3  1e-04  0.1 0.34319865 0.04711347
-    ## 4  1e-03  0.1 0.31767677 0.04681231
-    ## 5  1e-02  0.1 0.03468013 0.02184491
-    ## 6  1e-01  0.1 0.03282828 0.01876498
-    ## 7  1e-06  1.0 0.34319865 0.04711347
-    ## 8  1e-05  1.0 0.34319865 0.04711347
-    ## 9  1e-04  1.0 0.31767677 0.04681231
-    ## 10 1e-03  1.0 0.03468013 0.02009323
-    ## 11 1e-02  1.0 0.02734007 0.02604193
-    ## 12 1e-01  1.0 0.02555556 0.02302315
-    ## 13 1e-06 10.0 0.34319865 0.04711347
-    ## 14 1e-05 10.0 0.31767677 0.04681231
-    ## 15 1e-04 10.0 0.03468013 0.02009323
-    ## 16 1e-03 10.0 0.02734007 0.02604193
-    ## 17 1e-02 10.0 0.03286195 0.02818789
-    ## 18 1e-01 10.0 0.04016835 0.02548171
+    ## 1  1e-06  0.1 0.38151596 0.07135654
+    ## 2  1e-05  0.1 0.38151596 0.07135654
+    ## 3  1e-04  0.1 0.38151596 0.07135654
+    ## 4  1e-03  0.1 0.36471631 0.07013290
+    ## 5  1e-02  0.1 0.04184397 0.02770554
+    ## 6  1e-01  0.1 0.03767730 0.02146151
+    ## 7  1e-06  1.0 0.38151596 0.07135654
+    ## 8  1e-05  1.0 0.38151596 0.07135654
+    ## 9  1e-04  1.0 0.36471631 0.07013290
+    ## 10 1e-03  1.0 0.03971631 0.02845194
+    ## 11 1e-02  1.0 0.03554965 0.02197298
+    ## 12 1e-01  1.0 0.03559397 0.02203474
+    ## 13 1e-06 10.0 0.38151596 0.07135654
+    ## 14 1e-05 10.0 0.36263298 0.06657450
+    ## 15 1e-04 10.0 0.03971631 0.02845194
+    ## 16 1e-03 10.0 0.03554965 0.02197298
+    ## 17 1e-02 10.0 0.03971631 0.02670322
+    ## 18 1e-01 10.0 0.05447695 0.02631057
 
 Train model using the best values for gamma and cost.
 
@@ -201,9 +132,9 @@ Train model using the best values for gamma and cost.
     ##  SVM-Kernel:  radial 
     ##        cost:  1 
     ## 
-    ## Number of Support Vectors:  74
+    ## Number of Support Vectors:  72
     ## 
-    ##  ( 37 37 )
+    ##  ( 36 36 )
     ## 
     ## 
     ## Number of Classes:  2 
@@ -218,8 +149,8 @@ Predict test cases.
 
     ##            
     ## svm_predict  2  4
-    ##           2 95  5
-    ##           4  3 48
+    ##           2 77  2
+    ##           4  2 41
 
 Further reading
 ---------------
@@ -232,7 +163,7 @@ Session info
 
 Time built.
 
-    ## [1] "2022-04-11 01:25:00 UTC"
+    ## [1] "2022-04-11 03:55:12 UTC"
 
 Session info.
 

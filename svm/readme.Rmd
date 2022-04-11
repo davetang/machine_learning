@@ -48,39 +48,7 @@ for (my_package in my_packages){
 Using the [Breast Cancer Wisconsin (Diagnostic) Data Set](http://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+(Diagnostic)).
 
 ```{r}
-my_link <- 'http://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/breast-cancer-wisconsin.data'
-data <- read.table(url(my_link), stringsAsFactors = FALSE, header = FALSE, sep = ',')
-names(data) <- c('id','ct','ucsize','ucshape','ma','secs','bn','bc','nn','miti','class')
-head(data)
-```
-
-Any missing data?
-
-```{r}
-dim(data)[1] * dim(data)[2]
-table(is.na.data.frame(data))
-```
-
-What's the structure?
-
-```{r}
-str(data)
-```
-
-Why is the bare nuclei (bn) stored as characters instead of integers?
-
-```{r}
-table(data$bn)
-```
-
-Change the question marks into NA's and then into median values.
-
-```{r}
-data$bn <- gsub(pattern = '\\?', replacement = NA, x = data$bn)
-data$bn <- as.integer(data$bn)
-my_median <- median(data$bn, na.rm = TRUE)
-data$bn[is.na(data$bn)] <- my_median
-str(data)
+data <- read.table("../data/breast_cancer_data.csv", stringsAsFactors = FALSE, sep = ',', header = TRUE)
 ```
 
 The class should be a factor; 2 is benign and 4 is malignant.
@@ -89,7 +57,7 @@ The class should be a factor; 2 is benign and 4 is malignant.
 data$class <- factor(data$class)
 ```
 
-Finally remove id the row name, which was not unique anyway.
+Finally remove id column.
 
 ```{r}
 data <- data[,-1]
@@ -108,7 +76,6 @@ test <- data[!as.logical(my_decider),]
 Using the `e1071` package.
 
 ```{r}
-
 tuned <- tune.svm(class ~ ., data = train, gamma = 10^(-6:-1), cost = 10^(-1:1))
 summary(tuned)
 ```
