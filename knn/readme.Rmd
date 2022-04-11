@@ -1,0 +1,90 @@
+---
+title: "k-Nearest Neighbours"
+output: md_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+theme_set(theme_bw())
+knitr::opts_chunk$set(cache = FALSE)
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.path = "img/")
+```
+
+## Introduction
+
+In pattern recognition, the [k-Nearest Neighbours algorithm](https://en.wikipedia.org/wiki/K-nearest_neighbors_algorithm) (k-NN) is a non-parametric method used for classification and regression. In both cases, the input consists of the k closest training examples in the feature space.
+
+Install packages if missing and load.
+
+```{r load_package, message=FALSE, warning=FALSE}
+.libPaths('/packages')
+my_packages <- 'FNN'
+
+for (my_package in my_packages){
+   if(!require(my_package, character.only = TRUE)){
+      install.packages(my_package, '/packages')
+      library(my_package, character.only = TRUE)
+   }
+}
+```
+
+## Regression
+
+We'll use the `women` dataset to demonstrate how k-NN performs regression. The dataset contains height and weight measurements for 15 American women aged between 30–39.
+
+```{r}
+data(women)
+str(women)
+plot(women, xlab = "Height (in)", ylab = "Weight (lb)", main = "women data: American women aged 30-39", pch = 16)
+```
+
+In the example below, we want to *predict the weight* of a female who is 60 inches tall based on data in the `women` dataset.
+
+```{r}
+knn <- function(x, x_train, y_train, k){
+  d <- abs(x - x_train)
+  s <- order(d)
+  return(mean(y_train[s[1:k]]))
+}
+
+# using four neighbours
+knn(60, women$height, women$weight, 4)
+
+# using five neighbours
+knn(60, women$height, women$weight, 5)
+```
+
+* The `knn` algorithm first calculates the absolute distance of an input to a known set of data points for the same variable (height).
+* These distances are then sorted, with the closest data points ranked first.
+* The k-nearest distances of heights are used to obtain the corresponding weights
+* Finally, the k weights are averaged (mean) and returned
+
+Use `sapply` to predict several values.
+
+```{r}
+sapply(c(60,70), knn, x_train = women$height, y_train = women$weight, k = 4)
+```
+
+You can also use `knn.reg` in the `FNN` package.
+
+```{r}
+knn.reg(women$height, 60, women$weight, 4)
+
+knn.reg(women$height, 60, women$weight, 5)
+```
+
+## Session info
+
+Time built.
+
+```{r time, echo=FALSE}
+Sys.time()
+```
+
+Session info.
+
+```{r session_info, echo=FALSE}
+sessionInfo()
+```
+
