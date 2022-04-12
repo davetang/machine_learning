@@ -1,0 +1,254 @@
+---
+title: "Evaluation"
+output: md_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+theme_set(theme_bw())
+knitr::opts_chunk$set(cache = FALSE)
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.path = "img/")
+```
+
+## Introduction
+
+Different performance measures for evaluating whether your model is good or not.
+
+Install packages if missing and load.
+
+```{r load_package, message=FALSE, warning=FALSE}
+.libPaths('/packages')
+my_packages <- c('caret', 'clValid', 'dendextend', 'rpart', 'ROCR', 'randomForest', 'verification')
+
+for (my_package in my_packages){
+   if(!require(my_package, character.only = TRUE)){
+      install.packages(my_package, '/packages')
+      library(my_package, character.only = TRUE)
+   }
+}
+```
+
+## Spam
+
+Use [spam data](https://archive.ics.uci.edu/ml/machine-learning-databases/spambase/spambase.names) to train a Random Forest model to illustrate evaluation measures.
+
+```{r random_forest_spam}
+spam_data <- read.csv(file = "../data/spambase.csv")
+
+spam_data$class <- factor(spam_data$class)
+
+set.seed(31)
+system.time(rf <- randomForest(class ~ ., data = spam_data, importance=TRUE, proximity=TRUE, do.trace=100))
+```
+
+## Classification measures
+
+Build confusion matrix and calculate accuracy, precision, and recall. Check out [this guide as well](http://www.dataschool.io/simple-guide-to-confusion-matrix-terminology/).
+
+![Confusion matrix](img/confusion_matrix.png)
+
+Use `table` to construct a confusion matrix.
+
+```{r spam_rf_table}
+(spam_rf_table <- table(spam_data$class, rf$predicted))
+TP <- spam_rf_table[1, 1]
+FN <- spam_rf_table[1, 2]
+FP <- spam_rf_table[2, 1]
+TN <- spam_rf_table[2, 2]
+```
+
+Accuracy is the easiest to remember; you take all the correct predictions and divide by the total:
+
+* Accuracy = (TP + TN) / (TP + FP + FN + TN)
+
+```{r accuracy}
+(accuracy <- (TP + TN) / (TP + FN + FP + TN))
+# (accuracy  <- sum(diag(spam_rf_table)) / sum(spam_rf_table))
+```
+
+Precision or Positive Predictive Value (PPV) is concerned with all the _positive_ calls that were _predicted_:
+
+* Precision or Positive Predictive Value (PPV) = TP / (TP + FP)
+
+```{r precision}
+(precision <- TP / (TP + FP))
+```
+
+Recall (also known by other names, see below) is concerned with how many of the _truth positive cases_ were predicted as positive. The term sensitivity makes a bit more sense to me as it describes how sensitive a method is in detecting positive cases.
+
+* Sensitivity or True Positive Rate (TPR) or Recall or Hit Rate = TP / (TP + FN)
+
+```{r sensitivity}
+(recall <- TP / (TP + FN))
+```
+
+Specificity is concerned with how many of the _truth negative cases_ were predicted as negative, which is opposite to sensitivity.
+
+* Specificity or True Negative Rate (TNR) = TN / (TN + FP)
+
+```{r specificity}
+(specificity <- TN / (TN + FP))
+```
+
+Depending on the application, different metrics can be more desirable than others. For example when detecting spam, it is more preferably to have a high specificity (detect all real emails) than to have a high sensitivity (detect all spam).
+
+Other measures include:
+
+* Negative Predictive Value (NPV) = TN / (TN + FN)
+* Fall-out or False Positive Rate (FPR) = FP / (FP + TN) = 1 - specificity
+* False Negative Rate (FNR) = FN / (FN + TP) = 1 - TPR
+* False Discovery Rate (FDR) = TP / (TP + FP) = 1 - PPV
+
+## Regression
+
+Root Mean Squared Error (RMSE), which is the mean distance between estimates and the regression line.
+
+![](https://latex.codecogs.com/png.image?\large&space;\dpi{110}\bg{white}RMSE&space;=&space;\sqrt{&space;\frac{1}{N}&space;\sum_{i=1}^{N}&space;(y_i&space;-&space;\hat{y}_i)^2&space;})
+
+The blue line and black lines in the plot below shows the linear fit and the residuals (how far off a prediction was from the actual value), respectively. The RMSE sums all squared residuals, divides by all cases (i.e. calculates the mean), and then takes the square root.
+
+![Root Mean Squared Error (RMSE)](img/rmse.png)
+
+We can calculate the RMSE as per below.
+
+```{r women_rmse}
+# predict height from weight
+lm.fit <- lm(height ~ weight, data = women)
+h_pred <- predict(lm.fit, women)
+(rmse <- sqrt( ( 1/length(h_pred) ) * sum( (women$height - h_pred) ^ 2) ))
+```
+
+## Clustering
+
+Measure the distance between points within a cluster and between clusters.
+
+* Within Sum of Squares (WSS) measures the within cluster similarity
+* Between cluster Sum of Squares (BSS) measures the between cluster similarity
+* The [Dunn index](https://en.wikipedia.org/wiki/Dunn_index) is the minimal intercluster distance (between cluster measurement) divided by the maximal diameter (within cluster measurement); a higher Dunn index indicates better clustering
+
+For K-means clustering, the measures for WSS and BSS can be found in the cluster object as tot.withinss and betweenss.
+
+```{r}
+km <- kmeans(iris[,-5], centers = 3, nstart = 1)
+km
+
+d  <- dist(iris[,-5])
+dunn(d, km$cluster)
+
+# example adapted from clValid
+data(mouse, package = "clValid")
+express <- mouse[1:25, -c(1,8)]
+rownames(express) <- mouse$ID[1:25]
+express_dist <- dist(express,method="euclidean")
+express_hclust <- hclust(express_dist, method="average")
+express_cluster <- cutree(express_hclust, k = 3)
+dunn(express_dist, express_cluster)
+
+plot(color_branches(express_hclust, k = 3))
+```
+
+## Cross validation
+
+Instead of a single instance of train/test, cross validation carries out n-fold train/test evaluations. For example, the example below illustrates a 4-fold cross validation.
+
+![4 fold cross validation](img/cross_validation.png)
+
+The `caret` package in R supports many types of cross-validation, and you can specify which type of cross-validation and the number of cross-validation folds with the trainControl() function, which you pass to the trControl argument in train().
+
+```{r caret_lm}
+# using the diamonds data set from ggplot2
+# ggplot2 is automatically loaded with caret
+model <- train(
+  price ~ ., diamonds,
+  method = "lm",
+  trControl = trainControl(
+    method = "cv",
+    number = 10,
+    verboseIter = TRUE
+  )
+)
+
+model
+```
+
+Using the `caret` package, you can perform 5 x 5-fold cross validations by adding the `repeats` parameter.
+
+```{r caret_lm_xv}
+model <- train(
+  price ~ ., diamonds,
+  method = "lm",
+  trControl = trainControl(
+    method = "cv",
+    number = 5,
+    repeats = 5,
+    verboseIter = TRUE
+  )
+)
+
+model
+```
+
+## Receiver Operator Characteristic Curve
+
+* The false positive rate (second row of confusion matrix), FP / (FP + TN), is on the x-axis
+* The true positive rate (recall or first row of confusion matrix), TP / (TP + FN), is on the y-axis
+* Use the R package called ROCR
+
+```{r}
+# split iris dataset into training and test
+set.seed(31)
+x     <- sample(1:nrow(iris), size = 0.8 * nrow(iris), replace = FALSE)
+x_hat <- setdiff(1:150, x)
+train <- iris[x,]
+test  <- iris[x_hat,]
+
+tree <- rpart(Species ~ ., train, method = "class")
+
+probs <- predict(tree, test, type = "prob")
+probs_setosa <- probs[,1]
+probs_versicolor <- probs[,2]
+
+setosa <- as.numeric(grepl(pattern = 'setosa', x = test$Species))
+versicolor <- as.numeric(grepl(pattern = 'versicolor', x = test$Species))
+pred <- prediction(probs_setosa, setosa)
+pred <- prediction(probs_versicolor, versicolor)
+
+auc <- performance(pred, 'auc')
+auc_value <- auc@y.values[[1]]
+
+perf <- performance(pred, 'tpr', 'fpr')
+plot(perf, main='ROC for versicolor')
+legend('bottomright', legend = paste('AUC = ', auc_value))
+```
+
+![ROC curve](img/roc_versicolor.png)
+
+```{r}
+auc <- roc.area(as.integer(spam_data$class==1), rf$votes[,2])$A
+roc.plot(as.integer(spam_data$class==1), rf$votes[,2], main="", threshold = seq(0, 1, 0.1))
+legend("bottomright", bty="n", sprintf("Area Under the Curve (AUC) = %1.4f", auc))
+title(main="OOB ROC Curve")
+```
+
+Plotting with confidence intervals, which are calculated by bootstrapping the observations and prediction, then calculating probability of detection yes (PODy) and probability of detection no (PODn) values. The default CI is 95%.
+
+```{r}
+system.time(roc.plot(as.integer(spam_data$class==1), rf$votes[,2], main="", threshold = seq(0, 1, 0.1), CI = TRUE))
+legend("bottomright", bty="n", sprintf("Area Under the Curve (AUC) = %1.4f", auc))
+title(main="OOB ROC Curve")
+```
+
+## Session info
+
+Time built.
+
+```{r time, echo=FALSE}
+Sys.time()
+```
+
+Session info.
+
+```{r session_info, echo=FALSE}
+sessionInfo()
+```
