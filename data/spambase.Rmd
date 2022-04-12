@@ -1,0 +1,71 @@
+---
+title: "Spambase Data Set"
+output: md_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache = FALSE)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+From <https://archive.ics.uci.edu/ml/datasets/spambase>
+
+>Our collection of spam e-mails came from our postmaster and individuals who had filed spam. Our collection of non-spam e-mails came from filed work and personal e-mails, and hence the word 'george' and the area code '650' are indicators of non-spam. These are useful when constructing a personalized spam filter. One would either have to blind such non-spam indicators or get a very wide collection of non-spam to generate a general purpose spam filter.
+
+The last column of `spambase.data` denotes whether the e-mail was considered spam (1) or not (0). Most of the attributes indicate whether a particular word or character was frequently occurring in the e-mail.  The run-length attributes (55-57) measure the length of sequences of consecutive capital letters.
+
+```{r save_data}
+data_url <- 'https://archive.ics.uci.edu/ml/machine-learning-databases/spambase/spambase.data'
+data <- read.table(url(data_url), stringsAsFactors = FALSE, header = FALSE, sep = ',')
+
+data_col_url <- 'https://archive.ics.uci.edu/ml/machine-learning-databases/spambase/spambase.names'
+data_col <- read.table(url(data_col_url), stringsAsFactors = FALSE, header = FALSE, comment.char = "|")
+
+my_cols <- c(gsub(":$", "", data_col$V1[-1]), 'class')
+
+colnames(data) <- my_cols
+dim(data)
+```
+
+Any missing data?
+
+```{r any_missing_data}
+any(is.na(data))
+```
+
+Data structure.
+
+```{r str}
+str(data)
+```
+
+Convert `class` into a factor with levels `0` for ham and `1` for spam.
+
+```{r factor_class}
+data$class <- factor(data$class)
+```
+
+Save as CSV.
+
+```{r save_csv}
+write.csv(
+  x = data,
+  file = "spambase.csv",
+  quote = FALSE,
+  row.names = FALSE
+)
+```
+
+## Session info
+
+Time built.
+
+```{r time, echo=FALSE}
+Sys.time()
+```
+
+Session info.
+
+```{r session_info, echo=FALSE}
+sessionInfo()
+```
