@@ -1,6 +1,9 @@
 Introduction
 ------------
 
+This notebook is adapted from [this
+tutorial](https://datascienceplus.com/fitting-neural-network-in-r/).
+
 Install packages if missing and load.
 
     .libPaths('/packages')
@@ -13,24 +16,64 @@ Install packages if missing and load.
        }
     }
 
-Compare neural network regression with linear regression
---------------------------------------------------------
+Housing values in Boston
+------------------------
 
-Following the example from [this
-tutorial](http://datascienceplus.com/fitting-neural-network-in-r/).
+The `Boston` data set from the `MASS` package contains the following
+features:
+
+-   `crim` - per capita crime rate by town.
+-   `zn` - proportion of residential land zoned for lots over 25,000
+    sq.ft.
+-   `indus` - proportion of non-retail business acres per town.
+-   `chas` - Charles River dummy variable (= 1 if tract bounds river; 0
+    otherwise).
+-   `nox` - nitrogen oxides concentration (parts per 10 million).
+-   `rm` - average number of rooms per dwelling.
+-   `age` - proportion of owner-occupied units built prior to 1940.
+-   `dis` - weighted mean of distances to five Boston employment
+    centres.
+-   `rad` - index of accessibility to radial highways.
+-   `tax` - full-value property-tax rate per $10,000.
+-   `ptratio` - pupil-teacher ratio by town.
+-   `black` - 1000(Bk - 0.63)^2 where Bk is the proportion of blacks by
+    town.
+-   `lstat` - lower status of the population (percent).
+-   `medv` - median value of owner-occupied homes in $1000s.
+
+<!-- -->
+
+    str(Boston)
+
+    ## 'data.frame':    506 obs. of  14 variables:
+    ##  $ crim   : num  0.00632 0.02731 0.02729 0.03237 0.06905 ...
+    ##  $ zn     : num  18 0 0 0 0 0 12.5 12.5 12.5 12.5 ...
+    ##  $ indus  : num  2.31 7.07 7.07 2.18 2.18 2.18 7.87 7.87 7.87 7.87 ...
+    ##  $ chas   : int  0 0 0 0 0 0 0 0 0 0 ...
+    ##  $ nox    : num  0.538 0.469 0.469 0.458 0.458 0.458 0.524 0.524 0.524 0.524 ...
+    ##  $ rm     : num  6.58 6.42 7.18 7 7.15 ...
+    ##  $ age    : num  65.2 78.9 61.1 45.8 54.2 58.7 66.6 96.1 100 85.9 ...
+    ##  $ dis    : num  4.09 4.97 4.97 6.06 6.06 ...
+    ##  $ rad    : int  1 2 2 3 3 3 5 5 5 5 ...
+    ##  $ tax    : num  296 242 242 222 222 222 311 311 311 311 ...
+    ##  $ ptratio: num  15.3 17.8 17.8 18.7 18.7 18.7 15.2 15.2 15.2 15.2 ...
+    ##  $ black  : num  397 397 393 395 397 ...
+    ##  $ lstat  : num  4.98 9.14 4.03 2.94 5.33 ...
+    ##  $ medv   : num  24 21.6 34.7 33.4 36.2 28.7 22.9 27.1 16.5 18.9 ...
+
+    any(is.na(Boston))
+
+    ## [1] FALSE
+
+### Multiple linear regression
+
+Carry out multiple linear regression by regressing the median value onto
+all other features.
 
     set.seed(500)
-    data <- Boston
-    apply(data,2,function(x) sum(is.na(x)))
-
-    ##    crim      zn   indus    chas     nox      rm     age     dis     rad     tax 
-    ##       0       0       0       0       0       0       0       0       0       0 
-    ## ptratio   black   lstat    medv 
-    ##       0       0       0       0
-
-    index <- sample(1:nrow(data), round(0.75*nrow(data)))
-    train <- data[index,]
-    test <- data[-index,]
+    index <- sample(1:nrow(Boston), round(0.75*nrow(Boston)))
+    train <- Boston[index,]
+    test <- Boston[-index,]
     lm.fit <- glm(medv ~ ., data=train)
     summary(lm.fit)
 
@@ -69,119 +112,137 @@ tutorial](http://datascienceplus.com/fitting-neural-network-in-r/).
     ## 
     ## Number of Fisher Scoring iterations: 2
 
+The number of rooms has the highest *t*-statistic.
+
+    ggplot(Boston, aes(rm, medv)) +
+      geom_point() +
+      labs(x = "Average number of rooms per dwelling", y = "Median value in $1,000")
+
+![](img/rm_vs_medv-1.png)
+
+Predict prices and calculate the mean squared error (MSE).
+
     pr.lm <- predict(lm.fit, test)
     MSE.lm <- sum((pr.lm - test$medv)^2)/nrow(test)
+    MSE.lm
 
-Feature scaling
----------------
+    ## [1] 31.26302
 
-[Feature scaling](https://en.wikipedia.org/wiki/Feature_scaling) using:
+### Neural network
 
-$$ x' = \\frac{x - min(x)}{max(x) - min(x)} $$
+First we will carry out [feature
+scaling](https://en.wikipedia.org/wiki/Feature_scaling) using:
+
+![](https://latex.codecogs.com/png.image?\large&space;\dpi%7B110%7D\bg%7Bwhite%7D&space;x'&space;=&space;\frac%7Bx&space;-&space;min(x)%7D%7Bmax(x)&space;-&space;min(x)%7D)
+
+Manually perform min-max and compare `scale` approach (just for fun).
 
     x <- 1:20
     x_a <- (x - min(x)) / (max(x) - min(x))
     x_b <- as.vector(scale(x, center = min(x), scale = max(x) - min(x)))
-    x_a
-
-    ##  [1] 0.00000000 0.05263158 0.10526316 0.15789474 0.21052632 0.26315789
-    ##  [7] 0.31578947 0.36842105 0.42105263 0.47368421 0.52631579 0.57894737
-    ## [13] 0.63157895 0.68421053 0.73684211 0.78947368 0.84210526 0.89473684
-    ## [19] 0.94736842 1.00000000
-
     identical(x_a, x_b)
 
     ## [1] TRUE
 
-Carrying out the normalisation.
+Carrying out scaling on Boston data set.
 
-    maxs <- apply(data, 2, max)
-    mins <- apply(data, 2, min)
+    maxs <- apply(Boston, 2, max)
+    mins <- apply(Boston, 2, min)
 
-    scaled <- as.data.frame(scale(data, center = mins, scale = maxs - mins))
+    scaled <- as.data.frame(
+      scale(Boston, center = mins, scale = maxs - mins)
+    )
 
-    train_ <- scaled[index,]
-    test_ <- scaled[-index,]
+    train_scaled <- scaled[index,]
+    test_scaled <- scaled[-index,]
 
-Training
---------
+Manually create formula as `f` since `neuralnet` does not recognise R
+formulae.
 
-Manually create formula as `f` since neuralnet() doesn’t recognise
-`medv ~ .`.
-
-    n <- names(train_)
+    n <- names(train_scaled)
     f <- as.formula(paste("medv ~", paste(n[!n %in% "medv"], collapse = " + ")))
 
-    nn <- neuralnet(f, data = train_, hidden=c(5,3), linear.output = TRUE)
-    plot(nn)
+Train neural network using two hidden layers with 5 and 3 neurons,
+respectively.
 
-Prediction
-----------
+    nn <- neuralnet(f, data = train_scaled, hidden=c(5,3), linear.output = TRUE)
+    plot(nn, rep = "best")
 
-We need to unscale the predictions and test; remember the formula:
+![](img/train_boston-1.png)
 
-$$ x' = \\frac{x - min(x)}{max(x) - min(x)} $$
+Predict (scaled) value.
 
-    x <- 1:20
-    x_a <- (x - min(x)) / (max(x) - min(x))
-    x_orig <- as.integer(x_a * (max(x) - min(x)) + (min(x)))
-    identical(x, x_orig)
+    pr.nn <- compute(nn, test_scaled[,1:13])
 
-    ## [1] TRUE
+We need to unscale the data before calculating the MSE.
 
-Compare RMS of neural network regression with linear regression.
+    pr.nn_unscaled <- pr.nn$net.result * (max(Boston$medv) - min(Boston$medv)) + min(Boston$medv)
+    test.r <- (test_scaled$medv) * (max(Boston$medv) - min(Boston$medv)) + min(Boston$medv)
 
-    pr.nn <- compute(nn, test_[,1:13])
-    pr.nn_ <- pr.nn$net.result * (max(data$medv) - min(data$medv)) + min(data$medv)
-    test.r <- (test_$medv) * (max(data$medv) - min(data$medv)) + min(data$medv)
+    MSE.nn <- sum((test.r - pr.nn_unscaled)^2)/nrow(test_scaled)
 
-    MSE.nn <- sum((test.r - pr.nn_)^2)/nrow(test_)
-    print(paste(MSE.lm,MSE.nn))
+Comparing the MSEs.
 
-    ## [1] "31.2630222372615 16.4595537665717"
+    print(paste0("MSE of multiple linear regression: ", MSE.lm))
 
-Breast cancer example
----------------------
+    ## [1] "MSE of multiple linear regression: 31.2630222372615"
 
-    my_link <- 'http://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/breast-cancer-wisconsin.data'
-    data <- read.table(url(my_link), stringsAsFactors = FALSE, header = FALSE, sep = ',')
-    names(data) <- c('id','ct','ucsize','ucshape','ma','secs','bn','bc','nn','miti','class')
+    print(paste0("MSE of neural network regression: ", MSE.nn))
 
-    data$bn <- gsub(pattern = '\\?', replacement = NA, x = data$bn)
-    data$bn <- as.integer(data$bn)
-    my_median <- median(data$bn, na.rm = TRUE)
-    data$bn[is.na(data$bn)] <- my_median
+    ## [1] "MSE of neural network regression: 16.4595537665717"
+
+Breast cancer data
+------------------
+
+Classify breast cancer samples using the [Breast Cancer Wisconsin
+(Diagnostic) Data
+Set](https://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+(Diagnostic)).
+
+    data <- read.table(
+       "../data/breast_cancer_data.csv",
+       stringsAsFactors = FALSE,
+       sep = ',',
+       header = TRUE
+    )
+    data$class <- factor(data$class)
     data <- data[,-1]
-    data$class <- gsub(pattern = 2, replacement = 0, x = data$class)
-    data$class <- gsub(pattern = 4, replacement = 1, x = data$class)
-    data$class <- as.integer(data$class)
+
+Separate into training (80%) and testing (20%).
 
     set.seed(31)
-    my_decider <- rbinom(n=nrow(data),size=1,p=0.8)
-    table(my_decider)
+    my_prob <- 0.8
+    my_split <- as.logical(
+      rbinom(
+        n = nrow(data),
+        size = 1,
+        p = my_prob
+      )
+    )
 
-    ## my_decider
-    ##   0   1 
-    ## 151 548
+    train <- data[my_split,]
+    test <- data[!my_split,]
 
-    train <- data[as.logical(my_decider),]
-    test <- data[!as.logical(my_decider),]
+Train neural network.
 
     n <- names(train)
     f <- as.formula(paste("class ~", paste(n[!n %in% "class"], collapse = " + ")))
     nn <- neuralnet(f, data = train, hidden=c(5,3), linear.output = FALSE)
-    plot(nn)
+    plot(nn, rep = "best")
+
+![](img/train_breast_cancer_data-1.png)
+
+Predict and check results.
 
     result <- compute(nn, test[,-10])
-    result <- ifelse(result$net.result > 0.5, yes = 1, no = 0)
+    result <- apply(result$net.result, 1, function(x) ifelse(x[1] > x[2], yes = 2, no = 4))
 
-    # test$class are the rows and result are the columns
+    # test$class are the rows and nn result are the columns
     table(test$class, result)
 
     ##    result
-    ##      0  1
-    ##   0 93  5
-    ##   1  2 51
+    ##      2  4
+    ##   2 78  1
+    ##   4  2 41
 
 Further reading
 ---------------
@@ -194,7 +255,7 @@ Session info
 
 Time built.
 
-    ## [1] "2022-04-09 02:55:55 UTC"
+    ## [1] "2022-04-12 05:46:42 UTC"
 
 Session info.
 
@@ -228,11 +289,12 @@ Session info.
     ##  [9] utf8_1.2.2       rlang_1.0.2      pillar_1.7.0     glue_1.6.2      
     ## [13] withr_2.5.0      DBI_1.1.2        dbplyr_2.1.1     modelr_0.1.8    
     ## [17] readxl_1.4.0     lifecycle_1.0.1  munsell_0.5.0    gtable_0.3.0    
-    ## [21] cellranger_1.1.0 rvest_1.0.2      evaluate_0.15    knitr_1.38      
-    ## [25] tzdb_0.3.0       fastmap_1.1.0    fansi_1.0.3      broom_0.7.12    
-    ## [29] scales_1.1.1     backports_1.4.1  jsonlite_1.8.0   fs_1.5.2        
-    ## [33] hms_1.1.1        digest_0.6.29    stringi_1.7.6    grid_4.1.3      
-    ## [37] cli_3.2.0        tools_4.1.3      magrittr_2.0.3   crayon_1.5.1    
-    ## [41] pkgconfig_2.0.3  ellipsis_0.3.2   xml2_1.3.3       reprex_2.0.1    
-    ## [45] lubridate_1.8.0  rstudioapi_0.13  assertthat_0.2.1 rmarkdown_2.13  
-    ## [49] httr_1.4.2       R6_2.5.1         compiler_4.1.3
+    ## [21] cellranger_1.1.0 rvest_1.0.2      evaluate_0.15    labeling_0.4.2  
+    ## [25] knitr_1.38       tzdb_0.3.0       fastmap_1.1.0    fansi_1.0.3     
+    ## [29] highr_0.9        broom_0.7.12     scales_1.1.1     backports_1.4.1 
+    ## [33] jsonlite_1.8.0   farver_2.1.0     fs_1.5.2         hms_1.1.1       
+    ## [37] digest_0.6.29    stringi_1.7.6    grid_4.1.3       cli_3.2.0       
+    ## [41] tools_4.1.3      magrittr_2.0.3   crayon_1.5.1     pkgconfig_2.0.3 
+    ## [45] ellipsis_0.3.2   xml2_1.3.3       reprex_2.0.1     lubridate_1.8.0 
+    ## [49] rstudioapi_0.13  assertthat_0.2.1 rmarkdown_2.13   httr_1.4.2      
+    ## [53] R6_2.5.1         compiler_4.1.3
