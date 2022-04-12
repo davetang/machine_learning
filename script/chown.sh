@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+#
+# Files built by R inside a Docker container are owned by root.
+# Use this script to change the permissions back to your user and group.
+#
 
 set -euo pipefail
 
@@ -24,12 +28,12 @@ now(){
 
 SECONDS=0
 
->&2 printf "[ %s %s ] Start job\n\n" $(now)
+>&2 printf "[ %s %s ] Start job\n" $(now)
 
 r_version=4.1.3
 docker_image=davetang/r_build:${r_version}
-USERID=$(id -u) \
-GROUPID=$(id -g) \
+USERID=$(id -u)
+GROUPID=$(id -g)
 
 docker run \
    --rm \
