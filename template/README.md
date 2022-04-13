@@ -1,5 +1,3 @@
-<script src="http://latex.codecogs.com/latexit.js"></script>
-
 Introduction
 ------------
 
@@ -19,12 +17,6 @@ Install packages if missing and load.
           library(my_package, character.only = TRUE)
        }
     }
-
-Display equation.
-
-    <div lang="latex">
-       \frac{1+sin(x)}{y}
-    </div>
 
 Breast cancer data
 ------------------
@@ -69,7 +61,7 @@ Session info
 
 Time built.
 
-    ## [1] "2022-04-13 00:10:57 UTC"
+    ## [1] "2022-04-11 05:27:11 UTC"
 
 Session info.
 
