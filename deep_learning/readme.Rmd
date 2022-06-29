@@ -1,0 +1,247 @@
+---
+title: "MNIST"
+output: md_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+theme_set(theme_bw())
+knitr::opts_chunk$set(cache = FALSE)
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.path = "img/")
+```
+
+## Introduction
+
+Install packages if missing and load.
+
+```{r load_package, message=FALSE, warning=FALSE}
+.libPaths('/packages')
+my_packages <- c('keras', 'tensorflow')
+
+for (my_package in my_packages){
+   if(!require(my_package, character.only = TRUE)){
+      install.packages(my_package, '/packages')
+      library(my_package, character.only = TRUE)
+   }
+}
+
+# install_tensorflow()
+```
+
+## MNIST dataset
+
+```{r}
+mnist <- dataset_mnist()
+train_images <- mnist$train$x
+train_labels <- mnist$train$y
+test_images <- mnist$test$x
+test_labels <- mnist$test$y
+```
+
+```{r}
+network <- keras_model_sequential() %>%
+   layer_dense(units = 512, activation = "relu", input_shape = c(28 * 28)) %>%
+   layer_dense(units = 10, activation = "softmax")
+```
+
+```{r}
+network %>% compile(
+   optimizer = "rmsprop",
+   loss = "categorical_crossentropy",
+   metrics = c("accuracy")
+)
+```
+
+```{r}
+train_images <- array_reshape(train_images, c(60000, 28 * 28))
+train_images <- train_images / 255
+test_images <- array_reshape(test_images, c(10000, 28 * 28))
+test_images <- test_images / 255
+train_labels <- to_categorical(train_labels)
+test_labels <- to_categorical(test_labels)
+```
+
+```{r}
+network %>% fit(train_images, train_labels, epochs = 5, batch_size = 128)
+```
+
+```{r}
+metrics <- network %>% evaluate(test_images, test_labels)
+metrics
+```
+
+```{r}
+network %>% predict(test_images[1:10,]) %>% k_argmax()
+```
+
+## Fashion MNIST
+
+Following the [Basic Image Classification](https://tensorflow.rstudio.com/tutorials/beginners/basic-ml/tutorial_basic_classification/) guide.
+
+This guide uses the Fashion MNIST dataset which contains 70,000 grayscale images in 10 categories. The images show individual articles of clothing at low resolution (28 by 28 pixels).
+
+Fashion MNIST is intended as a drop-in replacement for the classic MNIST dataset and is a slightly more challenging problem than regular MNIST.
+
+We will use 60,000 images to train the network and 10,000 images to evaluate how accurately the network learned to classify images.
+
+```{r fashion_mnist}
+fashion_mnist <- dataset_fashion_mnist()
+
+str(fashion_mnist)
+```
+
+Assign.
+
+```{r fashion_mnist_data}
+c(train_images, train_labels) %<-% fashion_mnist$train
+c(test_images, test_labels) %<-% fashion_mnist$test
+```
+
+The labels are arrays of integers ranging from 0 to 9 and correspond to the class of clothing the image represents:
+
+| Digit |    Class    |
+| ----- | ----------- |
+|   0   | T-shirt/top |
+|   1   | Trouser     |
+|   2   | Pullover    |
+|   3   | Dress       |
+|   4   | Coat        |
+|   5   | Sandal      |
+|   6   | Shirt       |
+|   7   | Sneaker     |
+|   8   | Bag         |
+|   9   | Ankle boot  |
+
+```{r class_names}
+class_names = c(
+   'T-shirt/top',
+   'Trouser',
+   'Pullover',
+   'Dress',
+   'Coat', 
+   'Sandal',
+   'Shirt',
+   'Sneaker',
+   'Bag',
+   'Ankle boot'
+)
+```
+
+```{r}
+image_1 <- as.data.frame(train_images[1, , ])
+colnames(image_1) <- seq_len(ncol(image_1))
+image_1$y <- seq_len(nrow(image_1))
+image_1 <- gather(image_1, "x", "value", -y)
+image_1$x <- as.integer(image_1$x)
+
+ggplot(image_1, aes(x = x, y = y, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = "black", na.value = NA) +
+  scale_y_reverse() +
+  theme_minimal() +
+  theme(panel.grid = element_blank())   +
+  theme(aspect.ratio = 1) +
+  xlab("") +
+  ylab("")
+```
+
+Scale values to a range of 0 to 1 by dividing by 255 before feeding to the neural network model. It is important that the training set and the testing set are pre-processed in the same way.
+
+```{r}
+train_images <- train_images / 255
+test_images <- test_images / 255
+```
+
+Display the first 25 images.
+
+```{r}
+par(mfcol=c(5,5))
+par(mar=c(0, 0, 1.5, 0), xaxs='i', yaxs='i')
+for (i in 1:25) { 
+  img <- train_images[i, , ]
+  img <- t(apply(img, 2, rev)) 
+  image(1:28, 1:28, img, col = gray((0:255)/255), xaxt = 'n', yaxt = 'n',
+        main = paste(class_names[train_labels[i] + 1]))
+}
+```
+
+Set up the layers.
+
+```{r}
+model <- keras_model_sequential()
+model %>%
+  layer_flatten(input_shape = c(28, 28)) %>%
+  layer_dense(units = 128, activation = 'relu') %>%
+  layer_dense(units = 10, activation = 'softmax')
+```
+
+```{r}
+model %>% compile(
+  optimizer = 'adam', 
+  loss = 'sparse_categorical_crossentropy',
+  metrics = c('accuracy')
+)
+```
+
+```{r}
+model %>% fit(train_images, train_labels, epochs = 5, verbose = 2)
+```
+
+```{r}
+score <- model %>% evaluate(test_images, test_labels, verbose = 0)
+score
+```
+
+```{r}
+predictions <- model %>% predict(test_images)
+predictions[1, ]
+```
+```{r}
+which.max(predictions[1, ])
+```
+
+```{r}
+class_pred <- model %>% predict(test_images) %>% k_argmax()
+
+class_pred[1:20]
+```
+
+```{r}
+test_labels[1:20]
+```
+
+```{r}
+par(mfcol=c(5,5))
+par(mar=c(0, 0, 1.5, 0), xaxs='i', yaxs='i')
+for (i in 1:25) { 
+   img <- test_images[i, , ]
+   img <- t(apply(img, 2, rev)) 
+   # subtract 1 as labels go from 0 to 9
+   predicted_label <- which.max(predictions[i, ]) - 1
+   true_label <- test_labels[i]
+   if (predicted_label == true_label) {
+      color <- '#008800' 
+   } else {
+      color <- '#bb0000'
+   }
+   image(1:28, 1:28, img, col = gray((0:255)/255), xaxt = 'n', yaxt = 'n',
+         main = paste0(class_names[predicted_label + 1], " (",
+                       class_names[true_label + 1], ")"),
+         col.main = color)
+}
+```
+
+## Session info
+
+Time built.
+
+```{r time, echo=FALSE}
+Sys.time()
+```
+
+Session info.
+
+```{r session_info, echo=FALSE}
+sessionInfo()
+```
