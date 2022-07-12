@@ -1,25 +1,64 @@
 Introduction
 ------------
 
-Naive Bayes is based on [Bayes’
-theorem](https://en.wikipedia.org/wiki/Bayes%27_theorem)
+Naive Bayes is a machine learning approach based on [Bayes’
+theorem](https://en.wikipedia.org/wiki/Bayes%27_theorem), which
+describes the probability of an event, based on prior knowledge of
+conditions that might be related to the event. For example, if the risk
+of developing health problems is known to increase with age, Bayes’
+theorem allows the risk to an individual of a known age to be assessed
+more accurately (by conditioning it on their age) than simply assuming
+that the individual is typical of the population as a whole. The theorem
+is stated mathematically as:
 
-![Bayes’
-theorem](https://latex.codecogs.com/png.image?\large&space;\dpi%7B110%7D\bg%7Bwhite%7D\frac%7BP(B%7CA)P(A)%7D%7BP(B)%7D)
+$$ P(A|B)=\\frac{P(B|A)P(A)}{P(B)} $$
 
 where A and B are events and P(B) is not equal to 0.
 
--   The formula can be interpreted as the chance of a true positive
-    result divided by the chance of any positive result (true positive +
-    false positive)
 -   P(A|B) is a conditional probability: the likelihood of event A
-    occurring given that B is true; this is known as the posterior
-    probability
+    occurring given that B is true; this is the posterior probability
 -   P(B|A) is also a conditional probability: the likelihood of event B
     occurring given that A is true
 -   P(A) and P(B) are the probabilities of observing A and B
-    independently of each other; this is known as the marginal
-    probability and are the prior probabilities
+    independently of each other; they are known as marginal
+    probabilities and are the prior probabilities
+
+The formula can be interpreted as the chance of a true positive result,
+divided by the chance of any positive result (true positive + false
+positive).
+
+A typical example used for illustrating Bayes theorem is on calculating
+the probability that a [drug
+test](https://en.wikipedia.org/wiki/Bayes%27_theorem#Drug_testing) comes
+up positive with a drug user. Suppose a particular drug test is correct
+90% of the times at detecting drug use, i.e. 90% positive when a user
+has been using drugs, and is correct 80% of the times at detecting
+non-users. We also know that 5% of the population use this drug. Given
+what we know, what is the probability that a person is a drug user when
+the test turns up positive? Isn’t this just 90% or 0.9? Not quite, since
+we have prior knowledge that only 5% of people are drug users and that
+the test can turn up positive even with non-users. If we apply Bayes’
+theorem and let *P*(*U**s**e**r*|*P**o**s**i**t**i**v**e*) mean the
+probability that someone is a drug user given that they tested positive,
+then:
+
+$$ P(User | Positive) = \\frac{P (Positive | User) P(User)}{P(Positive)} $$
+
+The nominator is the 0.045, since
+
+-   *P*(*P**o**s**i**t**i**v**e*|*U**s**e**r*) = 0.90
+-   *P*(*U**s**e**r*) = 0.05
+
+For working out *P*(*P**o**s**i**t**i**v**e*), there are two scenarios
+that a test turns up positive:
+
+-   *P*(*P**o**s**i**t**i**v**e*|*U**s**e**r*) = 0.90 × 0.05 = 0.045
+-   *P*(*P**o**s**i**t**i**v**e*|*N**o**n* − *u**s**e**r*) = 0.20 × 0.95 = 0.19
+
+Therefore, the probability that a person is a drug-user given a positive
+test result is:
+
+$$ \\frac{0.045}{0.045 + 0.19} = .1914 \\approx 19% $$
 
 Classifiers based on Bayesian methods utilise training data to calculate
 an observed probability of each class based on feature values. An
@@ -147,7 +186,7 @@ Session info
 
 Time built.
 
-    ## [1] "2022-04-11 02:08:16 UTC"
+    ## [1] "2022-07-12 04:45:39 UTC"
 
 Session info.
 
@@ -176,14 +215,14 @@ Session info.
     ##  [9] ggplot2_3.3.5   tidyverse_1.3.1
     ## 
     ## loaded via a namespace (and not attached):
-    ##  [1] tidyselect_1.1.2 xfun_0.30        haven_2.4.3      colorspace_2.0-3
-    ##  [5] vctrs_0.4.0      generics_0.1.2   htmltools_0.5.2  yaml_2.3.5      
+    ##  [1] tidyselect_1.1.2 xfun_0.30        haven_2.5.0      colorspace_2.0-3
+    ##  [5] vctrs_0.4.1      generics_0.1.2   htmltools_0.5.2  yaml_2.3.5      
     ##  [9] utf8_1.2.2       rlang_1.0.2      pillar_1.7.0     glue_1.6.2      
     ## [13] withr_2.5.0      DBI_1.1.2        dbplyr_2.1.1     modelr_0.1.8    
     ## [17] readxl_1.4.0     lifecycle_1.0.1  munsell_0.5.0    gtable_0.3.0    
     ## [21] cellranger_1.1.0 rvest_1.0.2      evaluate_0.15    knitr_1.38      
     ## [25] tzdb_0.3.0       fastmap_1.1.0    class_7.3-20     fansi_1.0.3     
-    ## [29] broom_0.7.12     scales_1.1.1     backports_1.4.1  jsonlite_1.8.0  
+    ## [29] broom_0.8.0      scales_1.2.0     backports_1.4.1  jsonlite_1.8.0  
     ## [33] fs_1.5.2         hms_1.1.1        digest_0.6.29    stringi_1.7.6   
     ## [37] grid_4.1.3       cli_3.2.0        tools_4.1.3      magrittr_2.0.3  
     ## [41] proxy_0.4-26     crayon_1.5.1     pkgconfig_2.0.3  ellipsis_0.3.2  

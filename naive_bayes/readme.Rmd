@@ -13,16 +13,35 @@ knitr::opts_chunk$set(fig.path = "img/")
 
 ## Introduction
 
-Naive Bayes is based on [Bayes' theorem](https://en.wikipedia.org/wiki/Bayes%27_theorem) 
+Naive Bayes is a machine learning approach based on [Bayes' theorem](https://en.wikipedia.org/wiki/Bayes%27_theorem), which describes the probability of an event, based on prior knowledge of conditions that might be related to the event. For example, if the risk of developing health problems is known to increase with age, Bayes' theorem allows the risk to an individual of a known age to be assessed more accurately (by conditioning it on their age) than simply assuming that the individual is typical of the population as a whole. The theorem is stated mathematically as:
 
-![Bayes' theorem](https://latex.codecogs.com/png.image?\large&space;\dpi{110}\bg{white}\frac{P(B|A)P(A)}{P(B)})
+$$ P(A|B)=\frac{P(B|A)P(A)}{P(B)} $$
 
 where A and B are events and P(B) is not equal to 0.
 
-* The formula can be interpreted as the chance of a true positive result divided by the chance of any positive result (true positive + false positive)
-* P(A|B) is a conditional probability: the likelihood of event A occurring given that B is true; this is known as the posterior probability
+* P(A|B) is a conditional probability: the likelihood of event A occurring given that B is true; this is the posterior probability
 * P(B|A) is also a conditional probability: the likelihood of event B occurring given that A is true
-* P(A) and P(B) are the probabilities of observing A and B independently of each other; this is known as the marginal probability and are the prior probabilities
+* P(A) and P(B) are the probabilities of observing A and B independently of each other; they are known as marginal probabilities and are the prior probabilities
+
+The formula can be interpreted as the chance of a true positive result, divided by the chance of any positive result (true positive + false positive).
+
+A typical example used for illustrating Bayes theorem is on calculating the probability that a [drug test](https://en.wikipedia.org/wiki/Bayes%27_theorem#Drug_testing) comes up positive with a drug user. Suppose a particular drug test is correct 90% of the times at detecting drug use, i.e. 90% positive when a user has been using drugs, and is correct 80% of the times at detecting non-users. We also know that 5% of the population use this drug. Given what we know, what is the probability that a person is a drug user when the test turns up positive? Isn't this just 90% or 0.9? Not quite, since we have prior knowledge that only 5% of people are drug users and that the test can turn up positive even with non-users. If we apply Bayes' theorem and let $P(User|Positive)$ mean the probability that someone is a drug user given that they tested positive, then:
+
+$$ P(User | Positive) = \frac{P (Positive | User) P(User)}{P(Positive)} $$
+
+The nominator is the $0.045$, since
+
+* $P(Positive|User) = 0.90$
+* $P(User) = 0.05$
+
+For working out $P(Positive)$, there are two scenarios that a test turns up positive:
+
+* $P(Positive|User) = 0.90 \times 0.05 = 0.045$
+* $P(Positive|Non-user) = 0.20 \times 0.95 = 0.19$
+
+Therefore, the probability that a person is a drug-user given a positive test result is:
+
+$$ \frac{0.045}{0.045 + 0.19} = .1914 \approx 19% $$
 
 Classifiers based on Bayesian methods utilise training data to calculate an observed probability of each class based on feature values. An example is using Bayes' theorem to classify emails; we can use known ham and spam emails to tally up the occurrence of words to obtain prior and conditional probabilities, and use these probabilities to classify new emails. Bayesian classifiers utilise all available evidence to come up with a classification thus they are best applied to problems where the information from numerous attributes should be considered simultaneously
 
