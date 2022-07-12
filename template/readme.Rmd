@@ -1,6 +1,8 @@
 ---
 title: "Template"
-output: md_document
+output:
+   md_document:
+      variant: markdown
 ---
 
 ```{r setup, include=FALSE}
@@ -30,6 +32,10 @@ for (my_package in my_packages){
    }
 }
 ```
+
+$\LaTeX$:
+
+$$ e = mc^2 $$
 
 ## Breast cancer data
 
