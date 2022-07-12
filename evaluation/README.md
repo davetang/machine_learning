@@ -6,15 +6,17 @@ or not.
 
 Install packages if missing and load.
 
-    .libPaths('/packages')
-    my_packages <- c('caret', 'clValid', 'dendextend', 'rpart', 'ROCR', 'randomForest', 'verification')
+``` {.r}
+.libPaths('/packages')
+my_packages <- c('caret', 'clValid', 'dendextend', 'rpart', 'ROCR', 'randomForest', 'verification')
 
-    for (my_package in my_packages){
-       if(!require(my_package, character.only = TRUE)){
-          install.packages(my_package, '/packages')
-          library(my_package, character.only = TRUE)
-       }
-    }
+for (my_package in my_packages){
+   if(!require(my_package, character.only = TRUE)){
+      install.packages(my_package, '/packages')
+      library(my_package, character.only = TRUE)
+   }
+}
+```
 
 Spam
 ----
@@ -23,12 +25,14 @@ Use [spam
 data](https://archive.ics.uci.edu/ml/machine-learning-databases/spambase/spambase.names)
 to train a Random Forest model to illustrate evaluation measures.
 
-    spam_data <- read.csv(file = "../data/spambase.csv")
+``` {.r}
+spam_data <- read.csv(file = "../data/spambase.csv")
 
-    spam_data$class <- factor(spam_data$class)
+spam_data$class <- factor(spam_data$class)
 
-    set.seed(31)
-    system.time(rf <- randomForest(class ~ ., data = spam_data, importance=TRUE, proximity=TRUE, do.trace=100))
+set.seed(31)
+system.time(rf <- randomForest(class ~ ., data = spam_data, importance=TRUE, proximity=TRUE, do.trace=100))
+```
 
     ## ntree      OOB      1      2
     ##   100:   4.76%  3.16%  7.23%
@@ -38,7 +42,7 @@ to train a Random Forest model to illustrate evaluation measures.
     ##   500:   4.59%  2.73%  7.45%
 
     ##    user  system elapsed 
-    ##  32.138   0.864  33.080
+    ##  30.769   0.650  31.493
 
 Classification measures
 -----------------------
@@ -51,39 +55,45 @@ well](http://www.dataschool.io/simple-guide-to-confusion-matrix-terminology/).
 
 Use `table` to construct a confusion matrix.
 
-    (spam_rf_table <- table(spam_data$class, rf$predicted))
+``` {.r}
+(spam_rf_table <- table(spam_data$class, rf$predicted))
+```
 
     ##    
     ##        0    1
     ##   0 2712   76
     ##   1  135 1678
 
-    TP <- spam_rf_table[1, 1]
-    FN <- spam_rf_table[1, 2]
-    FP <- spam_rf_table[2, 1]
-    TN <- spam_rf_table[2, 2]
+``` {.r}
+TP <- spam_rf_table[1, 1]
+FN <- spam_rf_table[1, 2]
+FP <- spam_rf_table[2, 1]
+TN <- spam_rf_table[2, 2]
+```
 
 Accuracy is the easiest to remember; you take all the correct
 predictions and divide by the total:
 
 -   Accuracy = (TP + TN) / (TP + FP + FN + TN)
 
-<!-- -->
-
-    (accuracy <- (TP + TN) / (TP + FN + FP + TN))
+``` {.r}
+(accuracy <- (TP + TN) / (TP + FN + FP + TN))
+```
 
     ## [1] 0.9541404
 
-    # (accuracy  <- sum(diag(spam_rf_table)) / sum(spam_rf_table))
+``` {.r}
+# (accuracy  <- sum(diag(spam_rf_table)) / sum(spam_rf_table))
+```
 
 Precision or Positive Predictive Value (PPV) is concerned with all the
 *positive* calls that were *predicted*:
 
 -   Precision or Positive Predictive Value (PPV) = TP / (TP + FP)
 
-<!-- -->
-
-    (precision <- TP / (TP + FP))
+``` {.r}
+(precision <- TP / (TP + FP))
+```
 
     ## [1] 0.9525817
 
@@ -95,9 +105,9 @@ method is in detecting positive cases.
 -   Sensitivity or True Positive Rate (TPR) or Recall or Hit Rate = TP /
     (TP + FN)
 
-<!-- -->
-
-    (recall <- TP / (TP + FN))
+``` {.r}
+(recall <- TP / (TP + FN))
+```
 
     ## [1] 0.9727403
 
@@ -106,9 +116,9 @@ were predicted as negative, which is opposite to sensitivity.
 
 -   Specificity or True Negative Rate (TNR) = TN / (TN + FP)
 
-<!-- -->
-
-    (specificity <- TN / (TN + FP))
+``` {.r}
+(specificity <- TN / (TN + FP))
+```
 
     ## [1] 0.9255378
 
@@ -142,10 +152,12 @@ respectively. The RMSE sums all squared residuals, divides by all cases
 
 We can calculate the RMSE as per below.
 
-    # predict height from weight
-    lm.fit <- lm(height ~ weight, data = women)
-    h_pred <- predict(lm.fit, women)
-    (rmse <- sqrt( ( 1/length(h_pred) ) * sum( (women$height - h_pred) ^ 2) ))
+``` {.r}
+# predict height from weight
+lm.fit <- lm(height ~ weight, data = women)
+h_pred <- predict(lm.fit, women)
+(rmse <- sqrt( ( 1/length(h_pred) ) * sum( (women$height - h_pred) ^ 2) ))
+```
 
     ## [1] 0.4096541
 
@@ -166,8 +178,10 @@ clusters.
 For K-means clustering, the measures for WSS and BSS can be found in the
 cluster object as tot.withinss and betweenss.
 
-    km <- kmeans(iris[,-5], centers = 3, nstart = 1)
-    km
+``` {.r}
+km <- kmeans(iris[,-5], centers = 3, nstart = 1)
+km
+```
 
     ## K-means clustering with 3 clusters of sizes 38, 62, 50
     ## 
@@ -193,23 +207,29 @@ cluster object as tot.withinss and betweenss.
     ## [1] "cluster"      "centers"      "totss"        "withinss"     "tot.withinss"
     ## [6] "betweenss"    "size"         "iter"         "ifault"
 
-    d  <- dist(iris[,-5])
-    dunn(d, km$cluster)
+``` {.r}
+d  <- dist(iris[,-5])
+dunn(d, km$cluster)
+```
 
     ## [1] 0.09880739
 
-    # example adapted from clValid
-    data(mouse, package = "clValid")
-    express <- mouse[1:25, -c(1,8)]
-    rownames(express) <- mouse$ID[1:25]
-    express_dist <- dist(express,method="euclidean")
-    express_hclust <- hclust(express_dist, method="average")
-    express_cluster <- cutree(express_hclust, k = 3)
-    dunn(express_dist, express_cluster)
+``` {.r}
+# example adapted from clValid
+data(mouse, package = "clValid")
+express <- mouse[1:25, -c(1,8)]
+rownames(express) <- mouse$ID[1:25]
+express_dist <- dist(express,method="euclidean")
+express_hclust <- hclust(express_dist, method="average")
+express_cluster <- cutree(express_hclust, k = 3)
+dunn(express_dist, express_cluster)
+```
 
     ## [1] 0.2315126
 
-    plot(color_branches(express_hclust, k = 3))
+``` {.r}
+plot(color_branches(express_hclust, k = 3))
+```
 
 ![](img/unnamed-chunk-1-1.png)
 
@@ -227,17 +247,19 @@ you can specify which type of cross-validation and the number of
 cross-validation folds with the trainControl() function, which you pass
 to the trControl argument in train().
 
-    # using the diamonds data set from ggplot2
-    # ggplot2 is automatically loaded with caret
-    model <- train(
-      price ~ ., diamonds,
-      method = "lm",
-      trControl = trainControl(
-        method = "cv",
-        number = 10,
-        verboseIter = TRUE
-      )
-    )
+``` {.r}
+# using the diamonds data set from ggplot2
+# ggplot2 is automatically loaded with caret
+model <- train(
+  price ~ ., diamonds,
+  method = "lm",
+  trControl = trainControl(
+    method = "cv",
+    number = 10,
+    verboseIter = TRUE
+  )
+)
+```
 
     ## + Fold01: intercept=TRUE 
     ## - Fold01: intercept=TRUE 
@@ -262,7 +284,9 @@ to the trControl argument in train().
     ## Aggregating results
     ## Fitting final model on full training set
 
-    model
+``` {.r}
+model
+```
 
     ## Linear Regression 
     ## 
@@ -282,16 +306,18 @@ to the trControl argument in train().
 Using the `caret` package, you can perform 5 x 5-fold cross validations
 by adding the `repeats` parameter.
 
-    model <- train(
-      price ~ ., diamonds,
-      method = "lm",
-      trControl = trainControl(
-        method = "cv",
-        number = 5,
-        repeats = 5,
-        verboseIter = TRUE
-      )
-    )
+``` {.r}
+model <- train(
+  price ~ ., diamonds,
+  method = "lm",
+  trControl = trainControl(
+    method = "cv",
+    number = 5,
+    repeats = 5,
+    verboseIter = TRUE
+  )
+)
+```
 
     ## Warning: `repeats` has no meaning for this resampling method.
 
@@ -308,7 +334,9 @@ by adding the `repeats` parameter.
     ## Aggregating results
     ## Fitting final model on full training set
 
-    model
+``` {.r}
+model
+```
 
     ## Linear Regression 
     ## 
@@ -334,41 +362,43 @@ Receiver Operator Characteristic Curve
     / (TP + FN), is on the y-axis
 -   Use the R package called ROCR
 
-<!-- -->
+``` {.r}
+# split iris dataset into training and test
+set.seed(31)
+x     <- sample(1:nrow(iris), size = 0.8 * nrow(iris), replace = FALSE)
+x_hat <- setdiff(1:150, x)
+train <- iris[x,]
+test  <- iris[x_hat,]
 
-    # split iris dataset into training and test
-    set.seed(31)
-    x     <- sample(1:nrow(iris), size = 0.8 * nrow(iris), replace = FALSE)
-    x_hat <- setdiff(1:150, x)
-    train <- iris[x,]
-    test  <- iris[x_hat,]
+tree <- rpart(Species ~ ., train, method = "class")
 
-    tree <- rpart(Species ~ ., train, method = "class")
+probs <- predict(tree, test, type = "prob")
+probs_setosa <- probs[,1]
+probs_versicolor <- probs[,2]
 
-    probs <- predict(tree, test, type = "prob")
-    probs_setosa <- probs[,1]
-    probs_versicolor <- probs[,2]
+setosa <- as.numeric(grepl(pattern = 'setosa', x = test$Species))
+versicolor <- as.numeric(grepl(pattern = 'versicolor', x = test$Species))
+pred <- prediction(probs_setosa, setosa)
+pred <- prediction(probs_versicolor, versicolor)
 
-    setosa <- as.numeric(grepl(pattern = 'setosa', x = test$Species))
-    versicolor <- as.numeric(grepl(pattern = 'versicolor', x = test$Species))
-    pred <- prediction(probs_setosa, setosa)
-    pred <- prediction(probs_versicolor, versicolor)
+auc <- performance(pred, 'auc')
+auc_value <- auc@y.values[[1]]
 
-    auc <- performance(pred, 'auc')
-    auc_value <- auc@y.values[[1]]
-
-    perf <- performance(pred, 'tpr', 'fpr')
-    plot(perf, main='ROC for versicolor')
-    legend('bottomright', legend = paste('AUC = ', auc_value))
+perf <- performance(pred, 'tpr', 'fpr')
+plot(perf, main='ROC for versicolor')
+legend('bottomright', legend = paste('AUC = ', auc_value))
+```
 
 ![](img/unnamed-chunk-2-1.png)
 
 ![ROC curve](img/roc_versicolor.png)
 
-    auc <- roc.area(as.integer(spam_data$class==1), rf$votes[,2])$A
-    roc.plot(as.integer(spam_data$class==1), rf$votes[,2], main="", threshold = seq(0, 1, 0.1))
-    legend("bottomright", bty="n", sprintf("Area Under the Curve (AUC) = %1.4f", auc))
-    title(main="OOB ROC Curve")
+``` {.r}
+auc <- roc.area(as.integer(spam_data$class==1), rf$votes[,2])$A
+roc.plot(as.integer(spam_data$class==1), rf$votes[,2], main="", threshold = seq(0, 1, 0.1))
+legend("bottomright", bty="n", sprintf("Area Under the Curve (AUC) = %1.4f", auc))
+title(main="OOB ROC Curve")
+```
 
 ![](img/unnamed-chunk-3-1.png)
 
@@ -377,13 +407,17 @@ bootstrapping the observations and prediction, then calculating
 probability of detection yes (PODy) and probability of detection no
 (PODn) values. The default CI is 95%.
 
-    system.time(roc.plot(as.integer(spam_data$class==1), rf$votes[,2], main="", threshold = seq(0, 1, 0.1), CI = TRUE))
+``` {.r}
+system.time(roc.plot(as.integer(spam_data$class==1), rf$votes[,2], main="", threshold = seq(0, 1, 0.1), CI = TRUE))
+```
 
     ##    user  system elapsed 
-    ##  10.054   0.186  10.264
+    ##  10.092   0.159  10.277
 
-    legend("bottomright", bty="n", sprintf("Area Under the Curve (AUC) = %1.4f", auc))
-    title(main="OOB ROC Curve")
+``` {.r}
+legend("bottomright", bty="n", sprintf("Area Under the Curve (AUC) = %1.4f", auc))
+title(main="OOB ROC Curve")
+```
 
 ![](img/unnamed-chunk-4-1.png)
 
@@ -392,11 +426,11 @@ Session info
 
 Time built.
 
-    ## [1] "2022-04-12 08:10:31 UTC"
+    ## [1] "2022-07-12 06:18:03 UTC"
 
 Session info.
 
-    ## R version 4.1.3 (2022-03-10)
+    ## R version 4.2.1 (2022-06-23)
     ## Platform: x86_64-pc-linux-gnu (64-bit)
     ## Running under: Ubuntu 20.04.4 LTS
     ## 
@@ -416,40 +450,42 @@ Session info.
     ## [1] stats     graphics  grDevices utils     datasets  methods   base     
     ## 
     ## other attached packages:
-    ##  [1] verification_1.42  dtw_1.22-3         proxy_0.4-26       CircStats_0.2-6   
-    ##  [5] MASS_7.3-55        boot_1.3-28        fields_13.3        viridis_0.6.2     
-    ##  [9] viridisLite_0.4.0  spam_2.8-0         randomForest_4.7-1 ROCR_1.0-11       
-    ## [13] rpart_4.1.16       dendextend_1.15.2  clValid_0.7        cluster_2.1.2     
-    ## [17] caret_6.0-91       lattice_0.20-45    forcats_0.5.1      stringr_1.4.0     
-    ## [21] dplyr_1.0.8        purrr_0.3.4        readr_2.1.2        tidyr_1.2.0       
-    ## [25] tibble_3.1.6       ggplot2_3.3.5      tidyverse_1.3.1   
+    ##  [1] verification_1.42    dtw_1.22-3           proxy_0.4-27        
+    ##  [4] CircStats_0.2-6      MASS_7.3-57          boot_1.3-28         
+    ##  [7] fields_14.0          viridis_0.6.2        viridisLite_0.4.0   
+    ## [10] spam_2.8-0           randomForest_4.7-1.1 ROCR_1.0-11         
+    ## [13] rpart_4.1.16         dendextend_1.16.0    clValid_0.7         
+    ## [16] cluster_2.1.3        caret_6.0-92         lattice_0.20-45     
+    ## [19] forcats_0.5.1        stringr_1.4.0        dplyr_1.0.9         
+    ## [22] purrr_0.3.4          readr_2.1.2          tidyr_1.2.0         
+    ## [25] tibble_3.1.7         ggplot2_3.3.6        tidyverse_1.3.1     
     ## 
     ## loaded via a namespace (and not attached):
-    ##  [1] nlme_3.1-155         fs_1.5.2             lubridate_1.8.0     
-    ##  [4] httr_1.4.2           tools_4.1.3          backports_1.4.1     
-    ##  [7] utf8_1.2.2           R6_2.5.1             DBI_1.1.2           
+    ##  [1] nlme_3.1-157         fs_1.5.2             lubridate_1.8.0     
+    ##  [4] httr_1.4.3           tools_4.2.1          backports_1.4.1     
+    ##  [7] utf8_1.2.2           R6_2.5.1             DBI_1.1.3           
     ## [10] colorspace_2.0-3     nnet_7.3-17          withr_2.5.0         
-    ## [13] gridExtra_2.3        tidyselect_1.1.2     compiler_4.1.3      
-    ## [16] cli_3.2.0            rvest_1.0.2          xml2_1.3.3          
-    ## [19] scales_1.1.1         digest_0.6.29        rmarkdown_2.13      
-    ## [22] pkgconfig_2.0.3      htmltools_0.5.2      parallelly_1.31.0   
-    ## [25] highr_0.9            maps_3.4.0           dbplyr_2.1.1        
-    ## [28] fastmap_1.1.0        rlang_1.0.2          readxl_1.4.0        
-    ## [31] rstudioapi_0.13      generics_0.1.2       jsonlite_1.8.0      
+    ## [13] gridExtra_2.3        tidyselect_1.1.2     compiler_4.2.1      
+    ## [16] cli_3.3.0            rvest_1.0.2          xml2_1.3.3          
+    ## [19] scales_1.2.0         digest_0.6.29        rmarkdown_2.14      
+    ## [22] pkgconfig_2.0.3      htmltools_0.5.2      parallelly_1.32.0   
+    ## [25] highr_0.9            maps_3.4.0           dbplyr_2.2.1        
+    ## [28] fastmap_1.1.0        rlang_1.0.3          readxl_1.4.0        
+    ## [31] rstudioapi_0.13      generics_0.1.3       jsonlite_1.8.0      
     ## [34] ModelMetrics_1.2.2.2 magrittr_2.0.3       dotCall64_1.0-1     
-    ## [37] Matrix_1.4-0         Rcpp_1.0.8.3         munsell_0.5.0       
+    ## [37] Matrix_1.4-1         Rcpp_1.0.8.3         munsell_0.5.0       
     ## [40] fansi_1.0.3          lifecycle_1.0.1      stringi_1.7.6       
     ## [43] pROC_1.18.0          yaml_2.3.5           plyr_1.8.7          
-    ## [46] recipes_0.2.0        grid_4.1.3           parallel_4.1.3      
-    ## [49] listenv_0.8.0        crayon_1.5.1         haven_2.4.3         
-    ## [52] splines_4.1.3        hms_1.1.1            knitr_1.38          
-    ## [55] pillar_1.7.0         future.apply_1.8.1   reshape2_1.4.4      
-    ## [58] codetools_0.2-18     stats4_4.1.3         reprex_2.0.1        
+    ## [46] recipes_1.0.1        grid_4.2.1           parallel_4.2.1      
+    ## [49] listenv_0.8.0        crayon_1.5.1         haven_2.5.0         
+    ## [52] splines_4.2.1        hms_1.1.1            knitr_1.39          
+    ## [55] pillar_1.7.0         future.apply_1.9.0   reshape2_1.4.4      
+    ## [58] codetools_0.2-18     stats4_4.2.1         reprex_2.0.1        
     ## [61] glue_1.6.2           evaluate_0.15        data.table_1.14.2   
-    ## [64] modelr_0.1.8         vctrs_0.4.0          tzdb_0.3.0          
+    ## [64] modelr_0.1.8         vctrs_0.4.1          tzdb_0.3.0          
     ## [67] foreach_1.5.2        cellranger_1.1.0     gtable_0.3.0        
-    ## [70] future_1.24.0        assertthat_0.2.1     xfun_0.30           
-    ## [73] gower_1.0.0          prodlim_2019.11.13   broom_0.7.12        
-    ## [76] class_7.3-20         survival_3.2-13      timeDate_3043.102   
-    ## [79] iterators_1.0.14     hardhat_0.2.0        lava_1.6.10         
-    ## [82] globals_0.14.0       ellipsis_0.3.2       ipred_0.9-12
+    ## [70] future_1.26.1        assertthat_0.2.1     xfun_0.31           
+    ## [73] gower_1.0.0          prodlim_2019.11.13   broom_1.0.0         
+    ## [76] class_7.3-20         survival_3.3-1       timeDate_3043.102   
+    ## [79] iterators_1.0.14     hardhat_1.2.0        lava_1.6.10         
+    ## [82] globals_0.15.1       ellipsis_0.3.2       ipred_0.9-13

@@ -3,15 +3,17 @@ Introduction
 
 Install packages if missing and load.
 
-    .libPaths('/packages')
-    my_packages <- c('randomForest')
+``` {.r}
+.libPaths('/packages')
+my_packages <- c('randomForest')
 
-    for (my_package in my_packages){
-       if(!require(my_package, character.only = TRUE)){
-          install.packages(my_package, '/packages')
-          library(my_package, character.only = TRUE)
-       }
-    }
+for (my_package in my_packages){
+   if(!require(my_package, character.only = TRUE)){
+      install.packages(my_package, '/packages')
+      library(my_package, character.only = TRUE)
+   }
+}
+```
 
 Breast cancer data
 ------------------
@@ -19,29 +21,33 @@ Breast cancer data
 Using the [Breast Cancer Wisconsin (Diagnostic) Data
 Set](https://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+(Diagnostic)).
 
-    data <- read.table(
-       "../data/breast_cancer_data.csv",
-       stringsAsFactors = FALSE,
-       sep = ',',
-       header = TRUE
-    )
-    data$class <- factor(data$class)
-    data <- data[,-1]
+``` {.r}
+data <- read.table(
+   "../data/breast_cancer_data.csv",
+   stringsAsFactors = FALSE,
+   sep = ',',
+   header = TRUE
+)
+data$class <- factor(data$class)
+data <- data[,-1]
+```
 
 Separate into training (80%) and testing (20%).
 
-    set.seed(31)
-    my_prob <- 0.8
-    my_split <- as.logical(
-       rbinom(
-          n = nrow(data),
-          size = 1,
-          p = my_prob
-       )
-    )
+``` {.r}
+set.seed(31)
+my_prob <- 0.8
+my_split <- as.logical(
+   rbinom(
+      n = nrow(data),
+      size = 1,
+      p = my_prob
+   )
+)
 
-    train <- data[my_split,]
-    test <- data[!my_split,]
+train <- data[my_split,]
+test <- data[!my_split,]
+```
 
 Analysis
 --------
@@ -54,10 +60,10 @@ Parameters:
 -   `do.trace` = give a more verbose output as randomForest is running
 -   `proximity` = calculate the proximity measure among the rows
 
-<!-- -->
-
-    set.seed(31)
-    r <- randomForest(class ~ ., data=train, importance=TRUE, do.trace=100, proximity = TRUE)
+``` {.r}
+set.seed(31)
+r <- randomForest(class ~ ., data=train, importance=TRUE, do.trace=100, proximity = TRUE)
+```
 
     ## ntree      OOB      1      2
     ##   100:   3.98%  3.39%  4.95%
@@ -71,9 +77,11 @@ Predict
 
 Predict testing data.
 
-    table(
-       test$class, predict(object = r, newdata = test)
-    )
+``` {.r}
+table(
+   test$class, predict(object = r, newdata = test)
+)
+```
 
     ##    
     ##      2  4
@@ -85,20 +93,26 @@ Plots
 
 Variable importance.
 
-    varImpPlot(r)
+``` {.r}
+varImpPlot(r)
+```
 
 ![](img/var_imp_plot-1.png)
 
 Random Forest object
 --------------------
 
-    class(r)
+``` {.r}
+class(r)
+```
 
     ## [1] "randomForest.formula" "randomForest"
 
 Names.
 
-    names(r)
+``` {.r}
+names(r)
+```
 
     ##  [1] "call"            "type"            "predicted"       "err.rate"       
     ##  [5] "confusion"       "votes"           "oob.times"       "classes"        
@@ -108,20 +122,26 @@ Names.
 
 The original call to randomForest
 
-    r$call
+``` {.r}
+r$call
+```
 
     ## randomForest(formula = class ~ ., data = train, importance = TRUE, 
     ##     do.trace = 100, proximity = TRUE)
 
 One of regression, classification, or unsupervised
 
-    r$type
+``` {.r}
+r$type
+```
 
     ## [1] "classification"
 
 The predicted values of the input data based on out-of-bag samples
 
-    table(r$predicted, train$class)
+``` {.r}
+table(r$predicted, train$class)
+```
 
     ##    
     ##       2   4
@@ -137,9 +157,9 @@ regression) columns for classification:
     over all classes
 -   the `MeanDecreaseGini` is the mean decrease in Gini index
 
-<!-- -->
-
-    r$importance
+``` {.r}
+r$importance
+```
 
     ##                   2           4 MeanDecreaseAccuracy MeanDecreaseGini
     ## ct      0.044678510 0.035067024          0.040987744        11.745922
@@ -152,9 +172,11 @@ regression) columns for classification:
     ## nn      0.050747220 0.010876336          0.035453362        16.284314
     ## miti    0.008103249 0.002033872          0.005719762         1.860970
 
-The “standard errors” of the permutation-based importance measure.
+The "standard errors" of the permutation-based importance measure.
 
-    r$importanceSD
+``` {.r}
+r$importanceSD
+```
 
     ##                   2           4 MeanDecreaseAccuracy
     ## ct      0.003182645 0.001633369         0.0020862257
@@ -169,19 +191,25 @@ The “standard errors” of the permutation-based importance measure.
 
 Number of trees grown.
 
-    r$ntree
+``` {.r}
+r$ntree
+```
 
     ## [1] 500
 
 Number of predictors sampled for spliting at each node.
 
-    r$mtry
+``` {.r}
+r$mtry
+```
 
     ## [1] 3
 
 A list that contains the entire forest.
 
-    r$forest[[1]]
+``` {.r}
+r$forest[[1]]
+```
 
     ##   [1] 43 61 55 47 33 35 47 51 37 37 39 57 49 55 37 35 35 45 53 43 33 41 61 37 39
     ##  [26] 41 49 39 35 47 41 43 65 41 39 41 49 37 53 47 43 37 45 49 45 43 45 37 45 41
@@ -206,7 +234,9 @@ A list that contains the entire forest.
 
 Use `getTree` to obtain an individual tree.
 
-    head(getTree(r, k = 1))
+``` {.r}
+head(getTree(r, k = 1))
+```
 
     ##   left daughter right daughter split var split point status prediction
     ## 1             2              3         3         2.5      1          0
@@ -220,7 +250,9 @@ Vector error rates (classification only) of the prediction on the input
 data, the i-th element being the (OOB) error rate for all trees up to
 the i-th.
 
-    head(r$err.rate)
+``` {.r}
+head(r$err.rate)
+```
 
     ##             OOB          2          4
     ## [1,] 0.04278075 0.03508772 0.05479452
@@ -233,17 +265,21 @@ the i-th.
 The confusion matrix (classification only) of the prediction (based on
 OOB data).
 
-    r$confusion
+``` {.r}
+r$confusion
+```
 
     ##     2   4 class.error
     ## 2 285  10  0.03389831
     ## 4   8 174  0.04395604
 
 A matrix with one row for each input data point and one column for each
-class, giving the fraction or number of (OOB) ‘votes’ from the random
+class, giving the fraction or number of (OOB) 'votes' from the random
 forest (classification only).
 
-    head(r$votes)
+``` {.r}
+head(r$votes)
+```
 
     ##            2         4
     ## 1  1.0000000 0.0000000
@@ -253,10 +289,12 @@ forest (classification only).
     ## 8  1.0000000 0.0000000
     ## 10 0.5574713 0.4425287
 
-Number of times cases are “out-of-bag” (and thus used in computing OOB
+Number of times cases are "out-of-bag" (and thus used in computing OOB
 error estimate).
 
-    r$oob.times
+``` {.r}
+r$oob.times
+```
 
     ##   [1] 193 174 203 183 180 174 198 192 175 180 191 167 182 195 188 195 177 188
     ##  [19] 169 169 169 186 183 203 186 186 192 188 181 201 178 199 174 193 205 186
@@ -290,7 +328,9 @@ If proximity=TRUE when `randomForest` is called, a matrix of proximity
 measures among the input (based on the frequency that pairs of data
 points are in the same terminal nodes).
 
-    dim(r$proximity)
+``` {.r}
+dim(r$proximity)
+```
 
     ## [1] 477 477
 
@@ -325,11 +365,11 @@ Session info
 
 Time built.
 
-    ## [1] "2022-04-11 05:45:04 UTC"
+    ## [1] "2022-07-12 06:11:27 UTC"
 
 Session info.
 
-    ## R version 4.1.3 (2022-03-10)
+    ## R version 4.2.1 (2022-06-23)
     ## Platform: x86_64-pc-linux-gnu (64-bit)
     ## Running under: Ubuntu 20.04.4 LTS
     ## 
@@ -349,21 +389,22 @@ Session info.
     ## [1] stats     graphics  grDevices utils     datasets  methods   base     
     ## 
     ## other attached packages:
-    ##  [1] randomForest_4.7-1 forcats_0.5.1      stringr_1.4.0      dplyr_1.0.8       
-    ##  [5] purrr_0.3.4        readr_2.1.2        tidyr_1.2.0        tibble_3.1.6      
-    ##  [9] ggplot2_3.3.5      tidyverse_1.3.1   
+    ##  [1] randomForest_4.7-1.1 forcats_0.5.1        stringr_1.4.0       
+    ##  [4] dplyr_1.0.9          purrr_0.3.4          readr_2.1.2         
+    ##  [7] tidyr_1.2.0          tibble_3.1.7         ggplot2_3.3.6       
+    ## [10] tidyverse_1.3.1     
     ## 
     ## loaded via a namespace (and not attached):
-    ##  [1] tidyselect_1.1.2 xfun_0.30        haven_2.4.3      colorspace_2.0-3
-    ##  [5] vctrs_0.4.0      generics_0.1.2   htmltools_0.5.2  yaml_2.3.5      
-    ##  [9] utf8_1.2.2       rlang_1.0.2      pillar_1.7.0     glue_1.6.2      
-    ## [13] withr_2.5.0      DBI_1.1.2        dbplyr_2.1.1     modelr_0.1.8    
+    ##  [1] tidyselect_1.1.2 xfun_0.31        haven_2.5.0      colorspace_2.0-3
+    ##  [5] vctrs_0.4.1      generics_0.1.3   htmltools_0.5.2  yaml_2.3.5      
+    ##  [9] utf8_1.2.2       rlang_1.0.3      pillar_1.7.0     glue_1.6.2      
+    ## [13] withr_2.5.0      DBI_1.1.3        dbplyr_2.2.1     modelr_0.1.8    
     ## [17] readxl_1.4.0     lifecycle_1.0.1  munsell_0.5.0    gtable_0.3.0    
-    ## [21] cellranger_1.1.0 rvest_1.0.2      evaluate_0.15    knitr_1.38      
+    ## [21] cellranger_1.1.0 rvest_1.0.2      evaluate_0.15    knitr_1.39      
     ## [25] tzdb_0.3.0       fastmap_1.1.0    fansi_1.0.3      highr_0.9       
-    ## [29] broom_0.7.12     scales_1.1.1     backports_1.4.1  jsonlite_1.8.0  
+    ## [29] broom_1.0.0      scales_1.2.0     backports_1.4.1  jsonlite_1.8.0  
     ## [33] fs_1.5.2         hms_1.1.1        digest_0.6.29    stringi_1.7.6   
-    ## [37] grid_4.1.3       cli_3.2.0        tools_4.1.3      magrittr_2.0.3  
+    ## [37] grid_4.2.1       cli_3.3.0        tools_4.2.1      magrittr_2.0.3  
     ## [41] crayon_1.5.1     pkgconfig_2.0.3  ellipsis_0.3.2   xml2_1.3.3      
     ## [45] reprex_2.0.1     lubridate_1.8.0  rstudioapi_0.13  assertthat_0.2.1
-    ## [49] rmarkdown_2.13   httr_1.4.2       R6_2.5.1         compiler_4.1.3
+    ## [49] rmarkdown_2.14   httr_1.4.3       R6_2.5.1         compiler_4.2.1

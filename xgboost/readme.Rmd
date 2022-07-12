@@ -1,6 +1,8 @@
 ---
 title: "Extreme Gradient Boosting"
-output: md_document
+output:
+   md_document:
+      variant: markdown
 ---
 
 ```{r setup, include=FALSE}

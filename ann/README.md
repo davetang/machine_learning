@@ -6,15 +6,17 @@ tutorial](https://datascienceplus.com/fitting-neural-network-in-r/).
 
 Install packages if missing and load.
 
-    .libPaths('/packages')
-    my_packages <- c('MASS', 'neuralnet')
+``` {.r}
+.libPaths('/packages')
+my_packages <- c('MASS', 'neuralnet')
 
-    for (my_package in my_packages){
-       if(!require(my_package, character.only = TRUE)){
-          install.packages(my_package, '/packages')
-          library(my_package, character.only = TRUE)
-       }
-    }
+for (my_package in my_packages){
+   if(!require(my_package, character.only = TRUE)){
+      install.packages(my_package, '/packages')
+      library(my_package, character.only = TRUE)
+   }
+}
+```
 
 Housing values in Boston
 ------------------------
@@ -34,16 +36,16 @@ features:
 -   `dis` - weighted mean of distances to five Boston employment
     centres.
 -   `rad` - index of accessibility to radial highways.
--   `tax` - full-value property-tax rate per $10,000.
+-   `tax` - full-value property-tax rate per \$10,000.
 -   `ptratio` - pupil-teacher ratio by town.
--   `black` - 1000(Bk - 0.63)^2 where Bk is the proportion of blacks by
+-   `black` - 1000(Bk - 0.63)\^2 where Bk is the proportion of blacks by
     town.
 -   `lstat` - lower status of the population (percent).
--   `medv` - median value of owner-occupied homes in $1000s.
+-   `medv` - median value of owner-occupied homes in \$1000s.
 
-<!-- -->
-
-    str(Boston)
+``` {.r}
+str(Boston)
+```
 
     ## 'data.frame':    506 obs. of  14 variables:
     ##  $ crim   : num  0.00632 0.02731 0.02729 0.03237 0.06905 ...
@@ -61,7 +63,9 @@ features:
     ##  $ lstat  : num  4.98 9.14 4.03 2.94 5.33 ...
     ##  $ medv   : num  24 21.6 34.7 33.4 36.2 28.7 22.9 27.1 16.5 18.9 ...
 
-    any(is.na(Boston))
+``` {.r}
+any(is.na(Boston))
+```
 
     ## [1] FALSE
 
@@ -70,12 +74,14 @@ features:
 Carry out multiple linear regression by regressing the median value onto
 all other features.
 
-    set.seed(500)
-    index <- sample(1:nrow(Boston), round(0.75*nrow(Boston)))
-    train <- Boston[index,]
-    test <- Boston[-index,]
-    lm.fit <- glm(medv ~ ., data=train)
-    summary(lm.fit)
+``` {.r}
+set.seed(500)
+index <- sample(1:nrow(Boston), round(0.75*nrow(Boston)))
+train <- Boston[index,]
+test <- Boston[-index,]
+lm.fit <- glm(medv ~ ., data=train)
+summary(lm.fit)
+```
 
     ## 
     ## Call:
@@ -114,17 +120,21 @@ all other features.
 
 The number of rooms has the highest *t*-statistic.
 
-    ggplot(Boston, aes(rm, medv)) +
-      geom_point() +
-      labs(x = "Average number of rooms per dwelling", y = "Median value in $1,000")
+``` {.r}
+ggplot(Boston, aes(rm, medv)) +
+  geom_point() +
+  labs(x = "Average number of rooms per dwelling", y = "Median value in $1,000")
+```
 
 ![](img/rm_vs_medv-1.png)
 
 Predict prices and calculate the mean squared error (MSE).
 
-    pr.lm <- predict(lm.fit, test)
-    MSE.lm <- sum((pr.lm - test$medv)^2)/nrow(test)
-    MSE.lm
+``` {.r}
+pr.lm <- predict(lm.fit, test)
+MSE.lm <- sum((pr.lm - test$medv)^2)/nrow(test)
+MSE.lm
+```
 
     ## [1] 31.26302
 
@@ -137,57 +147,73 @@ scaling](https://en.wikipedia.org/wiki/Feature_scaling) using:
 
 Manually perform min-max and compare `scale` approach (just for fun).
 
-    x <- 1:20
-    x_a <- (x - min(x)) / (max(x) - min(x))
-    x_b <- as.vector(scale(x, center = min(x), scale = max(x) - min(x)))
-    identical(x_a, x_b)
+``` {.r}
+x <- 1:20
+x_a <- (x - min(x)) / (max(x) - min(x))
+x_b <- as.vector(scale(x, center = min(x), scale = max(x) - min(x)))
+identical(x_a, x_b)
+```
 
     ## [1] TRUE
 
 Carrying out scaling on Boston data set.
 
-    maxs <- apply(Boston, 2, max)
-    mins <- apply(Boston, 2, min)
+``` {.r}
+maxs <- apply(Boston, 2, max)
+mins <- apply(Boston, 2, min)
 
-    scaled <- as.data.frame(
-      scale(Boston, center = mins, scale = maxs - mins)
-    )
+scaled <- as.data.frame(
+  scale(Boston, center = mins, scale = maxs - mins)
+)
 
-    train_scaled <- scaled[index,]
-    test_scaled <- scaled[-index,]
+train_scaled <- scaled[index,]
+test_scaled <- scaled[-index,]
+```
 
 Manually create formula as `f` since `neuralnet` does not recognise R
 formulae.
 
-    n <- names(train_scaled)
-    f <- as.formula(paste("medv ~", paste(n[!n %in% "medv"], collapse = " + ")))
+``` {.r}
+n <- names(train_scaled)
+f <- as.formula(paste("medv ~", paste(n[!n %in% "medv"], collapse = " + ")))
+```
 
 Train neural network using two hidden layers with 5 and 3 neurons,
 respectively.
 
-    nn <- neuralnet(f, data = train_scaled, hidden=c(5,3), linear.output = TRUE)
-    plot(nn, rep = "best")
+``` {.r}
+nn <- neuralnet(f, data = train_scaled, hidden=c(5,3), linear.output = TRUE)
+plot(nn, rep = "best")
+```
 
 ![](img/train_boston-1.png)
 
 Predict (scaled) value.
 
-    pr.nn <- compute(nn, test_scaled[,1:13])
+``` {.r}
+pr.nn <- compute(nn, test_scaled[,1:13])
+```
 
 We need to unscale the data before calculating the MSE.
 
-    pr.nn_unscaled <- pr.nn$net.result * (max(Boston$medv) - min(Boston$medv)) + min(Boston$medv)
-    test.r <- (test_scaled$medv) * (max(Boston$medv) - min(Boston$medv)) + min(Boston$medv)
+``` {.r}
+pr.nn_unscaled <- pr.nn$net.result * (max(Boston$medv) - min(Boston$medv)) + min(Boston$medv)
+test.r <- (test_scaled$medv) * (max(Boston$medv) - min(Boston$medv)) + min(Boston$medv)
 
-    MSE.nn <- sum((test.r - pr.nn_unscaled)^2)/nrow(test_scaled)
+MSE.nn <- sum((test.r - pr.nn_unscaled)^2)/nrow(test_scaled)
+```
 
 Comparing the MSEs.
 
-    print(paste0("MSE of multiple linear regression: ", MSE.lm))
+``` {.r}
+print(paste0("MSE of multiple linear regression: ", MSE.lm))
+```
 
     ## [1] "MSE of multiple linear regression: 31.2630222372615"
 
-    print(paste0("MSE of neural network regression: ", MSE.nn))
+``` {.r}
+print(paste0("MSE of neural network regression: ", MSE.nn))
+```
 
     ## [1] "MSE of neural network regression: 16.4595537665717"
 
@@ -198,46 +224,54 @@ Classify breast cancer samples using the [Breast Cancer Wisconsin
 (Diagnostic) Data
 Set](https://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+(Diagnostic)).
 
-    data <- read.table(
-       "../data/breast_cancer_data.csv",
-       stringsAsFactors = FALSE,
-       sep = ',',
-       header = TRUE
-    )
-    data$class <- factor(data$class)
-    data <- data[,-1]
+``` {.r}
+data <- read.table(
+   "../data/breast_cancer_data.csv",
+   stringsAsFactors = FALSE,
+   sep = ',',
+   header = TRUE
+)
+data$class <- factor(data$class)
+data <- data[,-1]
+```
 
 Separate into training (80%) and testing (20%).
 
-    set.seed(31)
-    my_prob <- 0.8
-    my_split <- as.logical(
-      rbinom(
-        n = nrow(data),
-        size = 1,
-        p = my_prob
-      )
-    )
+``` {.r}
+set.seed(31)
+my_prob <- 0.8
+my_split <- as.logical(
+  rbinom(
+    n = nrow(data),
+    size = 1,
+    p = my_prob
+  )
+)
 
-    train <- data[my_split,]
-    test <- data[!my_split,]
+train <- data[my_split,]
+test <- data[!my_split,]
+```
 
 Train neural network.
 
-    n <- names(train)
-    f <- as.formula(paste("class ~", paste(n[!n %in% "class"], collapse = " + ")))
-    nn <- neuralnet(f, data = train, hidden=c(5,3), linear.output = FALSE)
-    plot(nn, rep = "best")
+``` {.r}
+n <- names(train)
+f <- as.formula(paste("class ~", paste(n[!n %in% "class"], collapse = " + ")))
+nn <- neuralnet(f, data = train, hidden=c(5,3), linear.output = FALSE)
+plot(nn, rep = "best")
+```
 
 ![](img/train_breast_cancer_data-1.png)
 
 Predict and check results.
 
-    result <- compute(nn, test[,-10])
-    result <- apply(result$net.result, 1, function(x) ifelse(x[1] > x[2], yes = 2, no = 4))
+``` {.r}
+result <- compute(nn, test[,-10])
+result <- apply(result$net.result, 1, function(x) ifelse(x[1] > x[2], yes = 2, no = 4))
 
-    # test$class are the rows and nn result are the columns
-    table(test$class, result)
+# test$class are the rows and nn result are the columns
+table(test$class, result)
+```
 
     ##    result
     ##      2  4
@@ -255,11 +289,11 @@ Session info
 
 Time built.
 
-    ## [1] "2022-04-12 05:46:42 UTC"
+    ## [1] "2022-07-12 05:53:24 UTC"
 
 Session info.
 
-    ## R version 4.1.3 (2022-03-10)
+    ## R version 4.2.1 (2022-06-23)
     ## Platform: x86_64-pc-linux-gnu (64-bit)
     ## Running under: Ubuntu 20.04.4 LTS
     ## 
@@ -279,22 +313,22 @@ Session info.
     ## [1] stats     graphics  grDevices utils     datasets  methods   base     
     ## 
     ## other attached packages:
-    ##  [1] neuralnet_1.44.2 MASS_7.3-55      forcats_0.5.1    stringr_1.4.0   
-    ##  [5] dplyr_1.0.8      purrr_0.3.4      readr_2.1.2      tidyr_1.2.0     
-    ##  [9] tibble_3.1.6     ggplot2_3.3.5    tidyverse_1.3.1 
+    ##  [1] neuralnet_1.44.2 MASS_7.3-57      forcats_0.5.1    stringr_1.4.0   
+    ##  [5] dplyr_1.0.9      purrr_0.3.4      readr_2.1.2      tidyr_1.2.0     
+    ##  [9] tibble_3.1.7     ggplot2_3.3.6    tidyverse_1.3.1 
     ## 
     ## loaded via a namespace (and not attached):
-    ##  [1] tidyselect_1.1.2 xfun_0.30        haven_2.4.3      colorspace_2.0-3
-    ##  [5] vctrs_0.4.0      generics_0.1.2   htmltools_0.5.2  yaml_2.3.5      
-    ##  [9] utf8_1.2.2       rlang_1.0.2      pillar_1.7.0     glue_1.6.2      
-    ## [13] withr_2.5.0      DBI_1.1.2        dbplyr_2.1.1     modelr_0.1.8    
+    ##  [1] tidyselect_1.1.2 xfun_0.31        haven_2.5.0      colorspace_2.0-3
+    ##  [5] vctrs_0.4.1      generics_0.1.3   htmltools_0.5.2  yaml_2.3.5      
+    ##  [9] utf8_1.2.2       rlang_1.0.3      pillar_1.7.0     glue_1.6.2      
+    ## [13] withr_2.5.0      DBI_1.1.3        dbplyr_2.2.1     modelr_0.1.8    
     ## [17] readxl_1.4.0     lifecycle_1.0.1  munsell_0.5.0    gtable_0.3.0    
     ## [21] cellranger_1.1.0 rvest_1.0.2      evaluate_0.15    labeling_0.4.2  
-    ## [25] knitr_1.38       tzdb_0.3.0       fastmap_1.1.0    fansi_1.0.3     
-    ## [29] highr_0.9        broom_0.7.12     scales_1.1.1     backports_1.4.1 
-    ## [33] jsonlite_1.8.0   farver_2.1.0     fs_1.5.2         hms_1.1.1       
-    ## [37] digest_0.6.29    stringi_1.7.6    grid_4.1.3       cli_3.2.0       
-    ## [41] tools_4.1.3      magrittr_2.0.3   crayon_1.5.1     pkgconfig_2.0.3 
+    ## [25] knitr_1.39       tzdb_0.3.0       fastmap_1.1.0    fansi_1.0.3     
+    ## [29] highr_0.9        broom_1.0.0      scales_1.2.0     backports_1.4.1 
+    ## [33] jsonlite_1.8.0   farver_2.1.1     fs_1.5.2         hms_1.1.1       
+    ## [37] digest_0.6.29    stringi_1.7.6    grid_4.2.1       cli_3.3.0       
+    ## [41] tools_4.2.1      magrittr_2.0.3   crayon_1.5.1     pkgconfig_2.0.3 
     ## [45] ellipsis_0.3.2   xml2_1.3.3       reprex_2.0.1     lubridate_1.8.0 
-    ## [49] rstudioapi_0.13  assertthat_0.2.1 rmarkdown_2.13   httr_1.4.2      
-    ## [53] R6_2.5.1         compiler_4.1.3
+    ## [49] rstudioapi_0.13  assertthat_0.2.1 rmarkdown_2.14   httr_1.4.3      
+    ## [53] R6_2.5.1         compiler_4.2.1

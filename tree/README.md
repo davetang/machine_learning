@@ -6,18 +6,22 @@ decision support tool that uses a tree-like graph or model of decisions
 and their possible consequences, including chance event outcomes,
 resource costs, and utility.
 
-    .libPaths('/packages')
-    my_packages <- c('tree', 'rpart', 'rpart.plot')
+``` {.r}
+.libPaths('/packages')
+my_packages <- c('tree', 'rpart', 'rpart.plot')
 
-    for (my_package in my_packages){
-       if(!require(my_package, character.only = TRUE)){
-          install.packages(my_package, '/packages')
-          library(my_package, character.only = TRUE)
-       }
-    }
+for (my_package in my_packages){
+   if(!require(my_package, character.only = TRUE)){
+      install.packages(my_package, '/packages')
+      library(my_package, character.only = TRUE)
+   }
+}
+```
 
-    tree1 <- tree(Species ~ Sepal.Width + Petal.Width, data = iris)
-    summary(tree1)
+``` {.r}
+tree1 <- tree(Species ~ Sepal.Width + Petal.Width, data = iris)
+summary(tree1)
+```
 
     ## 
     ## Classification tree:
@@ -26,27 +30,33 @@ resource costs, and utility.
     ## Residual mean deviance:  0.204 = 29.57 / 145 
     ## Misclassification error rate: 0.03333 = 5 / 150
 
-    plot(tree1)
-    text(tree1)
+``` {.r}
+plot(tree1)
+text(tree1)
+```
 
 ![](img/unnamed-chunk-1-1.png)
 
-    plot(iris$Petal.Width,
-         iris$Sepal.Width,
-         pch=19,
-         col=as.numeric(iris$Species))
+``` {.r}
+plot(iris$Petal.Width,
+     iris$Sepal.Width,
+     pch=19,
+     col=as.numeric(iris$Species))
 
-    partition.tree(tree1, label="Species", add=TRUE)
-    legend(2.3,4.5,
-           legend=levels(iris$Species),
-           col=1:length(levels(iris$Species)),
-           pch=19,
-           bty = 'n')
+partition.tree(tree1, label="Species", add=TRUE)
+legend(2.3,4.5,
+       legend=levels(iris$Species),
+       col=1:length(levels(iris$Species)),
+       pch=19,
+       bty = 'n')
+```
 
 ![](img/unnamed-chunk-2-1.png)
 
-    tree2 <- tree(Species ~ ., data = iris)
-    summary(tree2)
+``` {.r}
+tree2 <- tree(Species ~ ., data = iris)
+summary(tree2)
+```
 
     ## 
     ## Classification tree:
@@ -57,7 +67,9 @@ resource costs, and utility.
     ## Residual mean deviance:  0.1253 = 18.05 / 144 
     ## Misclassification error rate: 0.02667 = 4 / 150
 
-    plot(tree2); text(tree2)
+``` {.r}
+plot(tree2); text(tree2)
+```
 
 ![](img/unnamed-chunk-3-1.png)
 
@@ -67,19 +79,19 @@ Each node shows:
 2.  The numbers of each class (in the order above)
 3.  The percentage of all samples
 
-<!-- -->
-
-    rpart <- rpart(Species ~ ., data=iris, method="class")
-    summary(rpart)
+``` {.r}
+rpart <- rpart(Species ~ ., data=iris, method="class")
+summary(rpart)
+```
 
     ## Call:
     ## rpart(formula = Species ~ ., data = iris, method = "class")
     ##   n= 150 
     ## 
     ##     CP nsplit rel error xerror       xstd
-    ## 1 0.50      0      1.00   1.22 0.04772141
-    ## 2 0.44      1      0.50   0.69 0.06104097
-    ## 3 0.01      2      0.06   0.07 0.02583280
+    ## 1 0.50      0      1.00   1.14 0.05230679
+    ## 2 0.44      1      0.50   0.61 0.06016090
+    ## 3 0.01      2      0.06   0.10 0.03055050
     ## 
     ## Variable importance
     ##  Petal.Width Petal.Length Sepal.Length  Sepal.Width 
@@ -130,15 +142,19 @@ Each node shows:
     ##     class counts:     0     1    45
     ##    probabilities: 0.000 0.022 0.978
 
-    rpart.plot(rpart, type = 4, extra = 101)
+``` {.r}
+rpart.plot(rpart, type = 4, extra = 101)
+```
 
 ![](img/unnamed-chunk-4-1.png)
 
 Titanic data
 ------------
 
-    titanic <- read.csv('../data/titanic.csv.gz')
-    str(titanic)
+``` {.r}
+titanic <- read.csv('../data/titanic.csv.gz')
+str(titanic)
+```
 
     ## 'data.frame':    891 obs. of  12 variables:
     ##  $ PassengerId: int  1 2 3 4 5 6 7 8 9 10 ...
@@ -154,8 +170,10 @@ Titanic data
     ##  $ Cabin      : chr  "" "C85" "" "C123" ...
     ##  $ Embarked   : chr  "S" "C" "S" "S" ...
 
-    titanic$Pclass <- factor(titanic$Pclass)
-    boxplot(Fare ~ Pclass, data = titanic)
+``` {.r}
+titanic$Pclass <- factor(titanic$Pclass)
+boxplot(Fare ~ Pclass, data = titanic)
+```
 
 ![](img/unnamed-chunk-5-1.png)
 
@@ -165,20 +183,22 @@ Each node shows:
 2.  The predicted probability of survival
 3.  The percentage of all samples
 
-<!-- -->
-
-    t <-  rpart(Survived ~ Sex + Fare + Age, data=titanic, method="class")
-    rpart.plot(t)
+``` {.r}
+t <-  rpart(Survived ~ Sex + Fare + Age, data=titanic, method="class")
+rpart.plot(t)
+```
 
 ![](img/unnamed-chunk-6-1.png)
 
 For example the 0.74 indicates that 74% of females survived.
 
-    prop.table(
-       table(
-          titanic$Sex, titanic$Survived
-       ), margin = 1
-    )
+``` {.r}
+prop.table(
+   table(
+      titanic$Sex, titanic$Survived
+   ), margin = 1
+)
+```
 
     ##         
     ##                  0         1
@@ -188,14 +208,16 @@ For example the 0.74 indicates that 74% of females survived.
 Breast cancer data
 ------------------
 
-    data <- read.table(
-       "../data/breast_cancer_data.csv",
-       stringsAsFactors = FALSE,
-       sep = ',',
-       header = TRUE
-    )
-    data$class <- factor(data$class)
-    data <- data[,-1]
+``` {.r}
+data <- read.table(
+   "../data/breast_cancer_data.csv",
+   stringsAsFactors = FALSE,
+   sep = ',',
+   header = TRUE
+)
+data$class <- factor(data$class)
+data <- data[,-1]
+```
 
 Each node shows:
 
@@ -203,10 +225,10 @@ Each node shows:
 2.  The predicted probability of malignancy
 3.  The percentage of all samples
 
-<!-- -->
-
-    t <- rpart(class ~ ., data = data, method="class")
-    rpart.plot(t)
+``` {.r}
+t <- rpart(class ~ ., data = data, method="class")
+rpart.plot(t)
+```
 
 ![](img/unnamed-chunk-9-1.png)
 
@@ -215,11 +237,11 @@ Session info
 
 Time built.
 
-    ## [1] "2022-04-11 06:32:55 UTC"
+    ## [1] "2022-07-12 05:54:00 UTC"
 
 Session info.
 
-    ## R version 4.1.3 (2022-03-10)
+    ## R version 4.2.1 (2022-06-23)
     ## Platform: x86_64-pc-linux-gnu (64-bit)
     ## Running under: Ubuntu 20.04.4 LTS
     ## 
@@ -239,21 +261,21 @@ Session info.
     ## [1] stats     graphics  grDevices utils     datasets  methods   base     
     ## 
     ## other attached packages:
-    ##  [1] rpart.plot_3.1.0 rpart_4.1.16     tree_1.0-41      forcats_0.5.1   
-    ##  [5] stringr_1.4.0    dplyr_1.0.8      purrr_0.3.4      readr_2.1.2     
-    ##  [9] tidyr_1.2.0      tibble_3.1.6     ggplot2_3.3.5    tidyverse_1.3.1 
+    ##  [1] rpart.plot_3.1.1 rpart_4.1.16     tree_1.0-42      forcats_0.5.1   
+    ##  [5] stringr_1.4.0    dplyr_1.0.9      purrr_0.3.4      readr_2.1.2     
+    ##  [9] tidyr_1.2.0      tibble_3.1.7     ggplot2_3.3.6    tidyverse_1.3.1 
     ## 
     ## loaded via a namespace (and not attached):
-    ##  [1] tidyselect_1.1.2 xfun_0.30        haven_2.4.3      colorspace_2.0-3
-    ##  [5] vctrs_0.4.0      generics_0.1.2   htmltools_0.5.2  yaml_2.3.5      
-    ##  [9] utf8_1.2.2       rlang_1.0.2      pillar_1.7.0     glue_1.6.2      
-    ## [13] withr_2.5.0      DBI_1.1.2        dbplyr_2.1.1     modelr_0.1.8    
+    ##  [1] tidyselect_1.1.2 xfun_0.31        haven_2.5.0      colorspace_2.0-3
+    ##  [5] vctrs_0.4.1      generics_0.1.3   htmltools_0.5.2  yaml_2.3.5      
+    ##  [9] utf8_1.2.2       rlang_1.0.3      pillar_1.7.0     glue_1.6.2      
+    ## [13] withr_2.5.0      DBI_1.1.3        dbplyr_2.2.1     modelr_0.1.8    
     ## [17] readxl_1.4.0     lifecycle_1.0.1  munsell_0.5.0    gtable_0.3.0    
-    ## [21] cellranger_1.1.0 rvest_1.0.2      evaluate_0.15    knitr_1.38      
+    ## [21] cellranger_1.1.0 rvest_1.0.2      evaluate_0.15    knitr_1.39      
     ## [25] tzdb_0.3.0       fastmap_1.1.0    fansi_1.0.3      highr_0.9       
-    ## [29] broom_0.7.12     scales_1.1.1     backports_1.4.1  jsonlite_1.8.0  
+    ## [29] broom_1.0.0      scales_1.2.0     backports_1.4.1  jsonlite_1.8.0  
     ## [33] fs_1.5.2         hms_1.1.1        digest_0.6.29    stringi_1.7.6   
-    ## [37] grid_4.1.3       cli_3.2.0        tools_4.1.3      magrittr_2.0.3  
+    ## [37] grid_4.2.1       cli_3.3.0        tools_4.2.1      magrittr_2.0.3  
     ## [41] crayon_1.5.1     pkgconfig_2.0.3  ellipsis_0.3.2   xml2_1.3.3      
     ## [45] reprex_2.0.1     lubridate_1.8.0  rstudioapi_0.13  assertthat_0.2.1
-    ## [49] rmarkdown_2.13   httr_1.4.2       R6_2.5.1         compiler_4.1.3
+    ## [49] rmarkdown_2.14   httr_1.4.3       R6_2.5.1         compiler_4.2.1

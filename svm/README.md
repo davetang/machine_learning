@@ -23,7 +23,7 @@ dimension using a kernel function, typically much higher than the
 original feature space.
 
 In essence, the kernel function is a mathematical trick that allows the
-SVM to perform a “two-dimensional” classification of a set of originally
+SVM to perform a "two-dimensional" classification of a set of originally
 one-dimensional data. In general, a kernel function projects data from a
 low-dimensional space to a space of higher dimension. It is possible to
 prove that, for any given data set with consistent labels (where
@@ -40,15 +40,17 @@ data sets.
 
 Install packages if missing and load.
 
-    .libPaths('/packages')
-    my_packages <- 'e1071'
+``` {.r}
+.libPaths('/packages')
+my_packages <- 'e1071'
 
-    for (my_package in my_packages){
-       if(!require(my_package, character.only = TRUE)){
-          install.packages(my_package, '/packages')
-          library(my_package, character.only = TRUE)
-       }
-    }
+for (my_package in my_packages){
+   if(!require(my_package, character.only = TRUE)){
+      install.packages(my_package, '/packages')
+      library(my_package, character.only = TRUE)
+   }
+}
+```
 
 Breast cancer data
 ------------------
@@ -56,33 +58,45 @@ Breast cancer data
 Using the [Breast Cancer Wisconsin (Diagnostic) Data
 Set](http://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+(Diagnostic)).
 
-    data <- read.table("../data/breast_cancer_data.csv", stringsAsFactors = FALSE, sep = ',', header = TRUE)
+``` {.r}
+data <- read.table("../data/breast_cancer_data.csv", stringsAsFactors = FALSE, sep = ',', header = TRUE)
+```
 
 The class should be a factor; 2 is benign and 4 is malignant.
 
-    data$class <- factor(data$class)
+``` {.r}
+data$class <- factor(data$class)
+```
 
 Finally remove id column.
 
-    data <- data[,-1]
+``` {.r}
+data <- data[,-1]
+```
 
 Separate into training (80%) and testing (20%).
 
-    set.seed(31)
-    my_decider <- rbinom(n=nrow(data),size=1,p=0.8)
-    table(my_decider)
+``` {.r}
+set.seed(31)
+my_decider <- rbinom(n=nrow(data),size=1,p=0.8)
+table(my_decider)
+```
 
     ## my_decider
     ##   0   1 
     ## 122 477
 
-    train <- data[as.logical(my_decider),]
-    test <- data[!as.logical(my_decider),]
+``` {.r}
+train <- data[as.logical(my_decider),]
+test <- data[!as.logical(my_decider),]
+```
 
 Using the `e1071` package.
 
-    tuned <- tune.svm(class ~ ., data = train, gamma = 10^(-6:-1), cost = 10^(-1:1))
-    summary(tuned)
+``` {.r}
+tuned <- tune.svm(class ~ ., data = train, gamma = 10^(-6:-1), cost = 10^(-1:1))
+summary(tuned)
+```
 
     ## 
     ## Parameter tuning of 'svm':
@@ -118,8 +132,10 @@ Using the `e1071` package.
 
 Train model using the best values for gamma and cost.
 
-    svm_model <- svm(class ~ ., data = train, kernel="radial", gamma=0.01, cost=1)
-    summary(svm_model)
+``` {.r}
+svm_model <- svm(class ~ ., data = train, kernel="radial", gamma=0.01, cost=1)
+summary(svm_model)
+```
 
     ## 
     ## Call:
@@ -144,8 +160,10 @@ Train model using the best values for gamma and cost.
 
 Predict test cases.
 
-    svm_predict <- predict(svm_model, test)
-    table(svm_predict, test$class)
+``` {.r}
+svm_predict <- predict(svm_model, test)
+table(svm_predict, test$class)
+```
 
     ##            
     ## svm_predict  2  4
@@ -163,11 +181,11 @@ Session info
 
 Time built.
 
-    ## [1] "2022-04-11 03:55:12 UTC"
+    ## [1] "2022-07-12 05:57:27 UTC"
 
 Session info.
 
-    ## R version 4.1.3 (2022-03-10)
+    ## R version 4.2.1 (2022-06-23)
     ## Platform: x86_64-pc-linux-gnu (64-bit)
     ## Running under: Ubuntu 20.04.4 LTS
     ## 
@@ -187,22 +205,22 @@ Session info.
     ## [1] stats     graphics  grDevices utils     datasets  methods   base     
     ## 
     ## other attached packages:
-    ##  [1] e1071_1.7-9     forcats_0.5.1   stringr_1.4.0   dplyr_1.0.8    
-    ##  [5] purrr_0.3.4     readr_2.1.2     tidyr_1.2.0     tibble_3.1.6   
-    ##  [9] ggplot2_3.3.5   tidyverse_1.3.1
+    ##  [1] e1071_1.7-11    forcats_0.5.1   stringr_1.4.0   dplyr_1.0.9    
+    ##  [5] purrr_0.3.4     readr_2.1.2     tidyr_1.2.0     tibble_3.1.7   
+    ##  [9] ggplot2_3.3.6   tidyverse_1.3.1
     ## 
     ## loaded via a namespace (and not attached):
-    ##  [1] tidyselect_1.1.2 xfun_0.30        haven_2.4.3      colorspace_2.0-3
-    ##  [5] vctrs_0.4.0      generics_0.1.2   htmltools_0.5.2  yaml_2.3.5      
-    ##  [9] utf8_1.2.2       rlang_1.0.2      pillar_1.7.0     glue_1.6.2      
-    ## [13] withr_2.5.0      DBI_1.1.2        dbplyr_2.1.1     modelr_0.1.8    
+    ##  [1] tidyselect_1.1.2 xfun_0.31        haven_2.5.0      colorspace_2.0-3
+    ##  [5] vctrs_0.4.1      generics_0.1.3   htmltools_0.5.2  yaml_2.3.5      
+    ##  [9] utf8_1.2.2       rlang_1.0.3      pillar_1.7.0     glue_1.6.2      
+    ## [13] withr_2.5.0      DBI_1.1.3        dbplyr_2.2.1     modelr_0.1.8    
     ## [17] readxl_1.4.0     lifecycle_1.0.1  munsell_0.5.0    gtable_0.3.0    
-    ## [21] cellranger_1.1.0 rvest_1.0.2      evaluate_0.15    knitr_1.38      
+    ## [21] cellranger_1.1.0 rvest_1.0.2      evaluate_0.15    knitr_1.39      
     ## [25] tzdb_0.3.0       fastmap_1.1.0    class_7.3-20     fansi_1.0.3     
-    ## [29] broom_0.7.12     scales_1.1.1     backports_1.4.1  jsonlite_1.8.0  
+    ## [29] broom_1.0.0      scales_1.2.0     backports_1.4.1  jsonlite_1.8.0  
     ## [33] fs_1.5.2         hms_1.1.1        digest_0.6.29    stringi_1.7.6   
-    ## [37] grid_4.1.3       cli_3.2.0        tools_4.1.3      magrittr_2.0.3  
-    ## [41] proxy_0.4-26     crayon_1.5.1     pkgconfig_2.0.3  ellipsis_0.3.2  
+    ## [37] grid_4.2.1       cli_3.3.0        tools_4.2.1      magrittr_2.0.3  
+    ## [41] proxy_0.4-27     crayon_1.5.1     pkgconfig_2.0.3  ellipsis_0.3.2  
     ## [45] xml2_1.3.3       reprex_2.0.1     lubridate_1.8.0  rstudioapi_0.13 
-    ## [49] assertthat_0.2.1 rmarkdown_2.13   httr_1.4.2       R6_2.5.1        
-    ## [53] compiler_4.1.3
+    ## [49] assertthat_0.2.1 rmarkdown_2.14   httr_1.4.3       R6_2.5.1        
+    ## [53] compiler_4.2.1

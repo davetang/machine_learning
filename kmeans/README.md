@@ -3,15 +3,17 @@ Introduction
 
 Install packages if missing and load.
 
-    .libPaths('/packages')
-    my_packages <- c("cluster", "ggrepel", "factoextra")
+``` {.r}
+.libPaths('/packages')
+my_packages <- c("cluster", "ggrepel", "factoextra")
 
-    for (my_package in my_packages){
-       if(!require(my_package, character.only = TRUE)){
-          install.packages(my_package, '/packages')
-          library(my_package, character.only = TRUE)
-       }
-    }
+for (my_package in my_packages){
+   if(!require(my_package, character.only = TRUE)){
+      install.packages(my_package, '/packages')
+      library(my_package, character.only = TRUE)
+   }
+}
+```
 
 Data set
 --------
@@ -35,7 +37,7 @@ and consisting of:
 -   TOV - Turnovers
 
 Some players were traded during the season and thus have stats for
-different teams. The “TOT” team is a summation of stats from different
+different teams. The "TOT" team is a summation of stats from different
 teams but since we will perform our own summation, we will exclude that
 row of data.
 
@@ -44,22 +46,24 @@ played, since not everyone has played the same number of games. We will
 also standardise the data to ensure so that all the stats are on the
 same scale.
 
-    season_stat <- read.csv("../data/Seasons_Stats.csv.gz")
+``` {.r}
+season_stat <- read.csv("../data/Seasons_Stats.csv.gz")
 
-    # some players played in different teams
-    season_stat %>%
-      filter(Year == 2017, Tm != "TOT", G > 50) %>%
-      select(Player, Pos, G, FG, FGA, FT, FTA, X3P, X3PA, PTS, TRB, AST, STL, BLK, TOV) -> data_subset
+# some players played in different teams
+season_stat %>%
+  filter(Year == 2017, Tm != "TOT", G > 50) %>%
+  select(Player, Pos, G, FG, FGA, FT, FTA, X3P, X3PA, PTS, TRB, AST, STL, BLK, TOV) -> data_subset
 
-    data_subset %>%
-      group_by(Player, Pos) %>%
-      summarise_all(sum) -> data_subset
+data_subset %>%
+  group_by(Player, Pos) %>%
+  summarise_all(sum) -> data_subset
 
-    # scale stats by number of games played and normalise
-    data_subset[, -(1:3)] <- data_subset[, -(1:3)] / data_subset$G
-    data_subset[, -(1:3)] <- scale(data_subset[, -(1:3)])
+# scale stats by number of games played and normalise
+data_subset[, -(1:3)] <- data_subset[, -(1:3)] / data_subset$G
+data_subset[, -(1:3)] <- scale(data_subset[, -(1:3)])
 
-    str(data_subset)
+str(data_subset)
+```
 
     ## grouped_df [298 × 15] (S3: grouped_df/tbl_df/tbl/data.frame)
     ##  $ Player: chr [1:298] "Aaron Brooks" "Aaron Gordon" "Al Horford" "Al Jefferson" ...
@@ -183,14 +187,16 @@ same scale.
     ##   .. ..@ ptype: int(0) 
     ##   ..- attr(*, ".drop")= logi TRUE
 
-We’ll plot histograms of all standardised statistics to visualise the
+We'll plot histograms of all standardised statistics to visualise the
 distributions.
 
-    data_subset[, -(1:3)] %>%
-      gather() %>%
-      ggplot(., aes(value)) +
-      geom_histogram(bins = 20) +
-      facet_wrap(~key)
+``` {.r}
+data_subset[, -(1:3)] %>%
+  gather() %>%
+  ggplot(., aes(value)) +
+  geom_histogram(bins = 20) +
+  facet_wrap(~key)
+```
 
 ![](img/plot_hist-1.png)
 
@@ -207,38 +213,40 @@ for *k* clusters.
 We will use `kmeans` to perform k-means clustering with a *k* of 5 since
 there are 5 positions in basketball.
 
-    my_kmeans <- kmeans(x = data_subset[, -(1:3)], centers = 5)
-    my_kmeans
+``` {.r}
+my_kmeans <- kmeans(x = data_subset[, -(1:3)], centers = 5)
+my_kmeans
+```
 
-    ## K-means clustering with 5 clusters of sizes 37, 84, 55, 37, 85
+    ## K-means clustering with 5 clusters of sizes 85, 37, 37, 53, 86
     ## 
     ## Cluster means:
     ##           FG        FGA         FT        FTA        X3P       X3PA        PTS
-    ## 1  0.3994717  0.1115175  0.1358818  0.3661453 -0.9470417 -0.9960164  0.1895305
-    ## 2 -0.4356215 -0.3434826 -0.4564842 -0.4865173  0.1102358  0.1248735 -0.4086209
-    ## 3  0.5402600  0.6729396  0.2057350  0.1674639  0.8291409  0.8810535  0.5398968
-    ## 4  1.8889051  1.8944211  2.1594918  2.0751352  1.1598864  1.1497105  2.0345121
-    ## 5 -0.9152004 -0.9691632 -0.6811716 -0.6902405 -0.7380919 -0.7603999 -0.9136441
+    ## 1 -0.4413695 -0.3497524 -0.4570818 -0.4882517  0.1058263  0.1198035 -0.4133688
+    ## 2  1.8889051  1.8944211  2.1594918  2.0751352  1.1598864  1.1497105  2.0345121
+    ## 3  0.4375751  0.1631240  0.1534951  0.3832676 -0.8703345 -0.9070646  0.2308186
+    ## 4  0.5503157  0.6859763  0.2146891  0.1732394  0.8521716  0.9005738  0.5522838
+    ## 5 -0.9038383 -0.9622902 -0.6756638 -0.6818744 -0.7543460 -0.7778094 -0.9064178
     ##           TRB         AST          STL        BLK        TOV
-    ## 1  1.57299248 -0.38748122 -0.113782044  1.4232126  0.1168200
-    ## 2 -0.44214710 -0.05579102  0.007698825 -0.4273546 -0.2759398
-    ## 3  0.02384795  0.37262349  0.491090587 -0.2050806  0.3701375
-    ## 4  0.67103975  1.49273021  1.176130189  0.3217780  1.7642182
-    ## 5 -0.55529969 -0.66708304 -0.787806646 -0.2045580 -0.7856122
+    ## 1 -0.44943952 -0.05764948  0.006449069 -0.4320372 -0.2822212
+    ## 2  0.67103975  1.49273021  1.176130189  0.3217780  1.7642182
+    ## 3  1.60207783 -0.25264165  0.006001689  1.4759094  0.1788271
+    ## 4 -0.02095752  0.31518146  0.450245811 -0.2890315  0.3498826
+    ## 5 -0.52084003 -0.67078707 -0.792442771 -0.1682861 -0.7726471
     ## 
     ## Clustering vector:
-    ##   [1] 5 3 3 5 2 2 1 2 5 1 2 2 2 4 4 2 5 2 3 3 2 1 4 5 3 5 4 5 2 2 2 4 2 4 2 5 2
-    ##  [38] 4 2 4 1 1 5 5 2 2 5 2 3 4 3 2 5 5 3 3 5 5 5 1 5 4 4 2 3 2 3 4 2 5 3 5 5 3
-    ##  [75] 1 5 4 2 3 3 1 4 3 3 3 2 3 2 3 2 4 5 4 4 1 1 3 1 5 2 4 2 2 3 3 3 5 3 2 2 2
-    ## [112] 4 3 5 2 2 5 5 5 5 2 4 5 5 2 5 4 2 2 2 1 4 2 5 1 5 3 2 3 5 1 5 5 2 4 4 2 5
-    ## [149] 4 1 3 3 4 4 5 3 5 5 5 1 5 4 5 4 1 2 2 5 5 4 4 5 5 5 2 2 5 2 4 1 2 3 3 5 3
-    ## [186] 2 2 3 1 2 2 2 5 5 1 4 5 5 2 2 5 1 2 5 3 3 5 2 1 3 1 5 2 3 2 5 3 5 2 2 1 4
-    ## [223] 4 2 2 2 3 5 1 3 3 1 3 2 5 1 1 4 3 5 5 3 5 1 2 3 5 5 5 2 2 2 5 4 1 2 1 1 5
-    ## [260] 5 1 2 5 2 2 5 2 3 5 5 3 5 2 2 2 3 1 5 5 1 2 2 3 2 5 5 3 2 2 5 3 3 5 5 1 3
-    ## [297] 1 5
+    ##   [1] 5 4 3 5 1 1 3 1 5 3 1 1 1 2 2 1 5 1 4 4 1 3 2 5 4 5 2 5 1 1 1 2 1 2 1 5 1
+    ##  [38] 2 1 2 3 3 5 5 1 1 5 1 4 2 4 1 5 5 4 4 5 5 5 3 5 2 2 1 4 1 4 2 1 5 4 5 5 3
+    ##  [75] 3 5 2 1 4 4 3 2 4 4 4 1 4 1 4 1 2 5 2 2 3 3 4 3 5 1 2 1 1 4 4 4 5 4 1 1 1
+    ## [112] 2 4 5 1 1 5 5 5 5 1 2 5 5 1 1 2 1 1 1 5 2 1 5 3 5 4 1 4 5 3 5 5 1 2 2 1 5
+    ## [149] 2 3 4 4 2 2 5 4 5 5 5 3 5 2 5 2 3 1 1 5 5 2 2 5 5 5 1 1 5 1 2 3 1 4 4 5 4
+    ## [186] 1 1 4 3 1 1 1 5 5 3 2 5 5 1 1 5 3 1 5 4 4 5 1 3 4 3 5 1 4 1 5 4 5 1 1 3 2
+    ## [223] 2 1 1 1 4 5 3 4 4 3 4 1 5 3 3 2 4 5 5 4 5 3 1 4 5 5 5 1 1 1 5 2 3 1 3 3 5
+    ## [260] 5 3 1 5 1 1 5 1 4 5 5 4 5 1 1 1 4 3 5 5 3 1 1 4 1 5 5 4 1 1 5 4 4 5 5 5 4
+    ## [297] 3 5
     ## 
     ## Within cluster sum of squares by cluster:
-    ## [1] 200.4769 255.8427 289.0522 419.2085 165.0146
+    ## [1] 257.7204 419.2085 220.2030 258.4794 174.7238
     ##  (between_SS / total_SS =  62.7 %)
     ## 
     ## Available components:
@@ -249,22 +257,28 @@ there are 5 positions in basketball.
 The cluster assignments are in `cluster` and since we set *k* to 5 each
 player is assigned to 1 of 5 possible clusterings.
 
-    table(my_kmeans$cluster)
+``` {.r}
+table(my_kmeans$cluster)
+```
 
     ## 
     ##  1  2  3  4  5 
-    ## 37 84 55 37 85
+    ## 85 37 37 53 86
 
 The total within-cluster variation is stored in `tot.withinss`.
 
-    my_kmeans$tot.withinss
+``` {.r}
+my_kmeans$tot.withinss
+```
 
-    ## [1] 1329.595
+    ## [1] 1330.335
 
 We can use `fviz_cluster` to visualise the clusters in a scatter plot of
 the first two principal components.
 
-    fviz_cluster(my_kmeans, data = data_subset[, -(1:3)])
+``` {.r}
+fviz_cluster(my_kmeans, data = data_subset[, -(1:3)])
+```
 
 ![](img/fviz_cluster-1.png)
 
@@ -276,25 +290,27 @@ clusters.
 
 One way for determining an optimal number of clusters is to plot the
 total within-cluster variation for a range of *k* values and find the
-“elbow” point in the plot. This point is where the total within-cluster
-variation has a steep drop and forms a “visual elbow” in the plot.
+"elbow" point in the plot. This point is where the total within-cluster
+variation has a steep drop and forms a "visual elbow" in the plot.
 
-    # Use map_dbl to run many models with varying value of k (centers)
-    tot_withinss <- map_dbl(2:30,  function(k){
-      model <- kmeans(x = data_subset[, -(1:3)], centers = k)
-      model$tot.withinss
-    })
+``` {.r}
+# Use map_dbl to run many models with varying value of k (centers)
+tot_withinss <- map_dbl(2:30,  function(k){
+  model <- kmeans(x = data_subset[, -(1:3)], centers = k)
+  model$tot.withinss
+})
 
-    # Generate a data frame containing both k and tot_withinss
-    elbow_df <- data.frame(
-      k = 2:30,
-      tot_withinss = tot_withinss
-    )
+# Generate a data frame containing both k and tot_withinss
+elbow_df <- data.frame(
+  k = 2:30,
+  tot_withinss = tot_withinss
+)
 
-    ggplot(elbow_df, aes(x = k, y = tot_withinss)) +
-      geom_line() +
-      geom_point(aes(x = k, y = tot_withinss)) +
-      scale_x_continuous(breaks = 2:30)
+ggplot(elbow_df, aes(x = k, y = tot_withinss)) +
+  geom_line() +
+  geom_point(aes(x = k, y = tot_withinss)) +
+  scale_x_continuous(breaks = 2:30)
+```
 
 ![](img/elbow_plot-1.png)
 
@@ -307,30 +323,34 @@ indicates that an observation is well matched to its cluster; a value of
 and a value of -1 indicates that the observation has a better fit in the
 neighbouring cluster.
 
-    # Use map_dbl to run many models with varying value of k
-    sil_width <- map_dbl(2:30,  function(k){
-      model <- pam(x = data_subset[, -(1:3)], k = k)
-      model$silinfo$avg.width
-    })
+``` {.r}
+# Use map_dbl to run many models with varying value of k
+sil_width <- map_dbl(2:30,  function(k){
+  model <- pam(x = data_subset[, -(1:3)], k = k)
+  model$silinfo$avg.width
+})
 
-    # Generate a data frame containing both k and sil_width
-    sil_df <- data.frame(
-      k = 2:30,
-      sil_width = sil_width
-    )
+# Generate a data frame containing both k and sil_width
+sil_df <- data.frame(
+  k = 2:30,
+  sil_width = sil_width
+)
 
-    # Plot the relationship between k and sil_width
-    ggplot(sil_df, aes(x = k, y = sil_width)) +
-      geom_line() +
-      geom_point(aes(x = k, y = sil_width)) +
-      scale_x_continuous(breaks = 2:30)
+# Plot the relationship between k and sil_width
+ggplot(sil_df, aes(x = k, y = sil_width)) +
+  geom_line() +
+  geom_point(aes(x = k, y = sil_width)) +
+  scale_x_continuous(breaks = 2:30)
+```
 
 ![](img/silhouette_analysis-1.png)
 
 The silhouette approach suggests that a *k* of 2 is optimal.
 
-    my_kmeans_k_2 <- kmeans(data_subset[, -(1:3)], centers = 2)
-    fviz_cluster(my_kmeans_k_2, data = data_subset[, -(1:3)])
+``` {.r}
+my_kmeans_k_2 <- kmeans(data_subset[, -(1:3)], centers = 2)
+fviz_cluster(my_kmeans_k_2, data = data_subset[, -(1:3)])
+```
 
 ![](img/kmeans_k_2-1.png)
 
@@ -339,9 +359,11 @@ Extra
 
 Below I perform a Principal Component Analysis and plot the PCs.
 
-    my_pca <- prcomp(data_subset[, -(1:3)], center = FALSE, scale = FALSE)
+``` {.r}
+my_pca <- prcomp(data_subset[, -(1:3)], center = FALSE, scale = FALSE)
 
-    summary(my_pca)
+summary(my_pca)
+```
 
     ## Importance of components:
     ##                           PC1    PC2     PC3     PC4     PC5     PC6     PC7
@@ -353,43 +375,47 @@ Below I perform a Principal Component Analysis and plot the PCs.
     ## Proportion of Variance 0.00722 0.00153 0.00073 0.00036 0.000e+00
     ## Cumulative Proportion  0.99738 0.99891 0.99964 1.00000 1.000e+00
 
-    my_pca_df <- as.data.frame(my_pca$x)
-    my_pca_df$pos <- data_subset$Pos
-    my_pca_df$name <- data_subset$Player
+``` {.r}
+my_pca_df <- as.data.frame(my_pca$x)
+my_pca_df$pos <- data_subset$Pos
+my_pca_df$name <- data_subset$Player
 
-    ggplot(my_pca_df, aes(x = PC1, y = PC2, colour = pos, text = name)) +
-      geom_point()
+ggplot(my_pca_df, aes(x = PC1, y = PC2, colour = pos, text = name)) +
+  geom_point()
+```
 
 ![](img/pca-1.png)
 
 If we label the points, we can clearly see that the players with more
 variable statistics consist of many NBA All-Stars.
 
-    ggplot(my_pca_df, aes(x = PC1, y = PC2, colour = pos, label = name)) +
-      geom_text_repel(
-        data = my_pca_df %>% filter(PC1 > 5 | PC2 < -3.7)
-      ) +
-      geom_point() +
-      theme_classic()
+``` {.r}
+ggplot(my_pca_df, aes(x = PC1, y = PC2, colour = pos, label = name)) +
+  geom_text_repel(
+    data = my_pca_df %>% filter(PC1 > 5 | PC2 < -3.7)
+  ) +
+  geom_point() +
+  theme_classic()
+```
 
 ![](img/pca_figure-1.png)
 
 Further reading
 ---------------
 
--   <a href="https://uc-r.github.io/kmeans_clustering" class="uri">https://uc-r.github.io/kmeans_clustering</a>
--   <a href="https://www.datacamp.com/community/tutorials/k-means-clustering-r" class="uri">https://www.datacamp.com/community/tutorials/k-means-clustering-r</a>
+-   <https://uc-r.github.io/kmeans_clustering>
+-   <https://www.datacamp.com/community/tutorials/k-means-clustering-r>
 
 Session info
 ------------
 
 Time built.
 
-    ## [1] "2022-04-11 01:44:19 UTC"
+    ## [1] "2022-07-12 06:06:48 UTC"
 
 Session info.
 
-    ## R version 4.1.3 (2022-03-10)
+    ## R version 4.2.1 (2022-06-23)
     ## Platform: x86_64-pc-linux-gnu (64-bit)
     ## Running under: Ubuntu 20.04.4 LTS
     ## 
@@ -409,24 +435,24 @@ Session info.
     ## [1] stats     graphics  grDevices utils     datasets  methods   base     
     ## 
     ## other attached packages:
-    ##  [1] factoextra_1.0.7 ggrepel_0.9.1    cluster_2.1.2    forcats_0.5.1   
-    ##  [5] stringr_1.4.0    dplyr_1.0.8      purrr_0.3.4      readr_2.1.2     
-    ##  [9] tidyr_1.2.0      tibble_3.1.6     ggplot2_3.3.5    tidyverse_1.3.1 
+    ##  [1] factoextra_1.0.7 ggrepel_0.9.1    cluster_2.1.3    forcats_0.5.1   
+    ##  [5] stringr_1.4.0    dplyr_1.0.9      purrr_0.3.4      readr_2.1.2     
+    ##  [9] tidyr_1.2.0      tibble_3.1.7     ggplot2_3.3.6    tidyverse_1.3.1 
     ## 
     ## loaded via a namespace (and not attached):
     ##  [1] Rcpp_1.0.8.3     lubridate_1.8.0  assertthat_0.2.1 digest_0.6.29   
     ##  [5] utf8_1.2.2       R6_2.5.1         cellranger_1.1.0 backports_1.4.1 
-    ##  [9] reprex_2.0.1     evaluate_0.15    httr_1.4.2       highr_0.9       
-    ## [13] pillar_1.7.0     rlang_1.0.2      readxl_1.4.0     rstudioapi_0.13 
-    ## [17] car_3.0-12       rmarkdown_2.13   labeling_0.4.2   munsell_0.5.0   
-    ## [21] broom_0.7.12     compiler_4.1.3   modelr_0.1.8     xfun_0.30       
+    ##  [9] reprex_2.0.1     evaluate_0.15    httr_1.4.3       highr_0.9       
+    ## [13] pillar_1.7.0     rlang_1.0.3      readxl_1.4.0     rstudioapi_0.13 
+    ## [17] car_3.1-0        rmarkdown_2.14   labeling_0.4.2   munsell_0.5.0   
+    ## [21] broom_1.0.0      compiler_4.2.1   modelr_0.1.8     xfun_0.31       
     ## [25] pkgconfig_2.0.3  htmltools_0.5.2  tidyselect_1.1.2 fansi_1.0.3     
-    ## [29] crayon_1.5.1     tzdb_0.3.0       dbplyr_2.1.1     withr_2.5.0     
-    ## [33] ggpubr_0.4.0     grid_4.1.3       jsonlite_1.8.0   gtable_0.3.0    
-    ## [37] lifecycle_1.0.1  DBI_1.1.2        magrittr_2.0.3   scales_1.1.1    
-    ## [41] carData_3.0-5    cli_3.2.0        stringi_1.7.6    farver_2.1.0    
+    ## [29] crayon_1.5.1     tzdb_0.3.0       dbplyr_2.2.1     withr_2.5.0     
+    ## [33] ggpubr_0.4.0     grid_4.2.1       jsonlite_1.8.0   gtable_0.3.0    
+    ## [37] lifecycle_1.0.1  DBI_1.1.3        magrittr_2.0.3   scales_1.2.0    
+    ## [41] carData_3.0-5    cli_3.3.0        stringi_1.7.6    farver_2.1.1    
     ## [45] ggsignif_0.6.3   fs_1.5.2         xml2_1.3.3       ellipsis_0.3.2  
-    ## [49] generics_0.1.2   vctrs_0.4.0      tools_4.1.3      glue_1.6.2      
+    ## [49] generics_0.1.3   vctrs_0.4.1      tools_4.2.1      glue_1.6.2      
     ## [53] hms_1.1.1        abind_1.4-5      fastmap_1.1.0    yaml_2.3.5      
-    ## [57] colorspace_2.0-3 rstatix_0.7.0    rvest_1.0.2      knitr_1.38      
-    ## [61] haven_2.4.3
+    ## [57] colorspace_2.0-3 rstatix_0.7.0    rvest_1.0.2      knitr_1.39      
+    ## [61] haven_2.5.0

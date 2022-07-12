@@ -45,7 +45,7 @@ SECONDS=0
 
 >&2 printf "[ %s %s ] Start job\n\n" $(now)
 
-r_version=4.1.3
+r_version=4.2.1
 docker_image=davetang/r_build:${r_version}
 package_dir=${HOME}/r_packages_${r_version}
 

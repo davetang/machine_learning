@@ -1,6 +1,8 @@
 ---
 title: "k-Nearest Neighbours"
-output: md_document
+output:
+   md_document:
+      variant: markdown
 ---
 
 ```{r setup, include=FALSE}
