@@ -1,5 +1,7 @@
-Introduction
-------------
+Naive Bayes
+================
+
+## Introduction
 
 Naive Bayes is a machine learning approach based on [Bayes’
 theorem](https://en.wikipedia.org/wiki/Bayes%27_theorem), which
@@ -11,15 +13,18 @@ more accurately (by conditioning it on their age) than simply assuming
 that the individual is typical of the population as a whole. The theorem
 is stated mathematically as:
 
-$$ P(A|B)=\\frac{P(B|A)P(A)}{P(B)} $$
+  
+![ P(A|B)=\\frac{P(B|A)P(A)}{P(B)}
+](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;%20P%28A%7CB%29%3D%5Cfrac%7BP%28B%7CA%29P%28A%29%7D%7BP%28B%29%7D%20
+" P(A|B)=\\frac{P(B|A)P(A)}{P(B)} ")  
 
 where A and B are events and P(B) is not equal to 0.
 
--   P(A|B) is a conditional probability: the likelihood of event A
+  - P(A|B) is a conditional probability: the likelihood of event A
     occurring given that B is true; this is the posterior probability
--   P(B|A) is also a conditional probability: the likelihood of event B
+  - P(B|A) is also a conditional probability: the likelihood of event B
     occurring given that A is true
--   P(A) and P(B) are the probabilities of observing A and B
+  - P(A) and P(B) are the probabilities of observing A and B
     independently of each other; they are known as marginal
     probabilities and are the prior probabilities
 
@@ -38,27 +43,45 @@ what we know, what is the probability that a person is a drug user when
 the test turns up positive? Isn’t this just 90% or 0.9? Not quite, since
 we have prior knowledge that only 5% of people are drug users and that
 the test can turn up positive even with non-users. If we apply Bayes’
-theorem and let *P*(*U**s**e**r*|*P**o**s**i**t**i**v**e*) mean the
-probability that someone is a drug user given that they tested positive,
-then:
+theorem and let
+![P(User|Positive)](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;P%28User%7CPositive%29
+"P(User|Positive)") mean the probability that someone is a drug user
+given that they tested positive, then:
 
-$$ P(User | Positive) = \\frac{P (Positive | User) P(User)}{P(Positive)} $$
+  
+![ P(User | Positive) = \\frac{P (Positive | User) P(User)}{P(Positive)}
+](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;%20P%28User%20%7C%20Positive%29%20%3D%20%5Cfrac%7BP%20%28Positive%20%7C%20User%29%20P%28User%29%7D%7BP%28Positive%29%7D%20
+" P(User | Positive) = \\frac{P (Positive | User) P(User)}{P(Positive)} ")  
 
-The nominator is the 0.045, since
+The nominator is the
+![0.045](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;0.045
+"0.045"), since
 
--   *P*(*P**o**s**i**t**i**v**e*|*U**s**e**r*) = 0.90
--   *P*(*U**s**e**r*) = 0.05
+  - ![P(Positive|User)
+    = 0.90](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;P%28Positive%7CUser%29%20%3D%200.90
+    "P(Positive|User) = 0.90")
+  - ![P(User)
+    = 0.05](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;P%28User%29%20%3D%200.05
+    "P(User) = 0.05")
 
-For working out *P*(*P**o**s**i**t**i**v**e*), there are two scenarios
-that a test turns up positive:
+For working out
+![P(Positive)](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;P%28Positive%29
+"P(Positive)"), there are two scenarios that a test turns up positive:
 
--   *P*(*P**o**s**i**t**i**v**e*|*U**s**e**r*) = 0.90 × 0.05 = 0.045
--   *P*(*P**o**s**i**t**i**v**e*|*N**o**n* − *u**s**e**r*) = 0.20 × 0.95 = 0.19
+  - ![P(Positive|User) = 0.90 \\times 0.05
+    = 0.045](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;P%28Positive%7CUser%29%20%3D%200.90%20%5Ctimes%200.05%20%3D%200.045
+    "P(Positive|User) = 0.90 \\times 0.05 = 0.045")
+  - ![P(Positive|Non-user) = 0.20 \\times 0.95
+    = 0.19](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;P%28Positive%7CNon-user%29%20%3D%200.20%20%5Ctimes%200.95%20%3D%200.19
+    "P(Positive|Non-user) = 0.20 \\times 0.95 = 0.19")
 
 Therefore, the probability that a person is a drug-user given a positive
 test result is:
 
-$$ \\frac{0.045}{0.045 + 0.19} = .1914 \\approx 19% $$
+  
+![ \\frac{0.045}{0.045 + 0.19} = .1914 \\approx 19%
+](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;%20%5Cfrac%7B0.045%7D%7B0.045%20%2B%200.19%7D%20%3D%20.1914%20%5Capprox%2019%25%20
+" \\frac{0.045}{0.045 + 0.19} = .1914 \\approx 19% ")  
 
 Classifiers based on Bayesian methods utilise training data to calculate
 an observed probability of each class based on feature values. An
@@ -69,25 +92,26 @@ emails. Bayesian classifiers utilise all available evidence to come up
 with a classification thus they are best applied to problems where the
 information from numerous attributes should be considered simultaneously
 
--   The “naive” part of the method refers to a assumption that all
+  - The “naive” part of the method refers to a assumption that all
     features in a dataset are equally important and independent, which
     is usually not true; despite this, the method performs quite well in
     certain applications like spam classification
 
 Install packages if missing and load.
 
-    .libPaths('/packages')
-    my_packages <- 'e1071'
+``` r
+.libPaths('/packages')
+my_packages <- 'e1071'
 
-    for (my_package in my_packages){
-       if(!require(my_package, character.only = TRUE)){
-          install.packages(my_package, '/packages')
-          library(my_package, character.only = TRUE)
-       }
-    }
+for (my_package in my_packages){
+   if(!require(my_package, character.only = TRUE)){
+      install.packages(my_package, '/packages')
+      library(my_package, character.only = TRUE)
+   }
+}
+```
 
-Example
--------
+## Example
 
 Classifiers based on Bayesian methods utilise training data to calculate
 an observed probability of each class based on feature values. The
@@ -99,18 +123,20 @@ Use the `naiveBayes()` function from the `e1071` package to perform
 Bayes](https://en.wikipedia.org/wiki/Naive_Bayes_classifier#Gaussian_naive_Bayes).
 Divide the dataset in 80% training and 20% testing.
 
-    set.seed(1984)
-    my_index <- sample(x = 1:nrow(iris), size = .8*(nrow(iris)))
+``` r
+set.seed(1984)
+my_index <- sample(x = 1:nrow(iris), size = .8*(nrow(iris)))
 
-    my_train <- iris[my_index, -5]
-    my_train_label <- iris[my_index, 5]
+my_train <- iris[my_index, -5]
+my_train_label <- iris[my_index, 5]
 
-    my_test <- iris[!1:nrow(iris) %in% my_index, -5]
-    my_test_label <- iris[!1:nrow(iris) %in% my_index, 5]
+my_test <- iris[!1:nrow(iris) %in% my_index, -5]
+my_test_label <- iris[!1:nrow(iris) %in% my_index, 5]
 
-    m <- naiveBayes(my_train, my_train_label)
+m <- naiveBayes(my_train, my_train_label)
 
-    m
+m
+```
 
     ## 
     ## Naive Bayes Classifier for Discrete Predictors
@@ -151,9 +177,11 @@ Divide the dataset in 80% training and 20% testing.
 The values are the mean and variance for each feature stratified by
 class.
 
-    iris[my_index,] %>%
-      group_by(Species) %>%
-      summarise(mean = mean(Petal.Width), var = var(Petal.Width))
+``` r
+iris[my_index,] %>%
+  group_by(Species) %>%
+  summarise(mean = mean(Petal.Width), var = var(Petal.Width))
+```
 
     ## # A tibble: 3 × 3
     ##   Species     mean    var
@@ -165,7 +193,9 @@ class.
 Classify the test set and tabulate based on the real labels; only one
 misclassification of a virginica as a versicolor.
 
-    table(predict(m, my_test), my_test_label)
+``` r
+table(predict(m, my_test), my_test_label)
+```
 
     ##             my_test_label
     ##              setosa versicolor virginica
@@ -173,20 +203,18 @@ misclassification of a virginica as a versicolor.
     ##   versicolor      0          9         2
     ##   virginica       0          1        11
 
-Further reading
----------------
+## Further reading
 
--   [An Intuitive (and Short) Explanation of Bayes’
+  - [An Intuitive (and Short) Explanation of Bayes’
     Theorem](https://betterexplained.com/articles/an-intuitive-and-short-explanation-of-bayes-theorem/)
--   [Naive Bayes for Machine
+  - [Naive Bayes for Machine
     Learning](https://machinelearningmastery.com/naive-bayes-for-machine-learning/)
 
-Session info
-------------
+## Session info
 
 Time built.
 
-    ## [1] "2022-07-12 04:45:39 UTC"
+    ## [1] "2022-07-12 04:48:52 UTC"
 
 Session info.
 
