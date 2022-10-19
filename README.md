@@ -7,20 +7,51 @@ _Machine Learning is the study of computer algorithms that improve automatically
 
 Adapted from the section 1.2 of the book "Deep Learning with R".
 
-* Probabilistic modelling was one of the earliest forms of machine learning, where the principles of statistics were applied to data analysis
-* The Naive Bayes algorithm is one of the best known methods for carrying out probabilistic modelling
-* Logistic regression is an algorithm with roots that date back to the early 19th century
-* The core ideas of neural networks were investigated back in the 1950s
-* In the 1970s, the backpropagation algorithm was originally introduced
-* Kernel methods, especially Support Vector Machines (SVMs), become popular in the 90s
-* Decision trees [date back in the 1960s](http://washstat.org/presentations/20150604/loh_slides.pdf)
-* The first algorithm for random decision trees was created in 1995 and an extension of the algorithm, called Random Forests, was created in 2001
-* Gradient boosting is a machine-learning technique based on ensembling weak prediction models, generally decision trees, which originated in 1997
-* In 2012, the SuperVision team led by Alex Krizhevsky and advised by Geoffrey Hinton was able to achieve a top-five accuracy of [83.6% on the ImageNet challenge](http://www.image-net.org/challenges/LSVRC/2012/results.html)
+* Probabilistic modelling was one of the earliest forms of machine learning,
+where the principles of statistics were applied to data analysis.
+* The Naive Bayes algorithm is one of the best known methods for carrying out
+probabilistic modelling.
+* Logistic regression is an algorithm with roots that date back to the early 19th century.
+* The core ideas of neural networks were investigated back in the 1950s.
+* In the 1970s, the backpropagation algorithm was originally introduced.
+* Kernel methods, especially Support Vector Machines (SVMs), become popular in the 90s.
+* Decision trees [date back in the 1960s](http://washstat.org/presentations/20150604/loh_slides.pdf).
+* The first algorithm for random decision trees was created in 1995 and an
+extension of the algorithm, called Random Forests, was created in 2001.
+* Gradient boosting is a machine-learning technique based on ensembling weak
+prediction models, generally decision trees, which originated in 1997.
+* In 2012, the SuperVision team led by Alex Krizhevsky and advised by Geoffrey
+Hinton was able to achieve a top-five accuracy of [83.6% on the ImageNet
+challenge](http://www.image-net.org/challenges/LSVRC/2012/results.html).
+
+# Main challenges
+
+* Most machine learning algorithms require a lot of data to work properly; if
+your sample is too small, sampling noise will have a larger effect.
+* In addition, training data needs to representative, i.e. equally sampling
+from different labels or range of values, for a model to generalise.
+Non-representative data can result from a flawed sampling method (but sometimes
+it is just difficult to collect the necessary data).
+* Poor quality data will make it more difficult to detect underlying trends and
+a lot of time is required to "clean up" the data, e.g. dealing with missing
+values and removing or fixing outliers.
+* Models are only capable of learning if there are enough relevant features. A
+critical part of machine learning is feature engineering, which typically
+involves ***feature selection*** (selecting the most useful features) and ***feature
+extraction*** (combining existing features to produce more useful ones).
+* Avoiding overfitting, which is when the model performs well on the training
+data but does not generalise and this usually occurs when the model is too
+complex. Constraining a model to make it simpler and reducing the risk of
+overfitting is called ***regularisation***. The amount of regularisation to
+apply during learning can be controlled by a ***hyperparameter***, which is a
+parameter that is not part of the model.
+* Avoiding underfitting, which is when the model is too simple to learn the
+underlying structure of the data.
 
 # Resources
 
-A list of useful resources for learning about machine learning with an emphasis on biological applications.
+A list of useful resources for learning about machine learning with an emphasis
+on biological applications.
 
 ## Presentations
 
