@@ -1,4 +1,4 @@
-all: template som ann tree hclust logit svm kmeans knn naive_bayes xgboost random_forest eval
+all: template som ann tree hclust logit svm kmeans knn naive_bayes xgboost random_forest eval pca
 
 template: template/README.md
 som: som/README.md
@@ -13,6 +13,7 @@ naive_bayes: naive_bayes/README.md
 xgboost: xgboost/README.md
 random_forest: random_forest/README.md
 eval: evaluation/README.md
+pca: pca/README.md
 
 template/README.md: template/readme.Rmd
 	script/rmd_to_md.sh template/readme.Rmd
@@ -53,3 +54,5 @@ random_forest/README.md: random_forest/readme.Rmd
 evaluation/README.md: evaluation/readme.Rmd
 	script/rmd_to_md.sh evaluation/readme.Rmd
 
+pca/README.md: script/rmd_to_md.sh pca/readme.Rmd
+	$^
