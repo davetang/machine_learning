@@ -42,7 +42,7 @@ system.time(rf <- randomForest(class ~ ., data = spam_data, importance=TRUE, pro
     ##   500:   4.59%  2.73%  7.45%
 
     ##    user  system elapsed 
-    ##  30.769   0.650  31.493
+    ##  37.515   2.363  39.973
 
 Classification measures
 -----------------------
@@ -412,7 +412,7 @@ system.time(roc.plot(as.integer(spam_data$class==1), rf$votes[,2], main="", thre
 ```
 
     ##    user  system elapsed 
-    ##  10.092   0.159  10.277
+    ##  12.844   1.235  14.112
 
 ``` {.r}
 legend("bottomright", bty="n", sprintf("Area Under the Curve (AUC) = %1.4f", auc))
@@ -426,7 +426,7 @@ Session info
 
 Time built.
 
-    ## [1] "2022-07-12 06:18:03 UTC"
+    ## [1] "2022-10-20 06:53:14 UTC"
 
 Session info.
 

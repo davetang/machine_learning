@@ -74,7 +74,7 @@ summary(som_model)
     ## The number of data layers is 2.
     ## Distance measure(s) used: sumofsquares, tanimoto.
     ## Training data included: 150 objects.
-    ## Mean distance to the closest unit in the map: 0.003.
+    ## Mean distance to the closest unit in the map: 0.004.
 
 Explore `som_model`.
 
@@ -96,8 +96,8 @@ str(som_model)
     ##   .. ..- attr(*, "dimnames")=List of 2
     ##   .. .. ..$ : NULL
     ##   .. .. ..$ : chr [1:3] "setosa" "versicolor" "virginica"
-    ##  $ unit.classif    : num [1:150] 32 55 48 56 32 16 40 39 64 47 ...
-    ##  $ distances       : num [1:150] 0.001791 0.000148 0.000316 0.0016 0.002341 ...
+    ##  $ unit.classif    : num [1:150] 48 16 24 24 48 64 32 39 8 23 ...
+    ##  $ distances       : num [1:150] 0.000432 0.000135 0.001269 0.002133 0.001811 ...
     ##  $ grid            :List of 6
     ##   ..$ pts              : num [1:64, 1:2] 1.5 2.5 3.5 4.5 5.5 6.5 7.5 8.5 1 2 ...
     ##   .. ..- attr(*, "dimnames")=List of 2
@@ -110,15 +110,15 @@ str(som_model)
     ##   ..$ toroidal         : logi FALSE
     ##   ..- attr(*, "class")= chr "somgrid"
     ##  $ codes           :List of 2
-    ##   ..$ measurement: num [1:64, 1:4] 2.152 1.507 1.128 0.517 0.733 ...
+    ##   ..$ measurement: num [1:64, 1:4] 1.165 0.955 0.553 0.398 -0.415 ...
     ##   .. ..- attr(*, "dimnames")=List of 2
     ##   .. .. ..$ : chr [1:64] "V1" "V2" "V3" "V4" ...
     ##   .. .. ..$ : chr [1:4] "Sepal.Length" "Sepal.Width" "Petal.Length" "Petal.Width"
-    ##   ..$ species    : num [1:64, 1:3] 6.92e-323 1.28e-322 9.74e-222 1.68e-134 2.35e-39 ...
+    ##   ..$ species    : num [1:64, 1:3] 8.40e-323 0.00 6.69e-218 1.64e-52 1.28e-41 ...
     ##   .. ..- attr(*, "dimnames")=List of 2
     ##   .. .. ..$ : chr [1:64] "V1" "V2" "V3" "V4" ...
     ##   .. .. ..$ : chr [1:3] "setosa" "versicolor" "virginica"
-    ##  $ changes         : num [1:1000, 1:2] 0.0346 0.036 0.0336 0.0359 0.0436 ...
+    ##  $ changes         : num [1:1000, 1:2] 0.0321 0.0368 0.0347 0.0387 0.0363 ...
     ##   ..- attr(*, "dimnames")=List of 2
     ##   .. ..$ : NULL
     ##   .. ..$ : chr [1:2] "measurement" "species"
@@ -127,7 +127,7 @@ str(som_model)
     ##   ..- attr(*, "names")= chr [1:2] "66.66667%" ""
     ##  $ na.rows         : int(0) 
     ##  $ user.weights    : num [1:2] 0.5 0.5
-    ##  $ distance.weights: num [1:2] 0.125 2.265
+    ##  $ distance.weights: num [1:2] 0.131 2.225
     ##  $ whatmap         : int [1:2] 1 2
     ##  $ maxNA.fraction  : int 0
     ##  $ dist.fcts       : chr [1:2] "sumofsquares" "tanimoto"
@@ -217,7 +217,7 @@ Session info
 
 Time built.
 
-    ## [1] "2022-07-12 05:52:47 UTC"
+    ## [1] "2022-10-20 06:51:05 UTC"
 
 Session info.
 

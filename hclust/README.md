@@ -21,14 +21,6 @@ for (my_package in my_packages){
 }
 ```
 
-    ## * checking for file ‘/tmp/Rtmpj6OTci/remotes17133c6ec/ramhiser-datamicroarray-a95f6f6/DESCRIPTION’ ... OK
-    ## * preparing ‘datamicroarray’:
-    ## * checking DESCRIPTION meta-information ... OK
-    ## * checking for LF line-endings in source and make files and shell scripts
-    ## * checking for empty or unneeded directories
-    ## * looking to see if a ‘data/datalist’ file should be added
-    ## * building ‘datamicroarray_0.2.3.tar.gz’
-
 Using microarray data
 ---------------------
 
@@ -139,7 +131,7 @@ Session info
 
 Time built.
 
-    ## [1] "2022-07-12 05:55:44 UTC"
+    ## [1] "2022-10-20 06:51:24 UTC"
 
 Session info.
 
@@ -175,11 +167,11 @@ Session info.
     ## [13] glue_1.6.2        withr_2.5.0       DBI_1.1.3         dbplyr_2.2.1     
     ## [17] modelr_0.1.8      readxl_1.4.0      lifecycle_1.0.1   munsell_0.5.0    
     ## [21] gtable_0.3.0      cellranger_1.1.0  rvest_1.0.2       evaluate_0.15    
-    ## [25] knitr_1.39        tzdb_0.3.0        fastmap_1.1.0     curl_4.3.2       
-    ## [29] fansi_1.0.3       highr_0.9         broom_1.0.0       scales_1.2.0     
-    ## [33] backports_1.4.1   jsonlite_1.8.0    fs_1.5.2          gridExtra_2.3    
-    ## [37] hms_1.1.1         digest_0.6.29     stringi_1.7.6     grid_4.2.1       
-    ## [41] cli_3.3.0         tools_4.2.1       magrittr_2.0.3    crayon_1.5.1     
-    ## [45] pkgconfig_2.0.3   ellipsis_0.3.2    xml2_1.3.3        reprex_2.0.1     
-    ## [49] lubridate_1.8.0   viridis_0.6.2     rstudioapi_0.13   assertthat_0.2.1 
-    ## [53] rmarkdown_2.14    httr_1.4.3        R6_2.5.1          compiler_4.2.1
+    ## [25] knitr_1.39        tzdb_0.3.0        fastmap_1.1.0     fansi_1.0.3      
+    ## [29] highr_0.9         broom_1.0.0       scales_1.2.0      backports_1.4.1  
+    ## [33] jsonlite_1.8.0    fs_1.5.2          gridExtra_2.3     hms_1.1.1        
+    ## [37] digest_0.6.29     stringi_1.7.6     grid_4.2.1        cli_3.3.0        
+    ## [41] tools_4.2.1       magrittr_2.0.3    crayon_1.5.1      pkgconfig_2.0.3  
+    ## [45] ellipsis_0.3.2    xml2_1.3.3        reprex_2.0.1      lubridate_1.8.0  
+    ## [49] viridis_0.6.2     rstudioapi_0.13   assertthat_0.2.1  rmarkdown_2.14   
+    ## [53] httr_1.4.3        R6_2.5.1          compiler_4.2.1

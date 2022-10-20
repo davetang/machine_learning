@@ -89,9 +89,9 @@ summary(rpart)
     ##   n= 150 
     ## 
     ##     CP nsplit rel error xerror       xstd
-    ## 1 0.50      0      1.00   1.14 0.05230679
-    ## 2 0.44      1      0.50   0.61 0.06016090
-    ## 3 0.01      2      0.06   0.10 0.03055050
+    ## 1 0.50      0      1.00   1.11 0.05372150
+    ## 2 0.44      1      0.50   0.66 0.06079474
+    ## 3 0.01      2      0.06   0.08 0.02751969
     ## 
     ## Variable importance
     ##  Petal.Width Petal.Length Sepal.Length  Sepal.Width 
@@ -237,7 +237,7 @@ Session info
 
 Time built.
 
-    ## [1] "2022-07-12 05:54:00 UTC"
+    ## [1] "2022-10-20 06:51:15 UTC"
 
 Session info.
 
