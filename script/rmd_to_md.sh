@@ -58,8 +58,7 @@ docker run \
    -v ${package_dir}:/packages \
    -v $(pwd):$(pwd) \
    -w $(pwd) \
-   -e USERID=$(id -u) \
-   -e GROUPID=$(id -g) \
+   -u $(id -u):$(id -g) \
    ${docker_image} \
    Rscript -e "rmarkdown::render('${infile}', output_file = '${outfile}')"
 
