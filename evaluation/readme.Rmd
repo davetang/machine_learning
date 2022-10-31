@@ -1,13 +1,11 @@
 ---
-title: "Evaluation"
+title: "Evaluating predictions and clustering results"
 output:
    md_document:
       variant: markdown
 ---
 
 ```{r setup, include=FALSE}
-library(tidyverse)
-theme_set(theme_bw())
 knitr::opts_chunk$set(cache = FALSE)
 knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_chunk$set(fig.path = "img/")
@@ -15,7 +13,7 @@ knitr::opts_chunk$set(fig.path = "img/")
 
 ## Introduction
 
-Different performance measures for evaluating whether your model is good or not.
+Different performance measures for evaluating predictive models and unsupervised clustering.
 
 Install packages if missing and load.
 
@@ -29,35 +27,43 @@ for (my_package in my_packages){
       library(my_package, character.only = TRUE)
    }
 }
+library(tidyverse)
+theme_set(theme_bw())
 ```
 
 ## Spam
 
-Use [spam data](https://archive.ics.uci.edu/ml/machine-learning-databases/spambase/spambase.names) to train a Random Forest model to illustrate evaluation measures.
+Use [spam data](https://archive.ics.uci.edu/ml/machine-learning-databases/spambase/spambase.names) to train a Random Forest model to illustrate evaluation measures. Class 0 and 1 are ham (non-spam) and spam, respectively.
 
-```{r random_forest_spam}
+```{r load_spam}
 spam_data <- read.csv(file = "../data/spambase.csv")
-
 spam_data$class <- factor(spam_data$class)
 
+spam_data[c(1:3, (nrow(spam_data)-2):nrow(spam_data)), (ncol(spam_data)-2):ncol(spam_data)]
+```
+
+Train model.
+
+```{r random_forest_spam}
 set.seed(31)
 system.time(rf <- randomForest(class ~ ., data = spam_data, importance=TRUE, proximity=TRUE, do.trace=100))
 ```
 
 ## Classification measures
 
-Build confusion matrix and calculate accuracy, precision, and recall. Check out [this guide as well](http://www.dataschool.io/simple-guide-to-confusion-matrix-terminology/).
+Build confusion matrix and calculate accuracy, precision, and recall. Check out [this guide as well](https://www.dataschool.io/simple-guide-to-confusion-matrix-terminology/).
 
 ![Confusion matrix](img/confusion_matrix.png)
 
-Use `table` to construct a confusion matrix.
+Use `table` to construct a confusion matrix, where rows are real labels and columns are the predictions (different from the table above). Therefore the first row and first column cell are the non-spam cases that were predicted as non-spam (true negative). The first row and second column cell are the non-spam cases predicted as spam (false positive). The second row and first column cell are spam cases predicted as non-spam (false negative). Finally, the second row and second column cell are cases that are spam and predicted as spam (true positive).
 
 ```{r spam_rf_table}
 (spam_rf_table <- table(spam_data$class, rf$predicted))
-TP <- spam_rf_table[1, 1]
-FN <- spam_rf_table[1, 2]
-FP <- spam_rf_table[2, 1]
-TN <- spam_rf_table[2, 2]
+
+TN <- spam_rf_table[1, 1]
+FP <- spam_rf_table[1, 2]
+FN <- spam_rf_table[2, 1]
+TP <- spam_rf_table[2, 2]
 ```
 
 Accuracy is the easiest to remember; you take all the correct predictions and divide by the total:
@@ -66,10 +72,10 @@ Accuracy is the easiest to remember; you take all the correct predictions and di
 
 ```{r accuracy}
 (accuracy <- (TP + TN) / (TP + FN + FP + TN))
-# (accuracy  <- sum(diag(spam_rf_table)) / sum(spam_rf_table))
-```
 
-Precision or Positive Predictive Value (PPV) is concerned with all the _positive_ calls that were _predicted_:
+(accuracy  <- sum(diag(spam_rf_table)) / sum(spam_rf_table))
+```
+Precision or Positive Predictive Value (PPV) is concerned with all the _positive_ calls that were _predicted_ (column two of our table):
 
 * Precision or Positive Predictive Value (PPV) = TP / (TP + FP)
 
@@ -77,7 +83,7 @@ Precision or Positive Predictive Value (PPV) is concerned with all the _positive
 (precision <- TP / (TP + FP))
 ```
 
-Recall (also known by other names, see below) is concerned with how many of the _truth positive cases_ were predicted as positive. The term sensitivity makes a bit more sense to me as it describes how sensitive a method is in detecting positive cases.
+Recall (also known by other names, see below) is concerned with how many of the _truth positive cases_ were predicted as positive (row two of our table). The term sensitivity makes a bit more sense to me as it describes how sensitive a method is in detecting positive cases.
 
 * Sensitivity or True Positive Rate (TPR) or Recall or Hit Rate = TP / (TP + FN)
 
@@ -85,7 +91,7 @@ Recall (also known by other names, see below) is concerned with how many of the 
 (recall <- TP / (TP + FN))
 ```
 
-Specificity is concerned with how many of the _truth negative cases_ were predicted as negative, which is opposite to sensitivity.
+Specificity is concerned with how many of the _truth negative cases_ were predicted as negative (row one of our table), which is opposite to sensitivity.
 
 * Specificity or True Negative Rate (TNR) = TN / (TN + FP)
 
@@ -93,14 +99,34 @@ Specificity is concerned with how many of the _truth negative cases_ were predic
 (specificity <- TN / (TN + FP))
 ```
 
-Depending on the application, different metrics can be more desirable than others. For example when detecting spam, it is more preferably to have a high specificity (detect all real emails) than to have a high sensitivity (detect all spam).
+* Fall-out or False Positive Rate (FPR) = FP / (FP + TN) = 1 - specificity
 
-Other measures include:
+```{r fpr}
+(false_positive_rate <- FP / (FP + TN))
+(1 - specificity)
+```
 
 * Negative Predictive Value (NPV) = TN / (TN + FN)
-* Fall-out or False Positive Rate (FPR) = FP / (FP + TN) = 1 - specificity
+
+```{r npv}
+(npv <- TN / (TN + FN))
+```
+
+* False Discovery Rate (FDR) = FP / (TP + FP) = 1 - PPV
+
+```{r fdr}
+(fdr <- FP / (TP + FP))
+(1 - precision)
+```
+
 * False Negative Rate (FNR) = FN / (FN + TP) = 1 - TPR
-* False Discovery Rate (FDR) = TP / (TP + FP) = 1 - PPV
+
+```{r fnr}
+(fnr <- FN / (FN + TP))
+(1 - recall)
+```
+
+Depending on the application, different metrics can be more desirable than others. For example when detecting spam, it is more preferably to have a high specificity (detect all real emails) than to have a high sensitivity (detect all spam).
 
 ## Regression
 
@@ -123,31 +149,68 @@ h_pred <- predict(lm.fit, women)
 
 ## Clustering
 
-Measure the distance between points within a cluster and between clusters.
+Measure the distance between points within a cluster and between clusters. Perform k-means to demonstrate.
 
-* Within Sum of Squares (WSS) measures the within cluster similarity
-* Between cluster Sum of Squares (BSS) measures the between cluster similarity
-* The [Dunn index](https://en.wikipedia.org/wiki/Dunn_index) is the minimal intercluster distance (between cluster measurement) divided by the maximal diameter (within cluster measurement); a higher Dunn index indicates better clustering
-
-For K-means clustering, the measures for WSS and BSS can be found in the cluster object as tot.withinss and betweenss.
-
-```{r}
+```{r kmeans}
 km <- kmeans(iris[,-5], centers = 3, nstart = 1)
-km
+```
 
+Within Sum of Squares (WSS) measures the within cluster similarity
+
+```{r kmeans_wss}
+km$withinss
+```
+
+Between cluster Sum of Squares (BSS) measures the between cluster similarity
+
+```{r kmeans_bss}
+km$betweenss
+```
+
+The [Dunn index](https://en.wikipedia.org/wiki/Dunn_index) is the minimal intercluster distance (between cluster measurement) divided by the maximal diameter (within cluster measurement); a higher Dunn index indicates better clustering.
+
+```{r kmeans_dunn}
 d  <- dist(iris[,-5])
 dunn(d, km$cluster)
+```
 
-# example adapted from clValid
+Perform hierarchical clustering and cut dendrogram to form three clusters (example adapted from `clValid`).
+
+```{r dunn_express}
 data(mouse, package = "clValid")
 express <- mouse[1:25, -c(1,8)]
 rownames(express) <- mouse$ID[1:25]
-express_dist <- dist(express,method="euclidean")
+express_dist <- dist(express, method="euclidean")
 express_hclust <- hclust(express_dist, method="average")
 express_cluster <- cutree(express_hclust, k = 3)
 dunn(express_dist, express_cluster)
+```
 
+Hierarchical clustering.
+
+```{r dendrogram}
 plot(color_branches(express_hclust, k = 3))
+```
+
+Not sure that a higher Dunn index indicates better clustering.
+
+```{r try_k}
+my_dunn <- vector()
+i <- 1
+min_k <- 3
+max_k <- nrow(express)-1
+for (k in min_k:max_k){
+  my_clust <- cutree(express_hclust, k = k)
+  my_dunn[i] <- dunn(express_dist, my_clust)
+  i <- i + 1
+}
+names(my_dunn) <- min_k:max_k
+
+barplot(
+  my_dunn,
+  main = "Dunn index at different cluster numbers",
+  las = 2
+)
 ```
 
 ## Cross validation
@@ -193,52 +256,76 @@ model
 
 ## Receiver Operator Characteristic Curve
 
-* The false positive rate (second row of confusion matrix), FP / (FP + TN), is on the x-axis
-* The true positive rate (recall or first row of confusion matrix), TP / (TP + FN), is on the y-axis
-* Use the R package called ROCR
+The [ROCR](https://cran.rstudio.com/web/packages/ROCR/vignettes/ROCR.html) package can be used to generate ROC curves, which has the False Positive Rate (FP / [FP + TN]) on the x-axis and the True Positive Rate (TP / [TP + FN]) on the y-axis.
 
-```{r}
-# split iris dataset into training and test
-set.seed(31)
-x     <- sample(1:nrow(iris), size = 0.8 * nrow(iris), replace = FALSE)
-x_hat <- setdiff(1:150, x)
-train <- iris[x,]
-test  <- iris[x_hat,]
+The point of the ROC curve is to find the best probability to use maximising the True Positive Rate at the lowest False Positive rate. We will use the spam data again and we will start with a random predictor to illustrate how a ROC curve looks with a random predictor.
 
-tree <- rpart(Species ~ ., train, method = "class")
+```{r random_predictor}
+spam_data <- read.csv(file = "../data/spambase.csv")
+spam_data$class <- factor(spam_data$class)
 
-probs <- predict(tree, test, type = "prob")
-probs_setosa <- probs[,1]
-probs_versicolor <- probs[,2]
-
-setosa <- as.numeric(grepl(pattern = 'setosa', x = test$Species))
-versicolor <- as.numeric(grepl(pattern = 'versicolor', x = test$Species))
-pred <- prediction(probs_setosa, setosa)
-pred <- prediction(probs_versicolor, versicolor)
+set.seed(1984)
+random_prob <- runif(n = nrow(spam_data))
+pred <- prediction(random_prob, spam_data$class)
 
 auc <- performance(pred, 'auc')
-auc_value <- auc@y.values[[1]]
+auc_value <- round(auc@y.values[[1]], 4)
 
 perf <- performance(pred, 'tpr', 'fpr')
-plot(perf, main='ROC for versicolor')
+plot(perf, main='ROC for random predictor of spam')
 legend('bottomright', legend = paste('AUC = ', auc_value))
 ```
 
-![ROC curve](img/roc_versicolor.png)
+Let's train a random forest model and use the votes as the probability.
 
-```{r}
-auc <- roc.area(as.integer(spam_data$class==1), rf$votes[,2])$A
-roc.plot(as.integer(spam_data$class==1), rf$votes[,2], main="", threshold = seq(0, 1, 0.1))
+```{r random_forest_roc}
+set.seed(1984)
+system.time(rf <- randomForest(class ~ ., data = spam_data))
+
+pred <- prediction(rf$votes[, 2], spam_data$class)
+auc <- performance(pred, 'auc')
+auc_value <- round(auc@y.values[[1]], 4)
+
+perf <- performance(pred, 'tpr', 'fpr')
+plot(
+  perf,
+  main='ROC for Random Forests classifier of spam',
+  colorize = TRUE,
+  lwd = 3
+)
+legend('bottomright', legend = paste('AUC = ', auc_value))
+```
+
+The [verification package](https://cran.r-project.org/web/packages/verification/index.html) can also be used to generate a (nicer looking) ROC curve.
+
+```{r roc_verification}
+labels <- as.integer(spam_data$class == 1)
+probs <- rf$votes[, 2]
+auc <- roc.area(labels, probs)$A
+roc.plot(labels, probs, main="OOB ROC Curve", threshold = seq(0, 1, 0.1))
 legend("bottomright", bty="n", sprintf("Area Under the Curve (AUC) = %1.4f", auc))
-title(main="OOB ROC Curve")
 ```
 
 Plotting with confidence intervals, which are calculated by bootstrapping the observations and prediction, then calculating probability of detection yes (PODy) and probability of detection no (PODn) values. The default CI is 95%.
 
-```{r}
-system.time(roc.plot(as.integer(spam_data$class==1), rf$votes[,2], main="", threshold = seq(0, 1, 0.1), CI = TRUE))
+```{r roc_verification_ci}
+system.time(
+  roc.plot(labels, probs, main="OOB ROC Curve", threshold = seq(0, 1, 0.1), CI = TRUE)
+)
 legend("bottomright", bty="n", sprintf("Area Under the Curve (AUC) = %1.4f", auc))
-title(main="OOB ROC Curve")
+```
+
+Precision (TP / [TP + FP]) Recall (TP / [TP + FN]).
+
+```{r precision_recall}
+pred <- prediction(rf$votes[, 2], spam_data$class)
+perf <- performance(pred, "prec", "rec")
+
+plot(perf,
+     avg= "threshold",
+     colorize=TRUE,
+     lwd= 3,
+     main= "Precision/Recall")
 ```
 
 ## Session info
