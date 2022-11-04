@@ -293,7 +293,7 @@ plot(
   colorize = TRUE,
   lwd = 3
 )
-legend('bottomright', legend = paste('AUC = ', auc_value))
+legend("bottomright", legend = paste('AUC = ', auc_value))
 ```
 
 The [verification package](https://cran.r-project.org/web/packages/verification/index.html) can also be used to generate a (nicer looking) ROC curve.
@@ -320,12 +320,16 @@ Precision (TP / [TP + FP]) Recall (TP / [TP + FN]).
 ```{r precision_recall}
 pred <- prediction(rf$votes[, 2], spam_data$class)
 perf <- performance(pred, "prec", "rec")
+auc <- performance(pred, "aucpr")
+auc_value <- round(auc@y.values[[1]], 4)
 
 plot(perf,
      avg= "threshold",
      colorize=TRUE,
      lwd= 3,
-     main= "Precision/Recall")
+     main= "Precision/Recall"
+)
+legend('bottomleft', legend = paste('AUC = ', auc_value))
 ```
 
 ## Session info

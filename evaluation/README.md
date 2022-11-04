@@ -58,7 +58,7 @@ system.time(rf <- randomForest(class ~ ., data = spam_data, importance=TRUE, pro
     ##   500:   4.59%  2.73%  7.45%
 
     ##    user  system elapsed 
-    ##  34.964   1.315  36.367
+    ##  30.247   0.682  31.004
 
 Classification measures
 -----------------------
@@ -475,7 +475,7 @@ system.time(rf <- randomForest(class ~ ., data = spam_data))
 ```
 
     ##    user  system elapsed 
-    ##   7.784   0.278   8.081
+    ##   7.499   0.148   7.665
 
 ``` {.r}
 pred <- prediction(rf$votes[, 2], spam_data$class)
@@ -489,7 +489,7 @@ plot(
   colorize = TRUE,
   lwd = 3
 )
-legend('bottomright', legend = paste('AUC = ', auc_value))
+legend("bottomright", legend = paste('AUC = ', auc_value))
 ```
 
 ![](img/random_forest_roc-1.png)
@@ -520,7 +520,7 @@ system.time(
 ```
 
     ##    user  system elapsed 
-    ##  10.374   0.377  10.777
+    ##  10.159   0.095  10.279
 
 ``` {.r}
 legend("bottomright", bty="n", sprintf("Area Under the Curve (AUC) = %1.4f", auc))
@@ -533,12 +533,16 @@ Precision (TP / \[TP + FP\]) Recall (TP / \[TP + FN\]).
 ``` {.r}
 pred <- prediction(rf$votes[, 2], spam_data$class)
 perf <- performance(pred, "prec", "rec")
+auc <- performance(pred, "aucpr")
+auc_value <- round(auc@y.values[[1]], 4)
 
 plot(perf,
      avg= "threshold",
      colorize=TRUE,
      lwd= 3,
-     main= "Precision/Recall")
+     main= "Precision/Recall"
+)
+legend('bottomleft', legend = paste('AUC = ', auc_value))
 ```
 
 ![](img/precision_recall-1.png)
@@ -548,7 +552,7 @@ Session info
 
 Time built.
 
-    ## [1] "2022-10-31 06:26:22 UTC"
+    ## [1] "2022-11-04 07:37:42 UTC"
 
 Session info.
 
