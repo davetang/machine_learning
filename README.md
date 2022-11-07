@@ -48,6 +48,19 @@ parameter that is not part of the model.
 * Avoiding underfitting, which is when the model is too simple to learn the
 underlying structure of the data.
 
+# Why predictions fail?
+
+Reasons machine learning models fail to make correct predictions despite having
+enough data:
+
+1. Inadequate pre-processing of data
+2. Inadequate model validation (the procedure where a trained model is assessed
+   with testing data)
+3. Inappropriate model was used
+4. Unjustified extrapolation (making predictions on new data that is
+   characteristically different from the training data)
+5. Over-fitting the model on existing data
+
 # Resources
 
 A list of useful resources for learning about machine learning with an emphasis
