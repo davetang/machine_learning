@@ -164,6 +164,94 @@ Best model according to area under the ROC.
 slice_max(.data = my_rf$results, order_by = ROC, n = 1)
 ```
 
+## Entire workflow
+
+Implement the current workflow as a function to ease testing on a new data set (as long as the labels are stored in the last column).
+
+```{r run_rf}
+run_rf <- function(my_df, my_seed = 1984, max_mtry = 150, remove_nzv = TRUE, remove_cor = TRUE){
+  my_feat <- my_df[, -ncol(my_df)]
+  my_lab <- my_df[, ncol(my_df)]
+  
+  nzv <- nearZeroVar(my_feat)
+  if(length(nzv) > 0 && remove_nzv){
+    message(paste0("Removing ", length(nzv), " near zero variance features"))
+    my_feat <- my_feat[, -nzv]
+  }
+  
+  my_cor <- cor(my_feat)
+  my_cor_feat <- findCorrelation(my_cor, cutoff = 0.90)
+  if(length(my_cor_feat) > 0 && remove_cor){
+    message(paste0("Removing ", length(my_cor_feat), " correlated features"))
+    my_feat <- my_feat[, -my_cor_feat]
+  }
+  
+  set.seed(my_seed)
+  my_idx <- createDataPartition(
+    y = my_lab,
+    p = 0.8,
+    list = FALSE,
+    times = 1
+  )
+  my_train <- my_feat[my_idx, ]
+  my_train$class <- my_lab[my_idx]
+  my_test <- my_feat[-my_idx, ]
+  my_test$class <- my_lab[-my_idx]
+  
+  fit_control <- trainControl(
+    method = "repeatedcv",
+    number = 10,
+    repeats = 10,
+    classProbs = TRUE,
+    summaryFunction = twoClassSummary
+  )
+  
+  if(ncol(my_train) < max_mtry){
+    max_mtry <- ncol(my_train)
+  }
+  
+  gbm_grid <- expand.grid(
+    mtry = 1:max_mtry
+  )
+  
+  ncore <- ceiling(detectCores() / 2)
+  
+  cl <- makePSOCKcluster(ncore)
+  registerDoParallel(cl)
+  
+  set.seed(my_seed)
+  system.time(
+    my_rf <- train(
+      class ~ .,
+      data = my_train,
+      method = "rf",
+      trControl = fit_control,
+      tuneGrid = gbm_grid,
+      metric = "ROC",
+      verbose = FALSE
+    )
+  )
+  stopCluster(cl)
+  
+  return(my_rf)
+}
+```
+
+Load spam data and run workflow.
+
+```{r run_rf_on_spam}
+spam_data <- read.csv(file = "../data/spambase.csv")
+spam_data$class <- factor(ifelse(spam_data$class == 1, 'S', 'H'))
+spam_rf <- run_rf(spam_data)
+spam_rf$bestTune
+```
+
+Plot tuning results.
+
+```{r spam_rf_tune}
+ggplot(spam_rf)
+```
+
 ## Session info
 
 Time built.

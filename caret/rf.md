@@ -151,7 +151,7 @@ Train in parallel using half of all available CPUs.
     )
 
     ##    user  system elapsed 
-    ##   6.052   1.020  39.181
+    ##   6.110   0.929  37.334
 
     stopCluster(cl)
 
@@ -173,11 +173,102 @@ Best model according to area under the ROC.
     ##   mtry       ROC      Sens      Spec      ROCSD     SensSD    SpecSD
     ## 1    1 0.9379241 0.9259722 0.7655357 0.05740992 0.08717427 0.1672195
 
+## Entire workflow
+
+Implement the current workflow as a function to ease testing on a new
+data set (as long as the labels are stored in the last column).
+
+    run_rf <- function(my_df, my_seed = 1984, max_mtry = 150, remove_nzv = TRUE, remove_cor = TRUE){
+      my_feat <- my_df[, -ncol(my_df)]
+      my_lab <- my_df[, ncol(my_df)]
+      
+      nzv <- nearZeroVar(my_feat)
+      if(length(nzv) > 0 && remove_nzv){
+        message(paste0("Removing ", length(nzv), " near zero variance features"))
+        my_feat <- my_feat[, -nzv]
+      }
+      
+      my_cor <- cor(my_feat)
+      my_cor_feat <- findCorrelation(my_cor, cutoff = 0.90)
+      if(length(my_cor_feat) > 0 && remove_cor){
+        message(paste0("Removing ", length(my_cor_feat), " correlated features"))
+        my_feat <- my_feat[, -my_cor_feat]
+      }
+      
+      set.seed(my_seed)
+      my_idx <- createDataPartition(
+        y = my_lab,
+        p = 0.8,
+        list = FALSE,
+        times = 1
+      )
+      my_train <- my_feat[my_idx, ]
+      my_train$class <- my_lab[my_idx]
+      my_test <- my_feat[-my_idx, ]
+      my_test$class <- my_lab[-my_idx]
+      
+      fit_control <- trainControl(
+        method = "repeatedcv",
+        number = 10,
+        repeats = 10,
+        classProbs = TRUE,
+        summaryFunction = twoClassSummary
+      )
+      
+      if(ncol(my_train) < max_mtry){
+        max_mtry <- ncol(my_train)
+      }
+      
+      gbm_grid <- expand.grid(
+        mtry = 1:max_mtry
+      )
+      
+      ncore <- ceiling(detectCores() / 2)
+      
+      cl <- makePSOCKcluster(ncore)
+      registerDoParallel(cl)
+      
+      set.seed(my_seed)
+      system.time(
+        my_rf <- train(
+          class ~ .,
+          data = my_train,
+          method = "rf",
+          trControl = fit_control,
+          tuneGrid = gbm_grid,
+          metric = "ROC",
+          verbose = FALSE
+        )
+      )
+      stopCluster(cl)
+      
+      return(my_rf)
+    }
+
+Load spam data and run workflow.
+
+    spam_data <- read.csv(file = "../data/spambase.csv")
+    spam_data$class <- factor(ifelse(spam_data$class == 1, 'S', 'H'))
+    spam_rf <- run_rf(spam_data)
+
+    ## Removing 50 near zero variance features
+
+    spam_rf$bestTune
+
+    ##   mtry
+    ## 2    2
+
+Plot tuning results.
+
+    ggplot(spam_rf)
+
+![](img/spam_rf_tune-1.png)
+
 ## Session info
 
 Time built.
 
-    ## [1] "2022-11-08 06:47:27 UTC"
+    ## [1] "2022-11-08 08:03:48 UTC"
 
 Session info.
 
