@@ -13,19 +13,19 @@ knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_chunk$set(fig.path = "img/")
 ```
 
-## Introduction
+# Introduction
 
 [Gradient boosting](https://en.wikipedia.org/wiki/Gradient_boosting) is a machine learning technique for regression, classification and other tasks, which produces a prediction model in the form of an ensemble of weak prediction models, typically decision trees. When a decision tree is the weak learner, the resulting algorithm is called gradient boosted trees, which usually outperforms random forest. It builds the model in a stage-wise fashion like other boosting methods do, and it generalises them by allowing optimisation of an arbitrary differentiable loss function.
 
 XGBoost is one of the implementations of the Gradient Boosting concept but uses a more regularised model formalisation to control over-fitting, which gives it better performance.
 
-In this notebook we will be following [this tutorial](https://xgboost.readthedocs.io/en/latest/R-package/xgboostPresentation.html).
+In this notebook we will be following the [XGBoost R Tutorial](https://xgboost.readthedocs.io/en/stable/R-package/xgboostPresentation.html) and the [Understand your dataset with XGBoost](https://xgboost.readthedocs.io/en/stable/R-package/discoverYourData.html) articles.
 
 Install packages if missing and load.
 
 ```{r load_package, message=FALSE, warning=FALSE}
 .libPaths('/packages')
-my_packages <- c('xgboost', 'SHAPforxgboost')
+my_packages <- c('Matrix', 'vcd', 'data.table', 'xgboost', 'SHAPforxgboost')
 
 for (my_package in my_packages){
    if(!require(my_package, character.only = TRUE)){
@@ -33,6 +33,230 @@ for (my_package in my_packages){
       library(my_package, character.only = TRUE)
    }
 }
+```
+
+## XGBoost R Tutorial
+
+This tutorial uses mushroom data with the goal of predicting whether a mushroom can be eaten or not. The data is packaged with `xgboost` as `agaricus`. From [Wikipedia](https://en.wikipedia.org/wiki/Agaricus):
+
+> Agaricus is a genus of mushrooms containing both edible and poisonous species, with over 400 members worldwide (although many are disputed or newly-discovered species). The genus includes the common button mushroom (_Agaricus bisporus_) and the field mushroom (_A. campestris_), the dominant cultivated mushrooms of the West.
+
+```{r agaricus}
+data("agaricus.train", package = "xgboost")
+data("agaricus.test", package = "xgboost")
+
+train <- agaricus.train
+test <- agaricus.test
+
+dtrain <- xgb.DMatrix(data = train$data, label = train$label)
+dtest <- xgb.DMatrix(data = test$data, label = test$label)
+dim(dtrain)
+```
+
+We will train using a decision tree model with the following parameters:
+
+* `objective = "binary:logistic"` - train a binary classification model
+* `max.depth = 2` - shallow depth because our case is very simple
+* `nthread = 2` - use two CPU threads
+* `eta = 1` - learning rate used to prevent overfitting by making the boosting process more conservative. Lower value for `eta` implies larger value for `nrounds` and low `eta` value means model more robust to overfitting but slower to compute. The default is 0.3.
+* `nrounds = 2` - make two passes on the data, where the second one will enhance the model by further reducing the difference between ground truth and prediction
+
+```{r basic_training}
+bst <- xgboost(
+   data = dtrain,
+   max.depth = 2,
+   eta = 1,
+   nthread = 2,
+   nrounds = 2,
+   objective = "binary:logistic",
+   verbose = 2
+)
+```
+
+Predict.
+
+```{r predict}
+prediction <- as.numeric(predict(bst, dtest) > 0.5)
+err <- mean(as.numeric(prediction > 0.5) != test$label)
+print(paste("test-error=", signif(err, 5)))
+```
+
+Table of results.
+
+```{r predict_table}
+prop.table(table(real = test$label, predict = prediction))
+```
+
+Follow the progress of learning.
+
+From `?xgb.train`:
+
+The following is the list of built-in metrics for which `XGBoost` provides optimized implementation:
+
+* `rmse` - [root mean square error](https://en.wikipedia.org/wiki/Root_mean_square_error)
+* `logloss` - [negative log-likelihood](https://en.wikipedia.org/wiki/Log-likelihood)
+* `mlogloss` - [multiclass logloss](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.log_loss.html)
+* `error` - Binary classification error rate. It is calculated as (# wrong cases) / (# all cases). By default, it uses the 0.5 threshold for predicted values to define negative and positive instances. Different threshold (e.g., 0.) could be specified as "error@0."
+* `merror` - Multiclass classification error rate. It is calculated as (# wrong cases) / (# all cases).
+* `mae` - Mean absolute error
+* `mape` - Mean absolute percentage error
+* `auc` - [Area under the curve](https://en.wikipedia.org/wiki/Receiver_operating_characteristic#Area_under_the_curve)
+* `aucpr` - [Area under the PR curve](https://en.wikipedia.org/wiki/Precision_and_recall)
+* `ndcg` - [Normalized Discounted Cumulative Gain](https://en.wikipedia.org/wiki/NDCG)
+
+```{r watchlist}
+watchlist <- list(train=dtrain, test=dtest)
+
+bst <- xgb.train(
+   data=dtrain,
+   max.depth=2,
+   eta=1, 
+   nthread = 2,
+   nrounds=2,
+   watchlist=watchlist,
+   eval.metric = "error",
+   eval.metric = "logloss",
+   eval.metric = "auc",
+   eval.metric = "aucpr",
+   objective = "binary:logistic"
+)
+```
+
+The evaluation metrics are saved in `evaluation_log`.
+
+```{r evaluation_log}
+bst$evaluation_log
+```
+
+Linear boosting.
+
+```{r linear_boosting}
+bst2 <- xgb.train(
+   data=dtrain,
+   booster = "gblinear",
+   nthread = 2,
+   nrounds=2,
+   watchlist=watchlist,
+   eval.metric = "error",
+   eval.metric = "logloss",
+   eval.metric = "auc",
+   eval.metric = "aucpr",
+   objective = "binary:logistic"
+)
+```
+
+Linear boosting predictions.
+
+```{r linear_boosting_pred}
+prediction2 <- as.numeric(predict(bst2, dtest) > 0.5)
+err2 <- mean(as.numeric(prediction2 > 0.5) != test$label)
+
+prop.table(table(real = test$label, predict = prediction2))
+```
+
+Feature importance.
+
+```{r feature_importance}
+importance_matrix <- xgb.importance(model = bst2)
+head(importance_matrix)
+```
+
+Feature importance plot.
+
+```{r feature_importance_plot}
+xgb.plot.importance(importance_matrix)
+```
+
+## Understand your dataset with XGBoost
+
+How to use XGBoost to discover and understand your dataset better.
+
+### Data
+
+XGBoost uses only numeric vectors and categorical variables need to be converted using [one-hot encoding](https://en.wikipedia.org/wiki/One-hot). The data for this section is from a 1988 double-blind clinical trial investigating a new treatment for rheumatoid arthritis.
+
+```{r arthritis}
+data(Arthritis, package = "vcd")
+df <- data.table(Arthritis, keep.rownames = FALSE)
+dim(df)
+```
+
+The variables are:
+
+1. `ID` - patient ID.
+2. `Treatment` - factor indicating treatment (Placebo, Treated).
+3. `Sex` - factor indicating sex (Female, Male).
+4. `Age` - age of patient.
+5. `Improved` - ordered factor indicating treatment outcome (None, Some, Marked).
+
+```{r head_arthritis}
+head(df)
+```
+
+Remove ID.
+
+```{r remove_id}
+df[, ID:=NULL]
+```
+
+Add new age variable.
+
+```{r age_discret}
+head(df[,AgeDiscret := as.factor(round(Age/10,0))])
+```
+
+Random split.
+
+```{r age_cat}
+head(df[,AgeCat:= as.factor(ifelse(Age > 30, "Old", "Young"))])
+```
+
+We will transform the categorical data to dummy variables in a process called one-hot encoding. The purpose is to transform each value of each categorical feature into a binary feature.
+
+The formula `Improved~.-1` transforms all categorical features but column `Improved` (it is excluded because this is our label column that we want to predict) to binary values.
+
+```{r one_hot_encoding}
+sparse_matrix <- sparse.model.matrix(Improved~., data = df)
+sparse_matrix <- sparse_matrix[, -1]
+sparse_matrix[c(1:3, (nrow(sparse_matrix)-2):nrow(sparse_matrix)), ]
+```
+
+Create labels.
+
+```{r output_vector}
+output_vector = as.integer(df[, Improved] == "Marked")
+head(output_vector)
+```
+
+Train.
+
+```{r xgboost_arthritis}
+bst <- xgboost(
+   data = sparse_matrix,
+   label = output_vector,
+   max.depth = 4,
+   eta = 1,
+   nthread = 2,
+   nrounds = 10,
+   objective = "binary:logistic"
+)
+```
+
+Feature importance where:
+
+* `Gain` is the improvement in accuracy brought by a feature to the branches it is on. The idea is that before adding a new split on a feature X to the branch there was some wrongly classified elements, after adding the split on this feature, there are two new branches, and each of these branch is more accurate (one branch saying if your observation is on this branch then it should be classified as 1, and the other branch saying the exact opposite).
+* `Cover` measures the relative quantity of observations concerned by a feature.
+* `Frequency` is a simpler way to measure the Gain. It just counts the number of times a feature is used in all generated trees. You should not use it (unless you know why you want to use it).
+
+```{r arthritis_feat_imp}
+importance <- xgb.importance(feature_names = sparse_matrix@Dimnames[[2]], model = bst)
+head(importance)
+```
+
+Importance plot.
+
+```{r arthritis_imp_plot}
+xgb.plot.importance(importance)
 ```
 
 ## Breast cancer data
@@ -82,21 +306,23 @@ Train decision tree model using the following parameters:
 * `nthread`: "2", use two CPU threads
 * `nrounds`: "2" there will be two passes on the data, the second will enhance the model by further reducing the difference between the ground truth and prediction
 
-```{r train}
-bst <- xgboost(data = train$data,
-               label = train$label,
-               max.depth = 2,
-               eta = 1,
-               nthread = 2,
-               nrounds = 2,
-               objective = "binary:logistic")
+```{r breast_cancer_train}
+bst <- xgboost(
+   data = train$data,
+   label = train$label,
+   max.depth = 2,
+   eta = 1,
+   nthread = 2,
+   nrounds = 2,
+   objective = "binary:logistic"
+)
 ```
 
 ## Prediction
 
 Predict.
 
-```{r predict}
+```{r breast_cancer_predict}
 pred <- predict(bst, test$data)
 
 prediction <- as.numeric(pred > 0.5)
@@ -118,7 +344,7 @@ A benefit of using ensembles of decision tree methods like gradient boosting is 
 
 Importance is calculated for a single decision tree by the amount that each attribute split point improves the performance measure, weighted by the number of observations the node is responsible for. The performance measure may be the purity (Gini index) used to select the split points or another more specific error function. Finally, the feature importance are then averaged across all of the decision trees within the model.
 
-```{r feature_importance}
+```{r breast_cancer_feature_importance}
 importance_matrix <- xgb.importance(model = bst)
 print(importance_matrix)
 xgb.plot.importance(importance_matrix = importance_matrix)
@@ -156,4 +382,3 @@ Session info.
 ```{r session_info, echo=FALSE}
 sessionInfo()
 ```
-
