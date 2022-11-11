@@ -1,9 +1,24 @@
-Machine learning
-================
+Table of Contents
+=================
 
-_Machine Learning is the study of computer algorithms that improve automatically through experience. --Tom Mitchell_
+* [A brief history of machine learning](#a-brief-history-of-machine-learning)
+* [Main challenges](#main-challenges)
+* [Why predictions fail?](#why-predictions-fail)
+* [Machine learning project checklist](#machine-learning-project-checklist)
+* [Resources](#resources)
+   * [Presentations](#presentations)
+   * [Tutorials](#tutorials)
+   * [Online content](#online-content)
+   * [Papers](#papers)
+   * [Books](#books)
+   * [Datasets](#datasets)
+   * [Others](#others)
+
+Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
 
 # A brief history of machine learning
+
+_Machine Learning is the study of computer algorithms that improve automatically through experience. --Tom Mitchell_
 
 Adapted from the section 1.2 of the book "Deep Learning with R".
 
@@ -61,6 +76,22 @@ enough data:
    characteristically different from the training data)
 5. Over-fitting the model on existing data
 
+# Machine learning project checklist
+
+A useful checklist for machine learning projects from [Hands-On Machine Learning with Scikit-Learn, Keras, and TensorFlow 3rd edition](https://www.ebooks.com/en-us/book/210681725/hands-on-machine-learning-with-scikit-learn-keras-and-tensorflow/aur-lien-g-ron/).
+
+1. Frame the problem and look at the big picture.
+2. Get the data.
+3. Explore the data to gain insights.
+4. Prepare the data to better expose the underlying data patterns to machine
+   learning algorithms.
+5. Explore many different models and shortlist the best ones.
+6. Fine-tune your models and combine them into a great solution.
+7. Present your solution.
+8. Launch, monitor, and maintain your system.
+
+Adapt this checklist to your project needs!
+
 # Resources
 
 A list of useful resources for learning about machine learning with an emphasis
@@ -113,4 +144,3 @@ on biological applications.
 * Tom Mitchell's [home page](http://www.cs.cmu.edu/~tom/)
 * [My notes on Random Forests](https://github.com/davetang/learning_random_forest)
 * [No Free Lunch Theorems](http://www.no-free-lunch.org/)
-
