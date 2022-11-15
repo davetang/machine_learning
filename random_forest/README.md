@@ -72,21 +72,113 @@ r <- randomForest(class ~ ., data=train, importance=TRUE, do.trace=100, proximit
     ##   400:   3.98%  3.39%  4.95%
     ##   500:   3.77%  3.39%  4.40%
 
+Error rate.
+
+``` {.r}
+r
+```
+
+    ## 
+    ## Call:
+    ##  randomForest(formula = class ~ ., data = train, importance = TRUE,      do.trace = 100, proximity = TRUE) 
+    ##                Type of random forest: classification
+    ##                      Number of trees: 500
+    ## No. of variables tried at each split: 3
+    ## 
+    ##         OOB estimate of  error rate: 3.77%
+    ## Confusion matrix:
+    ##     2   4 class.error
+    ## 2 285  10  0.03389831
+    ## 4   8 174  0.04395604
+
+Find best `mtry`.
+
+``` {.r}
+set.seed(31)
+my_tuning <- tuneRF(train[, -ncol(train)], train[, ncol(train)])
+```
+
+    ## mtry = 3  OOB error = 3.77% 
+    ## Searching left ...
+    ## mtry = 2     OOB error = 3.35% 
+    ## 0.1111111 0.05 
+    ## mtry = 1     OOB error = 2.73% 
+    ## 0.1875 0.05 
+    ## Searching right ...
+    ## mtry = 6     OOB error = 4.19% 
+    ## -0.5384615 0.05
+
+![](img/tune_rf-1.png)
+
+``` {.r}
+my_tuning
+```
+
+    ##       mtry   OOBError
+    ## 1.OOB    1 0.02725367
+    ## 2.OOB    2 0.03354298
+    ## 3.OOB    3 0.03773585
+    ## 6.OOB    6 0.04192872
+
+Use the best `mtry` value to re-train another model.
+
+``` {.r}
+best_mtry <- my_tuning[order(my_tuning[, 2])[1], 1]
+
+set.seed(31)
+r_best_mtry <- randomForest(class ~ ., data=train, importance=TRUE, do.trace=100, proximity = TRUE, mtry = best_mtry)
+```
+
+    ## ntree      OOB      1      2
+    ##   100:   2.73%  3.05%  2.20%
+    ##   200:   2.52%  3.39%  1.10%
+    ##   300:   2.73%  3.39%  1.65%
+    ##   400:   2.52%  3.39%  1.10%
+    ##   500:   2.52%  3.39%  1.10%
+
+``` {.r}
+r_best_mtry
+```
+
+    ## 
+    ## Call:
+    ##  randomForest(formula = class ~ ., data = train, importance = TRUE,      do.trace = 100, proximity = TRUE, mtry = best_mtry) 
+    ##                Type of random forest: classification
+    ##                      Number of trees: 500
+    ## No. of variables tried at each split: 1
+    ## 
+    ##         OOB estimate of  error rate: 2.52%
+    ## Confusion matrix:
+    ##     2   4 class.error
+    ## 2 285  10  0.03389831
+    ## 4   2 180  0.01098901
+
 Predict
 -------
 
 Predict testing data.
 
 ``` {.r}
-table(
-   test$class, predict(object = r, newdata = test)
+prop.table(
+   table(
+      test$class, predict(object = r_best_mtry, newdata = test[, -ncol(test)])
+   )
 )
 ```
 
     ##    
-    ##      2  4
-    ##   2 76  3
-    ##   4  2 41
+    ##              2          4
+    ##   2 0.62295082 0.02459016
+    ##   4 0.01639344 0.33606557
+
+Error rate on testing set.
+
+``` {.r}
+my_pred <- predict(object = r_best_mtry, newdata = test[, -ncol(test)])
+1 - (sum(my_pred == test[, ncol(test)]) / length(my_pred))
+```
+
+    ## [1] 0.04098361
 
 Plots
 -----
@@ -365,7 +457,7 @@ Session info
 
 Time built.
 
-    ## [1] "2022-10-20 06:52:03 UTC"
+    ## [1] "2022-11-15 04:40:55 UTC"
 
 Session info.
 

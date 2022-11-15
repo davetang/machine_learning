@@ -70,9 +70,33 @@ Parameters:
 * `do.trace` = give a more verbose output as randomForest is running
 * `proximity` = calculate the proximity measure among the rows
 
-```{r analysis}
+```{r train_rf}
 set.seed(31)
 r <- randomForest(class ~ ., data=train, importance=TRUE, do.trace=100, proximity = TRUE)
+```
+
+Error rate.
+
+```{r error_rate}
+r
+```
+
+Find best `mtry`.
+
+```{r tune_rf}
+set.seed(31)
+my_tuning <- tuneRF(train[, -ncol(train)], train[, ncol(train)])
+my_tuning
+```
+
+Use the best `mtry` value to re-train another model.
+
+```{r best_mtry}
+best_mtry <- my_tuning[order(my_tuning[, 2])[1], 1]
+
+set.seed(31)
+r_best_mtry <- randomForest(class ~ ., data=train, importance=TRUE, do.trace=100, proximity = TRUE, mtry = best_mtry)
+r_best_mtry
 ```
 
 ## Predict
@@ -80,9 +104,18 @@ r <- randomForest(class ~ ., data=train, importance=TRUE, do.trace=100, proximit
 Predict testing data.
 
 ```{r predict}
-table(
-   test$class, predict(object = r, newdata = test)
+prop.table(
+   table(
+      test$class, predict(object = r_best_mtry, newdata = test[, -ncol(test)])
+   )
 )
+```
+
+Error rate on testing set.
+
+```{r test_error_rate}
+my_pred <- predict(object = r_best_mtry, newdata = test[, -ncol(test)])
+1 - (sum(my_pred == test[, ncol(test)]) / length(my_pred))
 ```
 
 ## Plots
