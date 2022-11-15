@@ -187,7 +187,7 @@ carried out:
     )
 
     ##    user  system elapsed 
-    ##   6.994   0.870  37.117
+    ##   6.785   0.855  36.909
 
     stopCluster(cl)
 
@@ -277,7 +277,7 @@ Assessment using the full dataset.
     )
 
     ##    user  system elapsed 
-    ##   7.643   0.967  44.191
+    ##   7.456   0.986  44.416
 
     stopCluster(cl)
 
@@ -301,6 +301,153 @@ Plot results.
     ggplot(my_rf_full)
 
 ![](img/plot_my_rf_full-1.png)
+
+### Using `resamples`
+
+Use the `resamples` function to manually test the `ntree` parameter.
+
+    fit_control <- trainControl(
+      method = "repeatedcv",
+      number = 10,
+      repeats = 10,
+      p = 0.8,
+      savePredictions = "final",
+      classProbs = TRUE,
+      summaryFunction = twoClassSummary
+    )
+
+    ncore <- ceiling(detectCores() / 2)
+    cl <- makePSOCKcluster(ncore)
+    registerDoParallel(cl)
+    full_data <- my_feat_filt
+    full_data$class <- my_lab
+
+    my_models <- list()
+
+    for (n in seq(from = 500, to = 3000, by = 500)){
+      set.seed(1984)
+      system.time(
+        my_rf <- train(
+          class ~ .,
+          data = full_data,
+          method = "rf",
+          trControl = fit_control,
+          metric = "ROC",
+          ntree = n
+        )
+      )
+      my_models[[paste0('n', n)]] <- my_rf
+    }
+    stopCluster(cl)
+
+    my_res <- resamples(my_models)
+
+    summary(my_res)
+
+    ## 
+    ## Call:
+    ## summary.resamples(object = my_res)
+    ## 
+    ## Models: n500, n1000, n1500, n2000, n2500, n3000 
+    ## Number of resamples: 100 
+    ## 
+    ## ROC 
+    ##            Min.   1st Qu.    Median      Mean   3rd Qu. Max. NA's
+    ## n500  0.8000000 0.9250000 0.9545455 0.9460244 0.9766204    1    0
+    ## n1000 0.8181818 0.9272727 0.9545455 0.9474184 0.9760101    1    0
+    ## n1500 0.8080808 0.9272727 0.9545455 0.9470774 0.9802189    1    0
+    ## n2000 0.8080808 0.9272727 0.9545455 0.9477290 0.9815657    1    0
+    ## n2500 0.8080808 0.9287879 0.9543561 0.9488152 0.9815657    1    0
+    ## n3000 0.8080808 0.9292929 0.9545455 0.9487609 0.9814815    1    0
+    ## 
+    ## Sens 
+    ##            Min.   1st Qu.    Median      Mean 3rd Qu. Max. NA's
+    ## n500  0.6363636 0.9090909 0.9090909 0.9228030       1    1    0
+    ## n1000 0.7272727 0.9090909 0.9090909 0.9265152       1    1    0
+    ## n1500 0.7272727 0.9090909 0.9090909 0.9263636       1    1    0
+    ## n2000 0.7272727 0.9090909 0.9090909 0.9283333       1    1    0
+    ## n2500 0.6666667 0.9090909 0.9090909 0.9275000       1    1    0
+    ## n3000 0.6363636 0.9090909 0.9090909 0.9256818       1    1    0
+    ## 
+    ## Spec 
+    ##       Min.   1st Qu.    Median      Mean   3rd Qu. Max. NA's
+    ## n500   0.4 0.6500000 0.7777778 0.7493333 0.8888889    1    0
+    ## n1000  0.4 0.6666667 0.7777778 0.7502222 0.8888889    1    0
+    ## n1500  0.4 0.6666667 0.7777778 0.7457778 0.8000000    1    0
+    ## n2000  0.4 0.7000000 0.7777778 0.7480000 0.8000000    1    0
+    ## n2500  0.4 0.7000000 0.7777778 0.7512222 0.8000000    1    0
+    ## n3000  0.4 0.6916667 0.7777778 0.7447778 0.8000000    1    0
+
+Plot.
+
+    dotplot(my_res)
+
+![](img/resamples_dotplot-1.png)
+
+Manually test two parameters.
+
+    fit_control <- trainControl(
+      method = "repeatedcv",
+      number = 10,
+      repeats = 10,
+      p = 0.8,
+      savePredictions = "final",
+      classProbs = TRUE,
+      summaryFunction = twoClassSummary
+    )
+
+    ncore <- ceiling(detectCores() / 2)
+    cl <- makePSOCKcluster(ncore)
+    registerDoParallel(cl)
+    full_data <- my_feat_filt
+    full_data$class <- my_lab
+
+    my_models_m_n <- list()
+
+    max_mtry <- floor(sqrt(ncol(full_data)))
+
+    for (m in 1:max_mtry){
+      gbm_grid <- expand.grid(
+        mtry = m
+      )
+      for (n in seq(from = 500, to = 3000, by = 500)){
+        set.seed(1984)
+        system.time(
+          my_rf <- train(
+            class ~ .,
+            data = full_data,
+            method = "rf",
+            trControl = fit_control,
+            metric = "ROC",
+            tuneGrid = gbm_grid,
+            ntree = n
+          )
+        )
+        my_models_m_n[[toString(paste0(n, '_', m))]] <- my_rf
+      }
+    }
+
+    stopCluster(cl)
+
+    my_res_m_n <- resamples(my_models_m_n)
+
+Best model.
+
+    my_summary <- summary(my_res_m_n)
+    as_tibble(my_summary$statistics$ROC, rownames = "model") %>%
+      tidyr::separate(col = model, into = c('ntree', 'mtry'), sep = "_") -> my_roc
+
+    ntree_lvl <- as.character(sort(unique(as.integer(pull(my_roc, ntree)))))
+
+    my_roc %>%
+      mutate(ntree = factor(ntree, levels = ntree_lvl)) -> my_roc
+
+    ggplot(my_roc, aes(ntree, mtry)) +
+      geom_tile(aes(fill = Mean)) +
+      geom_text(aes(label = round(Mean, 4))) +
+      scale_fill_gradient(low = "white", high = "red")
+
+![](img/ntree_mtry_heatmap-1.png)
 
 ## Entire workflow
 
@@ -399,7 +546,7 @@ Plot tuning results.
 
 Time built.
 
-    ## [1] "2022-11-15 04:16:42 UTC"
+    ## [1] "2022-11-15 06:23:11 UTC"
 
 Session info.
 

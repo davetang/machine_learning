@@ -255,6 +255,123 @@ Plot results.
 ggplot(my_rf_full)
 ```
 
+### Using `resamples`
+
+Use the `resamples` function to manually test the `ntree` parameter.
+
+```{r resamples}
+fit_control <- trainControl(
+  method = "repeatedcv",
+  number = 10,
+  repeats = 10,
+  p = 0.8,
+  savePredictions = "final",
+  classProbs = TRUE,
+  summaryFunction = twoClassSummary
+)
+
+ncore <- ceiling(detectCores() / 2)
+cl <- makePSOCKcluster(ncore)
+registerDoParallel(cl)
+full_data <- my_feat_filt
+full_data$class <- my_lab
+
+my_models <- list()
+
+for (n in seq(from = 500, to = 3000, by = 500)){
+  set.seed(1984)
+  system.time(
+    my_rf <- train(
+      class ~ .,
+      data = full_data,
+      method = "rf",
+      trControl = fit_control,
+      metric = "ROC",
+      ntree = n
+    )
+  )
+  my_models[[paste0('n', n)]] <- my_rf
+}
+stopCluster(cl)
+
+my_res <- resamples(my_models)
+
+summary(my_res)
+```
+
+Plot.
+
+```{r resamples_dotplot}
+dotplot(my_res)
+```
+
+Manually test two parameters.
+
+```{r resamples_mtry_ntree}
+fit_control <- trainControl(
+  method = "repeatedcv",
+  number = 10,
+  repeats = 10,
+  p = 0.8,
+  savePredictions = "final",
+  classProbs = TRUE,
+  summaryFunction = twoClassSummary
+)
+
+ncore <- ceiling(detectCores() / 2)
+cl <- makePSOCKcluster(ncore)
+registerDoParallel(cl)
+full_data <- my_feat_filt
+full_data$class <- my_lab
+
+my_models_m_n <- list()
+
+max_mtry <- floor(sqrt(ncol(full_data)))
+
+for (m in 1:max_mtry){
+  gbm_grid <- expand.grid(
+    mtry = m
+  )
+  for (n in seq(from = 500, to = 3000, by = 500)){
+    set.seed(1984)
+    system.time(
+      my_rf <- train(
+        class ~ .,
+        data = full_data,
+        method = "rf",
+        trControl = fit_control,
+        metric = "ROC",
+        tuneGrid = gbm_grid,
+        ntree = n
+      )
+    )
+    my_models_m_n[[toString(paste0(n, '_', m))]] <- my_rf
+  }
+}
+
+stopCluster(cl)
+
+my_res_m_n <- resamples(my_models_m_n)
+```
+
+Best model.
+
+```{r ntree_mtry_heatmap}
+my_summary <- summary(my_res_m_n)
+as_tibble(my_summary$statistics$ROC, rownames = "model") %>%
+  tidyr::separate(col = model, into = c('ntree', 'mtry'), sep = "_") -> my_roc
+
+ntree_lvl <- as.character(sort(unique(as.integer(pull(my_roc, ntree)))))
+
+my_roc %>%
+  mutate(ntree = factor(ntree, levels = ntree_lvl)) -> my_roc
+
+ggplot(my_roc, aes(ntree, mtry)) +
+  geom_tile(aes(fill = Mean)) +
+  geom_text(aes(label = round(Mean, 4))) +
+  scale_fill_gradient(low = "white", high = "red")
+```
+
 ## Entire workflow
 
 Implement the current workflow as a function to ease testing on a new data set (as long as the labels are stored in the last column).
