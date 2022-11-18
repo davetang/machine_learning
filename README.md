@@ -117,13 +117,14 @@ on biological applications.
 
 ## Papers
 
-* [What is Bayesian statistics](http://dx.doi.org/10.1038/nbt0904-1177) by Sean Eddy
-* [What is a support vector machine?](http://dx.doi.org/10.1038/nbt1206-1565) by William Noble
-* [What is a hidden Markov model?](http://dx.doi.org/10.1038/nbt1004-1315) by Sean Eddy
-* [What are artificial neural networks](http://dx.doi.org/10.1038/nbt1386) by Anders Krogh
-* [Deep learning for computational biology](http://dx.doi.org/10.15252/msb.20156651) by Angermueller et al.
-* [Machine learning applications in genetics and genomics](http://dx.doi.org/10.1038/nrg3920) by Maxwell Libbrecht and William Noble
-* [Conditional variable importance for random forests](http://www.ncbi.nlm.nih.gov/pubmed/18620558)
+* [What is Bayesian statistics](https://dx.doi.org/10.1038/nbt0904-1177) by Sean Eddy
+* [What is a support vector machine?](https://dx.doi.org/10.1038/nbt1206-1565) by William Noble
+* [What is a hidden Markov model?](https://dx.doi.org/10.1038/nbt1004-1315) by Sean Eddy
+* [What are artificial neural networks](https://dx.doi.org/10.1038/nbt1386) by Anders Krogh
+* [Deep learning for computational biology](https://dx.doi.org/10.15252/msb.20156651) by Angermueller et al.
+* [Machine learning applications in genetics and genomics](https://dx.doi.org/10.1038/nrg3920) by Maxwell Libbrecht and William Noble
+* [Conditional variable importance for random forests](https://pubmed.ncbi.nlm.nih.gov/18620558/) by Strobl et al.
+* [Ten quick tips for machine learning in computational biology](https://biodatamining.biomedcentral.com/articles/10.1186/s13040-017-0155-3) by Davide Chicco
 
 ## Books
 
