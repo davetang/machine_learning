@@ -1,0 +1,135 @@
+---
+title: "Calculating cutpoints"
+output:
+   md_document:
+      variant: markdown
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache = FALSE)
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.path = "img/")
+```
+
+## Introduction
+
+[cutpointr](https://cran.r-project.org/web/packages/cutpointr/vignettes/cutpointr.html) can be used to calculate optimal cut offs.
+
+Install packages if missing and load.
+
+```{r load_package, message=FALSE, warning=FALSE}
+.libPaths('/packages')
+my_packages <- c('cutpointr', 'randomForest')
+
+for (my_package in my_packages){
+   if(!require(my_package, character.only = TRUE)){
+      install.packages(my_package, '/packages')
+   }
+  library(my_package, character.only = TRUE)
+}
+
+library(tidyverse)
+theme_set(theme_bw())
+```
+
+## Example
+
+The `suicide` data is a data frame with 532 rows and 4 variables:
+
+1. `age` - (numeric) Age of participants in years
+2. `gender` - (factor) Gender
+3. `dsi` - (numeric) Sum-score (0 = low suicidality, 12 = high suicidality)
+4. `suicide` - (factor) Past suicide attempt (no = no attempt, yes = at least one attempt)
+
+```{r load_spam}
+data(suicide)
+head(suicide)
+```
+
+* `data` - A data.frame with the data needed for x, class and optionally subgroup.
+* `x` - The variable name to be used for classification, e.g. predictions. The raw vector of values if the data argument is unused.
+* `class` - The variable name indicating class membership. If the data argument is unused, the vector of raw numeric values.
+* `method` - (function) A function for determining cutpoints. Can be user supplied or use some of the built in methods. See details.
+* `metric` - (function) The function for computing a metric when using maximize_metric or minimize_metric as method and and for the out-of-bag values during bootstrapping. A way of internally validating the performance. User defined functions can be supplied, see details.
+
+```{r cutpointr_suicide}
+cp <- cutpointr(
+  data = suicide,
+  x = dsi,
+  class = suicide, 
+  method = maximize_metric,
+  metric = sum_sens_spec
+)
+
+summary(cp)
+```
+
+Optimal cut off.
+
+```{r optimal_cutoff}
+cp$optimal_cutpoint
+```
+
+Plot.
+
+```{r plot_cutpointr}
+plot(cp)
+```
+
+[Youden's J statistic](https://en.wikipedia.org/wiki/Youden%27s_J_statistic) = sensitivity + specificity - 1.
+
+```{r cutpointr_youden}
+cp_youden <- cutpointr(
+  data = suicide,
+  x = dsi,
+  class = suicide, 
+  method = maximize_metric,
+  metric = youden
+)
+
+summary(cp_youden)
+```
+
+## Random Forests
+
+Use [spam data](https://archive.ics.uci.edu/ml/machine-learning-databases/spambase/spambase.names) to train a Random Forest model to test with `cutpointr`. Class 0 and 1 are ham (non-spam) and spam, respectively.
+
+```{r random_forest_spam}
+spam_data <- read.csv(file = "../data/spambase.csv")
+spam_data$class <- factor(spam_data$class)
+set.seed(1984)
+rf <- randomForest(class ~ ., data = spam_data)
+```
+
+Optimal cut off using Youden's J statistic.
+
+```{r spam_youden}
+cp_rf_youden <- cutpointr(
+  x = rf$votes[, 2],
+  class = as.integer(spam_data$class)-1,
+  method = maximize_metric,
+  metric = youden
+)
+
+summary(cp_rf_youden)
+```
+
+Plot.
+
+```{r plot_spam_youden}
+plot(cp_rf_youden)
+```
+
+## Session info
+
+Time built.
+
+```{r time, echo=FALSE}
+Sys.time()
+```
+
+Session info.
+
+```{r session_info, echo=FALSE}
+sessionInfo()
+```
