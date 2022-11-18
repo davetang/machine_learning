@@ -120,6 +120,12 @@ Plot.
 plot(cp_rf_youden)
 ```
 
+Plot metric.
+
+```{r plot_metric}
+plot_metric(cp_rf_youden)
+```
+
 ## Session info
 
 Time built.

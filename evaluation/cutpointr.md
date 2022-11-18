@@ -211,11 +211,19 @@ plot(cp_rf_youden)
 
 ![](img/plot_spam_youden-1.png)
 
+Plot metric.
+
+``` r
+plot_metric(cp_rf_youden)
+```
+
+![](img/plot_metric-1.png)
+
 ## Session info
 
 Time built.
 
-    ## [1] "2022-11-18 06:56:26 UTC"
+    ## [1] "2022-11-18 07:04:37 UTC"
 
 Session info.
 
