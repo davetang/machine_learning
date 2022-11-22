@@ -33,6 +33,86 @@ If there are many outliers, the Mean Absolute Error (MAE, also called the averag
 
 $$ MAE(X, h) = \frac{1}{m} \sum^m_{i = 1} |h(x^{(i)}) - y^{(i)}| $$
 
+## Shannon Entropy
+
+[Entropy is a measure of randomness](https://medium.com/udacity/shannon-entropy-information-gain-and-picking-balls-from-buckets-5810d35d54b4) (or variance), where high entropy == more randomness/variance and low entropy == less randomness/variance. The general formula  is:
+
+$$ Entropy = - \sum^n_{i=1} p_i\ log_2\ p_i$$
+
+* $n$ is the number of classes/labels
+* $p_i$ is the probability of the $i^{th}$ class
+
+The `entropy` function will take a vector of classes/labels and return the entropy.
+
+```{r entropy}
+eg1 <- c('A', 'A', 'A', 'A', 'A', 'A', 'A', 'A')
+eg2 <- c('A', 'A', 'A', 'A', 'B', 'B', 'C', 'D')
+eg3 <- c('A', 'A', 'B', 'B', 'C', 'C', 'D', 'D')
+
+entropy <- function(x){
+  probs <- table(x) / length(x)
+  -sum(probs * log2(probs))
+}
+
+entropy(eg1)
+entropy(eg2)
+entropy(eg3)
+```
+
+## Information Gain
+
+Consider the [following dataset](https://victorzhou.com/blog/information-gain/).
+
+```{r ig_df}
+set.seed(1984)
+y <- runif(n = 10, min = 0, max = 3)
+x1 <- runif(n = 5, min = 0, max = 2)
+x2 <- runif(n = 5, min = 2, max = 3)
+
+df <- data.frame(
+  x = c(x1, x2),
+  y = y,
+  label = rep(c("blue", "green"), each = 5)
+)
+
+plot(df$x, df$y, col = df$label, pch = 16)
+abline(v = 1.6, lty = 3)
+```
+
+Before the split, the entropy was:
+
+```{r entropy_before}
+entropy(df$label)
+```
+
+After the split.
+
+```{r entropy_split}
+my_split <- df$x < 1.6
+
+left_split <- df$label[my_split]
+entropy(left_split)
+
+right_split <- df$label[!my_split]
+entropy(right_split)
+```
+
+Weigh by number of elements and calculate entropy after split.
+
+```{r entropy_after}
+entropy_after <- entropy(left_split) * (length(left_split) / length(df$label)) + entropy(right_split) * (length(right_split) / length(df$label))
+entropy_after
+```
+
+Information gain == how much entropy we removed.
+
+```{r information_gain}
+information_gain <- entropy(df$label) - entropy_after
+information_gain
+```
+
+Information gain is calculated for a split by subtracting the weighted entropies of each branch from the original entropy.
+
 ## Session info
 
 Time built.
