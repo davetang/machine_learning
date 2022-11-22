@@ -1,0 +1,48 @@
+---
+title: "Evaluation formulae"
+output:
+   md_document:
+      variant: markdown
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache = FALSE)
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.path = "img/")
+```
+
+## Introduction
+
+Mathematical formulae elaborated.
+
+## Root Mean Square Error
+
+The Root Mean Square Error (RMSE) is often used in regression problems to indicate how much error was made by the predictions, with a higher value to larger errors.
+
+$$ RMSE(X, h) = \sqrt{ \frac{1}{m} \sum^m_{i = 1} ( h(x^{(i)}) - y^{(i)} )^2 } $$
+
+* $m$ is the number of instances/cases in the dataset
+* $x^{(i)}$ is a vector of all the feature values of the $i^{th}$ instance in the dataset and $y^{(i)}$ is the label
+* $X$ is a matrix containing all the feature values of all instances in the dataset. There is one row per instance, and the $i^{th}$ row is equal to the transpose of $x^{(i)}$, noted $(x^{(i)})^T$.
+* $h$ is the prediction function, also called a hypothesis. When the function is given an instance's feature vector $x^{(i)}$, it outputs a predicted value $\hat{y}^{(i)} = h(x^{(i)})$ for that instance.
+* $RMSE(X,h)$ is the cost function measured on the set using hypothesis $h$.
+
+## Mean Absolute Error
+
+If there are many outliers, the Mean Absolute Error (MAE, also called the average absolute deviation) can be considered.
+
+$$ MAE(X, h) = \frac{1}{m} \sum^m_{i = 1} |h(x^{(i)}) - y^{(i)}| $$
+
+## Session info
+
+Time built.
+
+```{r time, echo=FALSE}
+Sys.time()
+```
+
+Session info.
+
+```{r session_info, echo=FALSE}
+sessionInfo()
+```
