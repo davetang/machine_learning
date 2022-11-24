@@ -1,0 +1,206 @@
+---
+title: "Gaussian Mixture Models"
+output:
+   md_document:
+      variant: markdown
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache = FALSE)
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.path = "img/")
+options(scipen = 999)
+library(tidyverse)
+theme_set(theme_bw())
+```
+
+## Introduction
+
+Following these blog posts:
+
+* <https://tinyheero.github.io/2015/10/13/mixture-model.html>
+* <https://tinyheero.github.io/2016/01/03/gmm-em.html>
+* <https://exploringdatablog.blogspot.com/2011/08/fitting-mixture-distributions-with-r.html>
+
+Install and load [mixtools](https://cran.r-project.org/web/packages/mixtools/index.html).
+
+```{r load_package, message=FALSE, warning=FALSE}
+.libPaths('/packages')
+my_packages <- c('mixtools')
+
+for (my_package in my_packages){
+   if(!require(my_package, character.only = TRUE)){
+      install.packages(my_package, '/packages')
+   }
+  library(my_package, character.only = TRUE)
+}
+```
+
+Waiting time between eruptions and the duration of the eruption for the Old Faithful geyser in Yellowstone National Park, Wyoming, USA.
+
+A data frame with 272 observations on 2 variables.
+
+* `eruptions` - Eruption time in minutes
+* `waiting` - Waiting time to next eruption in minutes
+
+```{r faithful_scatter}
+ggplot(faithful, aes(waiting, eruptions)) +
+  geom_point()
+```
+
+The `normalmixEM` function builds a 2-component GMM (k = 2 indicates to use 2 components).
+
+```{r mixmdl}
+set.seed(1984)
+mixmdl <- normalmixEM(faithful$waiting, k = 2)
+summary(mixmdl)
+```
+
+The red and blue lines indicate the two fitted Gaussian distributions.
+
+```{r plot_density}
+#' Plot a Mixture Component
+#' 
+#' @param x Input data
+#' @param mu Mean of component
+#' @param sigma Standard deviation of component
+#' @param lam Mixture weight of component
+plot_mix_comps <- function(x, mu, sigma, lam) {
+  lam * dnorm(x, mu, sigma)
+}
+
+data.frame(x = mixmdl$x) %>%
+  ggplot() +
+  geom_histogram(aes(x, ..density..), binwidth = 1, colour = "black", 
+                 fill = "white") +
+  stat_function(geom = "line", fun = plot_mix_comps,
+                args = list(mixmdl$mu[1], mixmdl$sigma[1], lam = mixmdl$lambda[1]),
+                colour = "red", lwd = 1.5) +
+  stat_function(geom = "line", fun = plot_mix_comps,
+                args = list(mixmdl$mu[2], mixmdl$sigma[2], lam = mixmdl$lambda[2]),
+                colour = "blue", lwd = 1.5) +
+  ylab("Density")
+```
+
+Mean and standard deviation.
+
+```{r parameters}
+mixmdl$mu
+mixmdl$sigma
+```
+
+`lambda` indicates the ratio of the dataset but formally it is referred to as the mixing weights (or mixing proportions or mixing co-efficients). It can be interpreted as the red component representing 36% and the blue component representing 64% of the input data.
+
+```{r lambda}
+mixmdl$lambda
+sum(mixmdl$lambda)
+```
+
+Each input data point is assigned a posterior probability of belonging to one of these components.
+
+```{r pp}
+head(cbind(mixmdl$x, mixmdl$posterior))
+```
+
+## Predict
+
+When two distributions are close to each other.
+
+```{r close}
+set.seed(1984)
+k1 <- rnorm(n = 123, mean = 0.4, sd = 0.2)
+k2 <- rnorm(n = 156, mean = 0.6, sd = 0.2)
+
+plot(density(c(k1, k2)), main = '')
+```
+
+EM.
+
+```{r normalmixem_close}
+set.seed(1984)
+mm <- normalmixEM(c(k1, k2), k = 2, maxit = 10000)
+summary(mm)
+```
+
+Two more distinguishable distributions.
+
+```{r distinct}
+set.seed(1984)
+k1 <- rnorm(n = 123, mean = 0.3, sd = 0.2)
+k2 <- rnorm(n = 156, mean = 0.7, sd = 0.2)
+
+df <- tibble(
+  label = rep(c('k1', 'k2'), c(length(k1), length(k2))),
+  value = c(k1, k2)
+)
+
+ggplot(df, aes(value, fill = label)) +
+  geom_histogram(bins = 25, position = "dodge")
+```
+
+EM.
+
+```{r normalmixem_distinct}
+set.seed(1984)
+mm2 <- normalmixEM(df$value, k = 2, maxit = 10000)
+summary(mm2)
+```
+
+Component 1 is the distribution with the higher mean (`k2`).
+
+```{r confusion_matrix}
+table(
+  real = df$label,
+  predicted = ifelse(mm2$posterior[, 1] < 0.5, yes = 'k1', no = 'k2')
+)
+```
+
+Two clearly distinguishable distributions.
+
+```{r clearly_distinct}
+set.seed(1984)
+k1 <- rnorm(n = 123, mean = 0.2, sd = 0.2)
+k2 <- rnorm(n = 156, mean = 0.8, sd = 0.2)
+
+df2 <- tibble(
+  label = rep(c('k1', 'k2'), c(length(k1), length(k2))),
+  value = c(k1, k2)
+)
+
+ggplot(df2, aes(value, fill = label)) +
+  geom_histogram(bins = 25, position = "dodge")
+```
+
+EM and predict.
+
+```{r normalmixem_clearly_distinct}
+set.seed(1984)
+mm3 <- normalmixEM(df2$value, k = 2, maxit = 10000)
+table(
+  real = df2$label,
+  predicted = ifelse(mm3$posterior[, 2] < 0.5, yes = 'k1', no = 'k2')
+)
+```
+
+Do we do better by simply setting a threshold at 0.5? In this case, yes.
+
+```{r hard_filter}
+table(
+  real = df2$label,
+  predicted = ifelse(df2$value < 0.5, yes = 'k1', no = 'k2')
+)
+```
+
+## Session info
+
+Time built.
+
+```{r time, echo=FALSE}
+Sys.time()
+```
+
+Session info.
+
+```{r session_info, echo=FALSE}
+sessionInfo()
+```
