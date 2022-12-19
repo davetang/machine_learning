@@ -109,35 +109,78 @@ overall class distribution of the data.
 
 ## Model training and tuning
 
+The caret package supports three different XGBoost models (which
+correspond to the type of booster):
+
+1.  `xgbDART` - used for classification and regression and tuning
+    parameters include: nrounds, max\_depth, eta, gamma, subsample,
+    colsample\_bytree, rate\_drop, skip\_drop, min\_child\_weight
+2.  `xgbLinear` - used for classification and regression, and tuning
+    parameters include: nrounds, lambda, alpha, eta
+3.  `xgbTree` - used for classification and regression, and tuning
+    parameters include: nrounds, max\_depth, eta, gamma,
+    colsample\_bytree, min\_child\_weight, subsample
+
+[Parameter
+descriptions](https://xgboost.readthedocs.io/en/stable/parameter.html):
+
+-   `num_round` (range: \[0, Inf\]) - The number of rounds for boosting
+-   `eta` (range: \[0,1\]) - a.k.a. the learning rate is a step size
+    shrinkage used in update to prevents overfitting. After each
+    boosting step, we can directly get the weights of new features, and
+    `eta` shrinks the feature weights to make the boosting process more
+    conservative.
+-   `gamma` (range: \[0, Inf\]) - the minimum loss reduction required to
+    make a further partition on a leaf node of the tree. The larger
+    gamma is, the more conservative the algorithm will be.
+-   `max_depth` (range: \[0, Inf\]) - the maximum depth of a tree.
+    Increasing this value will make the model more complex and more
+    likely to overfit. 0 indicates no limit on depth. Beware that
+    XGBoost aggressively consumes memory when training a deep tree.
+-   `min_child_weight` (range: \[0, Inf\]) - the minimum sum of instance
+    weight (hessian) needed in a child. If the tree partition step
+    results in a leaf node with the sum of instance weight less than
+    `min_child_weight`, then the building process will give up further
+    partitioning. In linear regression task, this simply corresponds to
+    minimum number of instances needed to be in each node. The larger
+    `min_child_weight` is, the more conservative the algorithm will be.
+-   `subsample` (range: \[0,1\]) - the subsample ratio of the training
+    instances. Setting it to 0.5 means that XGBoost would randomly
+    sample half of the training data prior to growing trees. and this
+    will prevent overfitting. Subsampling will occur once in every
+    boosting iteration.
+-   `colsample_bytree` (range: \[0,1\]) - is the subsample ratio of
+    columns when constructing each tree. Subsampling occurs once for
+    every tree constructed.
+-   `rate_drop` (range: \[0,1\]) - dropout rate (a fraction of previous
+    trees to drop during the dropout).
+-   `skip_drop` (range: \[0,1\]) - probability of skipping the dropout
+    procedure during a boosting iteration. If a dropout is skipped, new
+    trees are added in the same manner as `gbtree`. Note that non-zero
+    `skip_drop` has higher priority than `rate_drop` or `one_drop`.
+
+Default grid for [DART
+booster](https://xgboost.readthedocs.io/en/latest/tutorials/dart.html)
+([xgbDART](https://github.com/topepo/caret/blob/master/models/files/xgbDART.R)).
+
+    default_grid <- expand.grid(
+      nrounds = floor((1:10) * 50),
+      eta = c(0.3, 0.4),
+      gamma = 0,
+      max_depth = seq(1, 10),
+      min_child_weight = c(1),
+      subsample = seq(.5, 1, length = 10),
+      colsample_bytree = c(0.6, 0.8),
+      rate_drop = c(0.01, 0.50),
+      skip_drop = c(0.05, 0.95)
+    )
+
 The function `trainControl` can be used to specify the type of
 resampling and in the example below we perform 10 by 10
 cross-validation. `classProbs` (logical) refers to whether class
 probabilities should be computed for classification models (along with
 predicted values) in each resample. `twoClassSummary` computes
 sensitivity, specificity and the area under the ROC curve.
-
-Default grid for [DART
-booster](https://xgboost.readthedocs.io/en/latest/tutorials/dart.html).
-
-    # https://github.com/topepo/caret/blob/master/models/files/xgbDART.R
-    default_grid <- expand.grid(
-      nrounds = floor((1:10) * 50),
-      max_depth = seq(1, 10),
-      eta = c(0.3, 0.4), # "Usually" one should be the lowest possible
-      gamma = 0,
-      subsample = seq(.5, 1, length = 10),
-      colsample_bytree = c(0.6, 0.8),
-      rate_drop = c(0.01, 0.50),
-      skip_drop = c(0.05, 0.95),
-      min_child_weight = c(1)
-    )
-
-Train.
-
-    ncore <- ceiling(detectCores() / 4)
-
-    cl <- makePSOCKcluster(ncore)
-    registerDoParallel(cl)
 
     fit_control <- trainControl(
       method = "repeatedcv",
@@ -147,6 +190,11 @@ Train.
       summaryFunction = twoClassSummary
     )
 
+Train with DART Booster.
+
+    ncore <- 16
+    cl <- makePSOCKcluster(ncore)
+    registerDoParallel(cl)
     my_grid <- expand.grid(
       nrounds = c(5, 10, 20, 50),
       max_depth = 6:7,
@@ -158,13 +206,10 @@ Train.
       skip_drop = c(0.05, 0.95),
       min_child_weight = 1
     )
-    dim(my_grid)
-
-    ## [1] 1280    9
 
     set.seed(1984)
     system.time(
-      my_xgb_dart <- train(
+      my_xgbdart <- train(
         class ~ .,
         data = my_train,
         method = "xgbDART",
@@ -176,11 +221,11 @@ Train.
     )
 
     ##    user  system elapsed 
-    ##  11.871  12.745 328.780
+    ##  12.221  12.832 291.378
 
     stopCluster(cl)
 
-    arrange(my_xgb_dart$results, desc(ROC)) %>%
+    arrange(my_xgbdart$results, desc(ROC)) %>%
       select(ROC, nrounds, everything()) %>%
       head()
 
@@ -206,10 +251,9 @@ Train.
     ## 5 0.1187317
     ## 6 0.1147688
 
-Train tree.
+Train using `xgbTree`.
 
-    ncore <- ceiling(detectCores() / 4)
-
+    ncore <- 16
     cl <- makePSOCKcluster(ncore)
     registerDoParallel(cl)
 
@@ -230,13 +274,10 @@ Train tree.
       colsample_bytree = c(0.6, 0.8),
       min_child_weight = 1
     )
-    dim(my_grid)
-
-    ## [1] 320   7
 
     set.seed(1984)
     system.time(
-      my_xgb <- train(
+      my_xgbtree <- train(
         class ~ .,
         data = my_train,
         method = "xgbTree",
@@ -248,11 +289,11 @@ Train tree.
     )
 
     ##    user  system elapsed 
-    ##   9.258   6.410  89.267
+    ##   3.155   6.498  79.778
 
     stopCluster(cl)
 
-    arrange(my_xgb$results, desc(ROC)) %>%
+    arrange(my_xgbtree$results, desc(ROC)) %>%
       select(ROC, nrounds, everything()) %>%
       head()
 
@@ -271,11 +312,79 @@ Train tree.
     ## 5 0.5000000 0.8980392 0.8608333 0.04996001 0.05006510 0.13435804
     ## 6 0.6666667 0.8640523 0.7966667 0.01507364 0.06802568 0.11881942
 
+Linear Booster parameters.
+
+-   `lambda` - L2 regularization term on weights. Increasing this value
+    will make model more conservative. Normalised to number of training
+    examples.
+-   `alpha` - L1 regularization term on weights. Increasing this value
+    will make model more conservative. Normalised to number of training
+    examples.
+
+Train using `xgbLinear` - used for classification and regression, and
+tuning parameters include: nrounds, lambda, alpha, eta
+
+    ncore <- 16
+    cl <- makePSOCKcluster(ncore)
+    registerDoParallel(cl)
+
+    fit_control <- trainControl(
+      method = "repeatedcv",
+      number = 5,
+      repeats = 1,
+      classProbs = TRUE,
+      summaryFunction = twoClassSummary
+    )
+
+    my_grid <- expand.grid(
+      nrounds = c(5, 10, 20, 50),
+      eta = c(0.3, 0.4),
+      lambda = c(0.3, 0.6, 1, 2, 3, 5),
+      alpha = c(0.3, 0.6, 1, 2, 3, 5)
+    )
+
+    set.seed(1984)
+    system.time(
+      my_xgblinear <- train(
+        class ~ .,
+        data = my_train,
+        method = "xgbLinear",
+        trControl = fit_control,
+        metric = "ROC",
+        tuneGrid = my_grid,
+        nthread = 2
+      )
+    )
+
+    ##    user  system elapsed 
+    ##   5.776   0.242 257.320
+
+    stopCluster(cl)
+
+    arrange(my_xgblinear$results, desc(ROC)) %>%
+      select(ROC, nrounds, everything()) %>%
+      head()
+
+    ##         ROC nrounds eta lambda alpha      Sens      Spec      ROCSD     SensSD
+    ## 1 0.9115877      50 0.3    0.6   0.3 0.8869281 0.7583333 0.05608761 0.04283415
+    ## 2 0.9115877      50 0.4    0.6   0.3 0.8869281 0.7583333 0.05608761 0.04283415
+    ## 3 0.9115822      50 0.3    5.0   0.3 0.8758170 0.7583333 0.05287847 0.02922965
+    ## 4 0.9115822      50 0.4    5.0   0.3 0.8758170 0.7583333 0.05287847 0.02922965
+    ## 5 0.9109395      50 0.3    5.0   2.0 0.8529412 0.7583333 0.05411627 0.05487861
+    ## 6 0.9109395      50 0.4    5.0   2.0 0.8529412 0.7583333 0.05411627 0.05487861
+    ##      SpecSD
+    ## 1 0.1594533
+    ## 2 0.1594533
+    ## 3 0.1594533
+    ## 4 0.1594533
+    ## 5 0.1251388
+    ## 6 0.1251388
+
 ## Session info
 
 Time built.
 
-    ## [1] "2022-11-09 07:53:07 UTC"
+    ## [1] "2022-12-19 08:26:26 UTC"
 
 Session info.
 

@@ -105,33 +105,43 @@ my_test$class <- my_lab[-my_idx]
 
 ## Model training and tuning
 
-The function `trainControl` can be used to specify the type of resampling and in the example below we perform 10 by 10 cross-validation. `classProbs` (logical) refers to whether class probabilities should be computed for classification models (along with predicted values) in each resample. `twoClassSummary` computes sensitivity, specificity and the area under the ROC curve.
+The caret package supports three different XGBoost models (which correspond to the type of booster):
 
-Default grid for [DART booster](https://xgboost.readthedocs.io/en/latest/tutorials/dart.html).
+1. `xgbDART` - used for classification and regression and tuning parameters include: nrounds, max_depth, eta, gamma, subsample, colsample_bytree, rate_drop, skip_drop, min_child_weight
+2. `xgbLinear` - used for classification and regression, and tuning parameters include: nrounds, lambda, alpha, eta
+3. `xgbTree` - used for classification and regression, and tuning parameters include: nrounds, max_depth, eta, gamma, colsample_bytree, min_child_weight, subsample
 
-```{r default_grid}
-# https://github.com/topepo/caret/blob/master/models/files/xgbDART.R
+[Parameter descriptions](https://xgboost.readthedocs.io/en/stable/parameter.html):
+
+* `num_round` (range: [0, Inf]) - The number of rounds for boosting
+* `eta` (range: [0,1]) - a.k.a. the learning rate is a step size shrinkage used in update to prevents overfitting. After each boosting step, we can directly get the weights of new features, and `eta` shrinks the feature weights to make the boosting process more conservative.
+* `gamma` (range: [0, Inf]) - the minimum loss reduction required to make a further partition on a leaf node of the tree. The larger gamma is, the more conservative the algorithm will be.
+* `max_depth` (range: [0, Inf]) - the maximum depth of a tree. Increasing this value will make the model more complex and more likely to overfit. 0 indicates no limit on depth. Beware that XGBoost aggressively consumes memory when training a deep tree.
+* `min_child_weight` (range: [0, Inf]) - the minimum sum of instance weight (hessian) needed in a child. If the tree partition step results in a leaf node with the sum of instance weight less than `min_child_weight`, then the building process will give up further partitioning. In linear regression task, this simply corresponds to minimum number of instances needed to be in each node. The larger `min_child_weight` is, the more conservative the algorithm will be.
+* `subsample` (range: [0,1]) - the subsample ratio of the training instances. Setting it to 0.5 means that XGBoost would randomly sample half of the training data prior to growing trees. and this will prevent overfitting. Subsampling will occur once in every boosting iteration.
+* `colsample_bytree` (range: [0,1]) - is the subsample ratio of columns when constructing each tree. Subsampling occurs once for every tree constructed.
+* `rate_drop` (range: [0,1]) - dropout rate (a fraction of previous trees to drop during the dropout).
+* `skip_drop` (range: [0,1]) - probability of skipping the dropout procedure during a boosting iteration. If a dropout is skipped, new trees are added in the same manner as `gbtree`. Note that non-zero `skip_drop` has higher priority than `rate_drop` or `one_drop`.
+
+Default grid for [DART booster](https://xgboost.readthedocs.io/en/latest/tutorials/dart.html) ([xgbDART](https://github.com/topepo/caret/blob/master/models/files/xgbDART.R)).
+
+```{r xgbdart_default_grid}
 default_grid <- expand.grid(
   nrounds = floor((1:10) * 50),
-  max_depth = seq(1, 10),
-  eta = c(0.3, 0.4), # "Usually" one should be the lowest possible
+  eta = c(0.3, 0.4),
   gamma = 0,
+  max_depth = seq(1, 10),
+  min_child_weight = c(1),
   subsample = seq(.5, 1, length = 10),
   colsample_bytree = c(0.6, 0.8),
   rate_drop = c(0.01, 0.50),
-  skip_drop = c(0.05, 0.95),
-  min_child_weight = c(1)
+  skip_drop = c(0.05, 0.95)
 )
 ```
 
-Train.
+The function `trainControl` can be used to specify the type of resampling and in the example below we perform 10 by 10 cross-validation. `classProbs` (logical) refers to whether class probabilities should be computed for classification models (along with predicted values) in each resample. `twoClassSummary` computes sensitivity, specificity and the area under the ROC curve.
 
-```{r dart_model_training_and_tuning}
-ncore <- ceiling(detectCores() / 4)
-
-cl <- makePSOCKcluster(ncore)
-registerDoParallel(cl)
-
+```{r train_control}
 fit_control <- trainControl(
   method = "repeatedcv",
   number = 5,
@@ -139,7 +149,14 @@ fit_control <- trainControl(
   classProbs = TRUE,
   summaryFunction = twoClassSummary
 )
+```
 
+Train with DART Booster.
+
+```{r dart_model_training_and_tuning}
+ncore <- 16
+cl <- makePSOCKcluster(ncore)
+registerDoParallel(cl)
 my_grid <- expand.grid(
   nrounds = c(5, 10, 20, 50),
   max_depth = 6:7,
@@ -151,11 +168,10 @@ my_grid <- expand.grid(
   skip_drop = c(0.05, 0.95),
   min_child_weight = 1
 )
-dim(my_grid)
 
 set.seed(1984)
 system.time(
-  my_xgb_dart <- train(
+  my_xgbdart <- train(
     class ~ .,
     data = my_train,
     method = "xgbDART",
@@ -165,19 +181,17 @@ system.time(
     nthread = 2
   )
 )
-
 stopCluster(cl)
 
-arrange(my_xgb_dart$results, desc(ROC)) %>%
+arrange(my_xgbdart$results, desc(ROC)) %>%
   select(ROC, nrounds, everything()) %>%
   head()
 ```
 
-Train tree.
+Train using `xgbTree`.
 
 ```{r tree_model_training_and_tuning}
-ncore <- ceiling(detectCores() / 4)
-
+ncore <- 16
 cl <- makePSOCKcluster(ncore)
 registerDoParallel(cl)
 
@@ -198,11 +212,10 @@ my_grid <- expand.grid(
   colsample_bytree = c(0.6, 0.8),
   min_child_weight = 1
 )
-dim(my_grid)
 
 set.seed(1984)
 system.time(
-  my_xgb <- train(
+  my_xgbtree <- train(
     class ~ .,
     data = my_train,
     method = "xgbTree",
@@ -212,10 +225,55 @@ system.time(
     nthread = 2
   )
 )
-
 stopCluster(cl)
 
-arrange(my_xgb$results, desc(ROC)) %>%
+arrange(my_xgbtree$results, desc(ROC)) %>%
+  select(ROC, nrounds, everything()) %>%
+  head()
+```
+
+Linear Booster parameters.
+
+* `lambda` - L2 regularization term on weights. Increasing this value will make model more conservative. Normalised to number of training examples.
+* `alpha` - L1 regularization term on weights. Increasing this value will make model more conservative. Normalised to number of training examples.
+
+Train using `xgbLinear` - used for classification and regression, and tuning parameters include: nrounds, lambda, alpha, eta
+
+```{r linear_model_training_and_tuning}
+ncore <- 16
+cl <- makePSOCKcluster(ncore)
+registerDoParallel(cl)
+
+fit_control <- trainControl(
+  method = "repeatedcv",
+  number = 5,
+  repeats = 1,
+  classProbs = TRUE,
+  summaryFunction = twoClassSummary
+)
+
+my_grid <- expand.grid(
+  nrounds = c(5, 10, 20, 50),
+  eta = c(0.3, 0.4),
+  lambda = c(0.3, 0.6, 1, 2, 3, 5),
+  alpha = c(0.3, 0.6, 1, 2, 3, 5)
+)
+
+set.seed(1984)
+system.time(
+  my_xgblinear <- train(
+    class ~ .,
+    data = my_train,
+    method = "xgbLinear",
+    trControl = fit_control,
+    metric = "ROC",
+    tuneGrid = my_grid,
+    nthread = 2
+  )
+)
+stopCluster(cl)
+
+arrange(my_xgblinear$results, desc(ROC)) %>%
   select(ROC, nrounds, everything()) %>%
   head()
 ```
