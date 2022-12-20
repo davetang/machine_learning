@@ -278,6 +278,46 @@ arrange(my_xgblinear$results, desc(ROC)) %>%
   head()
 ```
 
+## Comparing models
+
+Collect resampling results using `resamples`.
+
+```{r resamples}
+resamps <- resamples(
+  list(
+    DART = my_xgbdart,
+    Linear = my_xgblinear,
+    Tree = my_xgbtree
+  )
+)
+resamps
+```
+
+Summary.
+
+```{r resamps_summary}
+summary(resamps)
+```
+
+Boxplots.
+
+```{r bwplot}
+bwplot(resamps, layout = c(3, 1))
+```
+
+Compute differences and use a simple _t_-test to evaluate the null hypothesis that there is no difference between models.
+
+```{r dif_values}
+diff_values <- diff(resamps)
+summary(diff_values)
+```
+
+Boxplots.
+
+```{r bwplot_diff_values}
+bwplot(diff_values, layout = c(3, 1))
+```
+
 ## Session info
 
 Time built.

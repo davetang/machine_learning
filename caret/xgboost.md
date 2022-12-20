@@ -221,7 +221,7 @@ Train with DART Booster.
     )
 
     ##    user  system elapsed 
-    ##  12.221  12.832 291.378
+    ##  12.069  12.675 300.466
 
     stopCluster(cl)
 
@@ -289,7 +289,7 @@ Train using `xgbTree`.
     )
 
     ##    user  system elapsed 
-    ##   3.155   6.498  79.778
+    ##   8.159   6.323  81.941
 
     stopCluster(cl)
 
@@ -357,7 +357,7 @@ tuning parameters include: nrounds, lambda, alpha, eta
     )
 
     ##    user  system elapsed 
-    ##   5.776   0.242 257.320
+    ##   5.361   0.316 256.623
 
     stopCluster(cl)
 
@@ -380,11 +380,107 @@ tuning parameters include: nrounds, lambda, alpha, eta
     ## 5 0.1251388
     ## 6 0.1251388
 
+## Comparing models
+
+Collect resampling results using `resamples`.
+
+    resamps <- resamples(
+      list(
+        DART = my_xgbdart,
+        Linear = my_xgblinear,
+        Tree = my_xgbtree
+      )
+    )
+    resamps
+
+    ## 
+    ## Call:
+    ## resamples.default(x = list(DART = my_xgbdart, Linear = my_xgblinear, Tree
+    ##  = my_xgbtree))
+    ## 
+    ## Models: DART, Linear, Tree 
+    ## Number of resamples: 5 
+    ## Performance metrics: ROC, Sens, Spec 
+    ## Time estimates for: everything, final model fit
+
+Summary.
+
+    summary(resamps)
+
+    ## 
+    ## Call:
+    ## summary.resamples(object = resamps)
+    ## 
+    ## Models: DART, Linear, Tree 
+    ## Number of resamples: 5 
+    ## 
+    ## ROC 
+    ##             Min.   1st Qu.    Median      Mean   3rd Qu.      Max. NA's
+    ## DART   0.8529412 0.9555556 0.9583333 0.9446623 0.9703704 0.9861111    0
+    ## Linear 0.8345588 0.8854167 0.9259259 0.9115877 0.9259259 0.9861111    0
+    ## Tree   0.8750000 0.9479167 0.9481481 0.9442593 0.9687500 0.9814815    0
+    ## 
+    ## Sens 
+    ##             Min.   1st Qu.    Median      Mean   3rd Qu.      Max. NA's
+    ## DART   0.8235294 0.8888889 0.9444444 0.9091503 0.9444444 0.9444444    0
+    ## Linear 0.8235294 0.8888889 0.8888889 0.8869281 0.8888889 0.9444444    0
+    ## Tree   0.8333333 0.8333333 0.8823529 0.8875817 0.9444444 0.9444444    0
+    ## 
+    ## Spec 
+    ##          Min. 1st Qu.    Median      Mean   3rd Qu.   Max. NA's
+    ## DART   0.6250  0.6875 0.8666667 0.8100000 0.9333333 0.9375    0
+    ## Linear 0.5625  0.6250 0.8000000 0.7583333 0.8666667 0.9375    0
+    ## Tree   0.6875  0.6875 0.8666667 0.8225000 0.9333333 0.9375    0
+
+Boxplots.
+
+    bwplot(resamps, layout = c(3, 1))
+
+![](img/bwplot-1.png)
+
+Compute differences and use a simple *t*-test to evaluate the null
+hypothesis that there is no difference between models.
+
+    diff_values <- diff(resamps)
+    summary(diff_values)
+
+    ## 
+    ## Call:
+    ## summary.diff.resamples(object = diff_values)
+    ## 
+    ## p-value adjustment: bonferroni 
+    ## Upper diagonal: estimates of the difference
+    ## Lower diagonal: p-value for H0: difference = 0
+    ## 
+    ## ROC 
+    ##        DART   Linear     Tree      
+    ## DART           0.0330746  0.0004031
+    ## Linear 0.1651            -0.0326716
+    ## Tree   1.0000 0.2528               
+    ## 
+    ## Sens 
+    ##        DART   Linear     Tree      
+    ## DART           0.0222222  0.0215686
+    ## Linear 0.5334            -0.0006536
+    ## Tree   1.0000 1.0000               
+    ## 
+    ## Spec 
+    ##        DART    Linear   Tree    
+    ## DART            0.05167 -0.01250
+    ## Linear 0.31512          -0.06417
+    ## Tree   1.00000 0.09482
+
+Boxplots.
+
+    bwplot(diff_values, layout = c(3, 1))
+
+![](img/bwplot_diff_values-1.png)
+
 ## Session info
 
 Time built.
 
-    ## [1] "2022-12-19 08:26:26 UTC"
+    ## [1] "2022-12-20 02:44:12 UTC"
 
 Session info.
 
@@ -424,23 +520,23 @@ Session info.
     ## [16] cli_3.4.1            rvest_1.0.3          xml2_1.3.3          
     ## [19] scales_1.2.1         digest_0.6.30        rmarkdown_2.17      
     ## [22] pkgconfig_2.0.3      htmltools_0.5.3      parallelly_1.32.1   
-    ## [25] dbplyr_2.2.1         fastmap_1.1.0        rlang_1.0.6         
-    ## [28] readxl_1.4.1         rstudioapi_0.14      generics_0.1.3      
-    ## [31] jsonlite_1.8.3       ModelMetrics_1.2.2.2 googlesheets4_1.0.1 
-    ## [34] magrittr_2.0.3       Matrix_1.5-1         Rcpp_1.0.9          
-    ## [37] munsell_0.5.0        fansi_1.0.3          lifecycle_1.0.3     
-    ## [40] pROC_1.18.0          stringi_1.7.8        yaml_2.3.6          
-    ## [43] MASS_7.3-58.1        recipes_1.0.2        grid_4.2.0          
-    ## [46] listenv_0.8.0        crayon_1.5.2         haven_2.5.1         
-    ## [49] splines_4.2.0        hms_1.1.2            knitr_1.40          
-    ## [52] pillar_1.8.1         stats4_4.2.0         reshape2_1.4.4      
-    ## [55] future.apply_1.10.0  codetools_0.2-18     reprex_2.0.2        
-    ## [58] glue_1.6.2           evaluate_0.17        data.table_1.14.4   
-    ## [61] modelr_0.1.9         vctrs_0.5.0          tzdb_0.3.0          
-    ## [64] cellranger_1.1.0     gtable_0.3.1         future_1.29.0       
-    ## [67] assertthat_0.2.1     xfun_0.34            gower_1.0.0         
-    ## [70] prodlim_2019.11.13   broom_1.0.1          class_7.3-20        
-    ## [73] survival_3.4-0       googledrive_2.0.0    gargle_1.2.1        
-    ## [76] timeDate_4021.106    hardhat_1.2.0        lava_1.7.0          
-    ## [79] timechange_0.1.1     globals_0.16.1       ellipsis_0.3.2      
-    ## [82] ipred_0.9-13
+    ## [25] highr_0.9            dbplyr_2.2.1         fastmap_1.1.0       
+    ## [28] rlang_1.0.6          readxl_1.4.1         rstudioapi_0.14     
+    ## [31] generics_0.1.3       jsonlite_1.8.3       ModelMetrics_1.2.2.2
+    ## [34] googlesheets4_1.0.1  magrittr_2.0.3       Matrix_1.5-1        
+    ## [37] Rcpp_1.0.9           munsell_0.5.0        fansi_1.0.3         
+    ## [40] lifecycle_1.0.3      pROC_1.18.0          stringi_1.7.8       
+    ## [43] yaml_2.3.6           MASS_7.3-58.1        recipes_1.0.2       
+    ## [46] grid_4.2.0           listenv_0.8.0        crayon_1.5.2        
+    ## [49] haven_2.5.1          splines_4.2.0        hms_1.1.2           
+    ## [52] knitr_1.40           pillar_1.8.1         stats4_4.2.0        
+    ## [55] reshape2_1.4.4       future.apply_1.10.0  codetools_0.2-18    
+    ## [58] reprex_2.0.2         glue_1.6.2           evaluate_0.17       
+    ## [61] data.table_1.14.4    modelr_0.1.9         vctrs_0.5.0         
+    ## [64] tzdb_0.3.0           cellranger_1.1.0     gtable_0.3.1        
+    ## [67] future_1.29.0        assertthat_0.2.1     xfun_0.34           
+    ## [70] gower_1.0.0          prodlim_2019.11.13   broom_1.0.1         
+    ## [73] class_7.3-20         survival_3.4-0       googledrive_2.0.0   
+    ## [76] gargle_1.2.1         timeDate_4021.106    hardhat_1.2.0       
+    ## [79] lava_1.7.0           timechange_0.1.1     globals_0.16.1      
+    ## [82] ellipsis_0.3.2       ipred_0.9-13
