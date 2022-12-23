@@ -31,7 +31,7 @@ Install packages if missing and load.
 
 ```{r load_package, message=FALSE, warning=FALSE}
 .libPaths('/packages')
-my_packages <- c('gbm', 'mlbench', 'caret', 'xgboost')
+my_packages <- c('gbm', 'mlbench', 'caret', 'xgboost', 'doParallel')
 
 for (my_package in my_packages){
   if(!require(my_package, character.only = TRUE)){
@@ -258,7 +258,7 @@ training <- Sonar[idx, ]
 testing <- Sonar[-idx, ]
 ```
 
-The function `trainControl` can be used to specify the type of resampling and in the example below we perform 10 by 10 cross-validation.
+The function `trainControl` can be used to specify the type of resampling and in the example below we repeat a 10-fold cross-validation 10 times.
 
 ```{r sonar_train_control}
 fit_control <- trainControl(
@@ -268,7 +268,11 @@ fit_control <- trainControl(
 )
 ```
 
-The first two arguments to `train` are the predictor and outcome data objects, respectively. The third argument, `method`, specifies the type of model. In the example below, we fit a boosted tree model via the `gbm` package.
+On a side note, seeds are controlled using `trainControl`:
+
+>an optional set of integers that will be used to set the seed at each resampling iteration. This is useful when the models are run in parallel. A value of NA will stop the seed from being set within the worker processes while a value of NULL will set the seeds using a random set of integers. Alternatively, a list can be used. The list should have B+1 elements where B is the number of resamples, unless method is "boot632" in which case B is the number of resamples plus 1. The first B elements of the list should be vectors of integers of length M where M is the number of models being evaluated. The last element of the list only needs to be a single integer (for the final model). See the Examples section below and the Details section.
+
+The first two arguments to `train` are the predictor and outcome data objects, respectively, but a formula can be used instead as per the example. The third argument, `method`, specifies the type of model. In the example below, we fit a boosted tree model via the `gbm` package.
 
 ```{r sonar_boosted_tree}
 set.seed(1984)
@@ -300,20 +304,26 @@ The `Accuracy` column is the overall agreement rate averaged over cross-validati
 
 The `train` function has an argument called `preProcess` that is used to specify what pre-processing should be carried out. This argument takes a character string of methods that would normally be passed to the `method` argument of the `preProcess` function.
 
-The tuning parameter grid can be specified using the `tuneGrid` argument in the `train` function. Use `expand.grid` function to create a grid.
+The tuning parameter grid can be specified using the `tuneGrid` argument in the `train` function. Use `expand.grid` function to create a grid; the grid `gbm_grid` specifies the combination of parameters to be tested.
 
 ```{r gbm_grid}
 gbm_grid <- expand.grid(
   interaction.depth = c(1, 5, 9),
   n.trees = (1:30)*50,
-  shrinkage = 0.1,
-  n.minobsinnode = 20
+  shrinkage = c(0.1, 0.2),
+  n.minobsinnode = c(10, 20)
 )
 
 head(gbm_grid)
 ```
 
-Train using parameters specified in our grid.
+Train using parameters specified in our grid and controlled by settings defined in `fit_control`.
+
+```{r make_socket, include=FALSE}
+cl <- makePSOCKcluster(16)
+registerDoParallel(cl)
+clusterEvalQ(cl, .libPaths("/packages"))
+```
 
 ```{r train_with_grid}
 set.seed(1984)
@@ -327,8 +337,27 @@ system.time(
     tuneGrid = gbm_grid
   )
 )
+```
 
-gbm_fit_grid
+If you want the seeds used to train the models, you can look in `control$seeds`.
+
+```{r control_seeds}
+head(gbm_fit_grid$control$seeds)
+length(gbm_fit_grid$control$seeds)
+```
+
+The [code](https://github.com/topepo/caret/blob/master/pkg/caret/R/train.default.R#L612-L617) that generates the seeds, samples integers from 1,000,000 and creates a list of list of seeds. `control$seeds` is 101 in length because we performed a 10x10 CV and there needs to be 10x10+1 set of seeds.
+
+The reason for why there are 12 seeds per list entry is a bit more complicated. Each model contains a `loop` function that can create multiple submodel predictions from the same object. Even though we generated a grid with 360 parameter combinations, `caret` saves time by only training combination with the most trees and then creating submodels from this model. Therefore, if we kept the `n.trees` parameter constant at the highest number of trees, there are only 12 combinations and therefore only 12 seeds are required for each resampling.
+
+```{r loop}
+gbm_fit_grid$modelInfo$loop(gbm_grid)$loop
+```
+
+`resample` contains the performance metrics as well as the `Resample` name.
+
+```{r resample}
+head(gbm_fit_grid$resample)
 ```
 
 Plot grid results.
@@ -367,8 +396,6 @@ system.time(
     metric = "ROC"
   )
 )
-
-gbm_fit_roc
 ```
 
 Best model according to area under the ROC.
@@ -526,6 +553,10 @@ my_xgbtree_best <- train(
 )
 
 prop.table(table(my_test$class, predict(my_xgbtree_best, newdata = my_test)))
+```
+
+```{r stop_cluster, include=FALSE}
+stopCluster(cl)
 ```
 
 ## Session info

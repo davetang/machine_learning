@@ -23,7 +23,7 @@ Packages
 Install packages if missing and load.
 
     .libPaths('/packages')
-    my_packages <- c('gbm', 'mlbench', 'caret', 'xgboost')
+    my_packages <- c('gbm', 'mlbench', 'caret', 'xgboost', 'doParallel')
 
     for (my_package in my_packages){
       if(!require(my_package, character.only = TRUE)){
@@ -342,8 +342,8 @@ Split.
     testing <- Sonar[-idx, ]
 
 The function `trainControl` can be used to specify the type of
-resampling and in the example below we perform 10 by 10
-cross-validation.
+resampling and in the example below we repeat a 10-fold cross-validation
+10 times.
 
     fit_control <- trainControl(
       method = "repeatedcv",
@@ -351,10 +351,24 @@ cross-validation.
       repeats = 10
     )
 
+On a side note, seeds are controlled using `trainControl`:
+
+> an optional set of integers that will be used to set the seed at each
+> resampling iteration. This is useful when the models are run in
+> parallel. A value of NA will stop the seed from being set within the
+> worker processes while a value of NULL will set the seeds using a
+> random set of integers. Alternatively, a list can be used. The list
+> should have B+1 elements where B is the number of resamples, unless
+> method is “boot632” in which case B is the number of resamples plus 1.
+> The first B elements of the list should be vectors of integers of
+> length M where M is the number of models being evaluated. The last
+> element of the list only needs to be a single integer (for the final
+> model). See the Examples section below and the Details section.
+
 The first two arguments to `train` are the predictor and outcome data
-objects, respectively. The third argument, `method`, specifies the type
-of model. In the example below, we fit a boosted tree model via the
-`gbm` package.
+objects, respectively, but a formula can be used instead as per the
+example. The third argument, `method`, specifies the type of model. In
+the example below, we fit a boosted tree model via the `gbm` package.
 
     set.seed(1984)
     system.time(
@@ -368,7 +382,7 @@ of model. In the example below, we fit a boosted tree model via the
     )
 
     ##    user  system elapsed 
-    ##  14.538   0.070  14.795
+    ##  15.326   0.172  15.534
 
     gbm_fit
 
@@ -431,26 +445,29 @@ character string of methods that would normally be passed to the
 `method` argument of the `preProcess` function.
 
 The tuning parameter grid can be specified using the `tuneGrid` argument
-in the `train` function. Use `expand.grid` function to create a grid.
+in the `train` function. Use `expand.grid` function to create a grid;
+the grid `gbm_grid` specifies the combination of parameters to be
+tested.
 
     gbm_grid <- expand.grid(
       interaction.depth = c(1, 5, 9),
       n.trees = (1:30)*50,
-      shrinkage = 0.1,
-      n.minobsinnode = 20
+      shrinkage = c(0.1, 0.2),
+      n.minobsinnode = c(10, 20)
     )
 
     head(gbm_grid)
 
     ##   interaction.depth n.trees shrinkage n.minobsinnode
-    ## 1                 1      50       0.1             20
-    ## 2                 5      50       0.1             20
-    ## 3                 9      50       0.1             20
-    ## 4                 1     100       0.1             20
-    ## 5                 5     100       0.1             20
-    ## 6                 9     100       0.1             20
+    ## 1                 1      50       0.1             10
+    ## 2                 5      50       0.1             10
+    ## 3                 9      50       0.1             10
+    ## 4                 1     100       0.1             10
+    ## 5                 5     100       0.1             10
+    ## 6                 9     100       0.1             10
 
-Train using parameters specified in our grid.
+Train using parameters specified in our grid and controlled by settings
+defined in `fit_control`.
 
     set.seed(1984)
     system.time(
@@ -465,119 +482,84 @@ Train using parameters specified in our grid.
     )
 
     ##    user  system elapsed 
-    ## 103.417   6.461 102.739
+    ##   2.846   6.526  46.759
 
-    gbm_fit_grid
+If you want the seeds used to train the models, you can look in
+`control$seeds`.
 
-    ## Stochastic Gradient Boosting 
+    head(gbm_fit_grid$control$seeds)
+
+    ## [[1]]
+    ##  [1] 218298  56533 881312 145135 459537 833604 460241 240166 930989 786634
+    ## [11] 121794 534614
     ## 
-    ## 157 samples
-    ##  60 predictor
-    ##   2 classes: 'M', 'R' 
+    ## [[2]]
+    ##  [1] 627925 549288 903067 224331 609713 277174 214810 221500 815624 435391
+    ## [11] 338248 664404
     ## 
-    ## No pre-processing
-    ## Resampling: Cross-Validated (10 fold, repeated 10 times) 
-    ## Summary of sample sizes: 141, 141, 141, 142, 141, 142, ... 
-    ## Resampling results across tuning parameters:
+    ## [[3]]
+    ##  [1] 463469  66460  19034 672587 640352 929533 356671  58624 977903  52449
+    ## [11] 814965 784504
     ## 
-    ##   interaction.depth  n.trees  Accuracy   Kappa    
-    ##   1                    50     0.7835735  0.5621391
-    ##   1                   100     0.8225123  0.6419372
-    ##   1                   150     0.8402672  0.6777867
-    ##   1                   200     0.8434755  0.6840516
-    ##   1                   250     0.8461789  0.6889603
-    ##   1                   300     0.8404191  0.6774742
-    ##   1                   350     0.8417525  0.6803184
-    ##   1                   400     0.8372990  0.6710734
-    ##   1                   450     0.8402574  0.6774131
-    ##   1                   500     0.8427255  0.6823474
-    ##   1                   550     0.8422206  0.6812464
-    ##   1                   600     0.8415539  0.6801108
-    ##   1                   650     0.8444951  0.6859744
-    ##   1                   700     0.8426103  0.6822001
-    ##   1                   750     0.8422255  0.6815636
-    ##   1                   800     0.8429706  0.6831321
-    ##   1                   850     0.8416373  0.6806077
-    ##   1                   900     0.8429608  0.6833167
-    ##   1                   950     0.8441740  0.6857446
-    ##   1                  1000     0.8428824  0.6828056
-    ##   1                  1050     0.8437892  0.6847428
-    ##   1                  1100     0.8469142  0.6911132
-    ##   1                  1150     0.8461740  0.6892732
-    ##   1                  1200     0.8460123  0.6891467
-    ##   1                  1250     0.8430441  0.6831939
-    ##   1                  1300     0.8406078  0.6781814
-    ##   1                  1350     0.8438627  0.6847171
-    ##   1                  1400     0.8455809  0.6880673
-    ##   1                  1450     0.8450711  0.6870113
-    ##   1                  1500     0.8464412  0.6899866
-    ##   5                    50     0.8081397  0.6135063
-    ##   5                   100     0.8380270  0.6731663
-    ##   5                   150     0.8482255  0.6942498
-    ##   5                   200     0.8526520  0.7029205
-    ##   5                   250     0.8565539  0.7106475
-    ##   5                   300     0.8570221  0.7119278
-    ##   5                   350     0.8562819  0.7104071
-    ##   5                   400     0.8529853  0.7036701
-    ##   5                   450     0.8583137  0.7142778
-    ##   5                   500     0.8563186  0.7100256
-    ##   5                   550     0.8595270  0.7168502
-    ##   5                   600     0.8601569  0.7177081
-    ##   5                   650     0.8578088  0.7130800
-    ##   5                   700     0.8571471  0.7117875
-    ##   5                   750     0.8609020  0.7194554
-    ##   5                   800     0.8578137  0.7132084
-    ##   5                   850     0.8603554  0.7183101
-    ##   5                   900     0.8591936  0.7158802
-    ##   5                   950     0.8616103  0.7208111
-    ##   5                  1000     0.8609853  0.7195539
-    ##   5                  1050     0.8616103  0.7207326
-    ##   5                  1100     0.8591054  0.7157003
-    ##   5                  1150     0.8604020  0.7183818
-    ##   5                  1200     0.8604755  0.7185999
-    ##   5                  1250     0.8603554  0.7181768
-    ##   5                  1300     0.8603137  0.7180980
-    ##   5                  1350     0.8591422  0.7157124
-    ##   5                  1400     0.8559706  0.7094513
-    ##   5                  1450     0.8584755  0.7143722
-    ##   5                  1500     0.8583971  0.7141931
-    ##   9                    50     0.8040613  0.6047199
-    ##   9                   100     0.8384657  0.6739542
-    ##   9                   150     0.8480907  0.6932013
-    ##   9                   200     0.8482941  0.6933494
-    ##   9                   250     0.8508824  0.6985950
-    ##   9                   300     0.8541544  0.7055808
-    ##   9                   350     0.8585490  0.7140863
-    ##   9                   400     0.8553358  0.7080196
-    ##   9                   450     0.8562353  0.7095681
-    ##   9                   500     0.8601520  0.7170714
-    ##   9                   550     0.8627721  0.7225602
-    ##   9                   600     0.8596471  0.7163227
-    ##   9                   650     0.8598456  0.7166466
-    ##   9                   700     0.8558088  0.7087391
-    ##   9                   750     0.8571005  0.7113546
-    ##   9                   800     0.8564289  0.7102271
-    ##   9                   850     0.8570956  0.7115897
-    ##   9                   900     0.8590123  0.7154597
-    ##   9                   950     0.8616422  0.7206826
-    ##   9                  1000     0.8584289  0.7143158
-    ##   9                  1050     0.8597941  0.7171601
-    ##   9                  1100     0.8596005  0.7166471
-    ##   9                  1150     0.8591324  0.7158730
-    ##   9                  1200     0.8585490  0.7146270
-    ##   9                  1250     0.8585123  0.7146446
-    ##   9                  1300     0.8578824  0.7133377
-    ##   9                  1350     0.8603088  0.7179830
-    ##   9                  1400     0.8616422  0.7206135
-    ##   9                  1450     0.8603088  0.7179843
-    ##   9                  1500     0.8621887  0.7216408
+    ## [[4]]
+    ##  [1] 880060 416395 219513 660074 766757 194494 850992 836983 450960 305428
+    ## [11] 743228 735207
     ## 
-    ## Tuning parameter 'shrinkage' was held constant at a value of 0.1
+    ## [[5]]
+    ##  [1]  33219 326494 411494 493594 385283 601946 974393  11562 548845 105522
+    ## [11]  63992 658943
     ## 
-    ## Tuning parameter 'n.minobsinnode' was held constant at a value of 20
-    ## Accuracy was used to select the optimal model using the largest value.
-    ## The final values used for the model were n.trees = 550, interaction.depth =
-    ##  9, shrinkage = 0.1 and n.minobsinnode = 20.
+    ## [[6]]
+    ##  [1] 422069 179536 651436 780932 380568 673035 526853 457941 445672  44016
+    ## [11] 711206 981833
+
+    length(gbm_fit_grid$control$seeds)
+
+    ## [1] 101
+
+The
+[code](https://github.com/topepo/caret/blob/master/pkg/caret/R/train.default.R#L612-L617)
+that generates the seeds, samples integers from 1,000,000 and creates a
+list of list of seeds. `control$seeds` is 101 in length because we
+performed a 10x10 CV and there needs to be 10x10+1 set of seeds.
+
+The reason for why there are 12 seeds per list entry is a bit more
+complicated. Each model contains a `loop` function that can create
+multiple submodel predictions from the same object. Even though we
+generated a grid with 360 parameter combinations, `caret` saves time by
+only training combination with the most trees and then creating
+submodels from this model. Therefore, if we kept the `n.trees` parameter
+constant at the highest number of trees, there are only 12 combinations
+and therefore only 12 seeds are required for each resampling.
+
+    gbm_fit_grid$modelInfo$loop(gbm_grid)$loop
+
+    ##    shrinkage interaction.depth n.minobsinnode n.trees
+    ## 1        0.1                 1             10    1500
+    ## 2        0.1                 1             20    1500
+    ## 3        0.1                 5             10    1500
+    ## 4        0.1                 5             20    1500
+    ## 5        0.1                 9             10    1500
+    ## 6        0.1                 9             20    1500
+    ## 7        0.2                 1             10    1500
+    ## 8        0.2                 1             20    1500
+    ## 9        0.2                 5             10    1500
+    ## 10       0.2                 5             20    1500
+    ## 11       0.2                 9             10    1500
+    ## 12       0.2                 9             20    1500
+
+`resample` contains the performance metrics as well as the `Resample`
+name.
+
+    head(gbm_fit_grid$resample)
+
+    ##    Accuracy     Kappa     Resample
+    ## 1 1.0000000 1.0000000 Fold01.Rep08
+    ## 2 0.8666667 0.7321429 Fold01.Rep07
+    ## 3 0.9333333 0.8672566 Fold08.Rep07
+    ## 4 0.8750000 0.7500000 Fold07.Rep07
+    ## 5 1.0000000 1.0000000 Fold09.Rep06
+    ## 6 0.8666667 0.7321429 Fold04.Rep05
 
 Plot grid results.
 
@@ -616,135 +598,23 @@ Using area under the ROC curve as a performance metric.
     )
 
     ##    user  system elapsed 
-    ##   4.748   0.001   4.760
-
-    gbm_fit_roc
-
-    ## Stochastic Gradient Boosting 
-    ## 
-    ## 157 samples
-    ##  60 predictor
-    ##   2 classes: 'M', 'R' 
-    ## 
-    ## No pre-processing
-    ## Resampling: Cross-Validated (5 fold, repeated 1 times) 
-    ## Summary of sample sizes: 125, 126, 126, 125, 126 
-    ## Resampling results across tuning parameters:
-    ## 
-    ##   interaction.depth  n.trees  ROC        Sens       Spec     
-    ##   1                    50     0.8778081  0.8580882  0.7266667
-    ##   1                   100     0.8853011  0.8698529  0.7400000
-    ##   1                   150     0.9059664  0.8941176  0.7952381
-    ##   1                   200     0.9084174  0.8823529  0.7819048
-    ##   1                   250     0.9150560  0.8941176  0.7952381
-    ##   1                   300     0.9144958  0.9058824  0.7676190
-    ##   1                   350     0.9085084  0.9058824  0.7542857
-    ##   1                   400     0.9085574  0.9058824  0.7809524
-    ##   1                   450     0.9118627  0.8941176  0.7809524
-    ##   1                   500     0.9111905  0.8941176  0.7942857
-    ##   1                   550     0.9071709  0.8941176  0.7676190
-    ##   1                   600     0.9120308  0.8941176  0.7809524
-    ##   1                   650     0.9102871  0.8941176  0.7809524
-    ##   1                   700     0.9094468  0.8941176  0.7809524
-    ##   1                   750     0.9096218  0.8941176  0.8076190
-    ##   1                   800     0.9071919  0.8823529  0.8076190
-    ##   1                   850     0.9047339  0.8823529  0.8076190
-    ##   1                   900     0.9063515  0.8823529  0.8076190
-    ##   1                   950     0.9054062  0.8705882  0.7942857
-    ##   1                  1000     0.9079832  0.8823529  0.7942857
-    ##   1                  1050     0.9070938  0.8705882  0.7942857
-    ##   1                  1100     0.9046849  0.8705882  0.8076190
-    ##   1                  1150     0.9054132  0.8705882  0.8076190
-    ##   1                  1200     0.9045728  0.8705882  0.8076190
-    ##   1                  1250     0.9053641  0.8705882  0.7809524
-    ##   1                  1300     0.9061415  0.8705882  0.7942857
-    ##   1                  1350     0.9053571  0.8705882  0.7809524
-    ##   1                  1400     0.9069188  0.8705882  0.7809524
-    ##   1                  1450     0.9028922  0.8705882  0.7809524
-    ##   1                  1500     0.9053011  0.8705882  0.7809524
-    ##   5                    50     0.8869258  0.9051471  0.7666667
-    ##   5                   100     0.9010994  0.8933824  0.7800000
-    ##   5                   150     0.9012185  0.8816176  0.7933333
-    ##   5                   200     0.8995448  0.8816176  0.7666667
-    ##   5                   250     0.8995868  0.8698529  0.7809524
-    ##   5                   300     0.9025980  0.8816176  0.8076190
-    ##   5                   350     0.8976190  0.8816176  0.7942857
-    ##   5                   400     0.9052171  0.8941176  0.8076190
-    ##   5                   450     0.9060364  0.8816176  0.7942857
-    ##   5                   500     0.9077591  0.8816176  0.7809524
-    ##   5                   550     0.9094538  0.8816176  0.7809524
-    ##   5                   600     0.9079272  0.8823529  0.7942857
-    ##   5                   650     0.9102311  0.8941176  0.7942857
-    ##   5                   700     0.9086204  0.8823529  0.7809524
-    ##   5                   750     0.9069888  0.8823529  0.7809524
-    ##   5                   800     0.9077661  0.8823529  0.7942857
-    ##   5                   850     0.9076541  0.8823529  0.7942857
-    ##   5                   900     0.9101611  0.8941176  0.7942857
-    ##   5                   950     0.9110574  0.8941176  0.7942857
-    ##   5                  1000     0.9086555  0.8705882  0.7942857
-    ##   5                  1050     0.9069678  0.8823529  0.7942857
-    ##   5                  1100     0.9085364  0.8588235  0.7942857
-    ##   5                  1150     0.9076401  0.8705882  0.8076190
-    ##   5                  1200     0.9052871  0.8823529  0.7942857
-    ##   5                  1250     0.9061835  0.8705882  0.7676190
-    ##   5                  1300     0.9053431  0.8823529  0.7942857
-    ##   5                  1350     0.9077591  0.8580882  0.7942857
-    ##   5                  1400     0.9069188  0.8823529  0.7942857
-    ##   5                  1450     0.9069188  0.8941176  0.8076190
-    ##   5                  1500     0.9084314  0.8941176  0.7942857
-    ##   9                    50     0.8748739  0.8573529  0.7123810
-    ##   9                   100     0.8878571  0.8470588  0.7809524
-    ##   9                   150     0.8934874  0.8588235  0.7533333
-    ##   9                   200     0.8877311  0.8588235  0.7819048
-    ##   9                   250     0.8949860  0.8705882  0.8085714
-    ##   9                   300     0.9056933  0.8823529  0.7952381
-    ##   9                   350     0.9105672  0.8941176  0.7942857
-    ##   9                   400     0.9116176  0.8823529  0.7819048
-    ##   9                   450     0.9087115  0.8941176  0.7666667
-    ##   9                   500     0.9136415  0.8941176  0.7819048
-    ##   9                   550     0.9128641  0.8941176  0.7819048
-    ##   9                   600     0.9144818  0.8705882  0.7952381
-    ##   9                   650     0.9103291  0.8705882  0.7952381
-    ##   9                   700     0.9128011  0.8941176  0.7809524
-    ##   9                   750     0.9013725  0.8823529  0.7676190
-    ##   9                   800     0.9029482  0.9058824  0.7809524
-    ##   9                   850     0.9029482  0.9058824  0.7676190
-    ##   9                   900     0.9070938  0.8705882  0.7942857
-    ##   9                   950     0.9054062  0.8705882  0.7942857
-    ##   9                  1000     0.9054622  0.8705882  0.7809524
-    ##   9                  1050     0.9060784  0.8823529  0.7809524
-    ##   9                  1100     0.9045658  0.8705882  0.7809524
-    ##   9                  1150     0.9062465  0.8823529  0.7809524
-    ##   9                  1200     0.9078151  0.8941176  0.7809524
-    ##   9                  1250     0.9079692  0.8941176  0.7942857
-    ##   9                  1300     0.9071289  0.8705882  0.7942857
-    ##   9                  1350     0.9113305  0.8823529  0.7809524
-    ##   9                  1400     0.9104902  0.8823529  0.7809524
-    ##   9                  1450     0.9085854  0.8823529  0.7809524
-    ##   9                  1500     0.9135714  0.8705882  0.7809524
-    ## 
-    ## Tuning parameter 'shrinkage' was held constant at a value of 0.1
-    ## 
-    ## Tuning parameter 'n.minobsinnode' was held constant at a value of 20
-    ## ROC was used to select the optimal model using the largest value.
-    ## The final values used for the model were n.trees = 250, interaction.depth =
-    ##  1, shrinkage = 0.1 and n.minobsinnode = 20.
+    ##   1.424   0.012   3.716
 
 Best model according to area under the ROC.
 
     slice_max(.data = gbm_fit_roc$results, order_by = ROC, n = 1)
 
-    ##   shrinkage interaction.depth n.minobsinnode n.trees      ROC      Sens
-    ## 1       0.1                 1             20     250 0.915056 0.8941176
-    ##        Spec      ROCSD     SensSD     SpecSD
-    ## 1 0.7952381 0.04207215 0.06443795 0.08397711
+    ##   shrinkage interaction.depth n.minobsinnode n.trees       ROC      Sens
+    ## 1       0.2                 9             10    1200 0.9352521 0.7992647
+    ##        Spec      ROCSD    SensSD     SpecSD
+    ## 1 0.9180952 0.05181693 0.1278757 0.05816545
 
 The best parameters are stored in `bestTune`.
 
     gbm_fit_roc$bestTune
 
-    ##   n.trees interaction.depth shrinkage n.minobsinnode
-    ## 5     250                 1       0.1             20
+    ##     n.trees interaction.depth shrinkage n.minobsinnode
+    ## 324    1200                 9       0.2             10
 
 Density plot.
 
@@ -838,89 +708,8 @@ Train using `xgbTree`.
       )
     )
 
-    ## [01:52:59] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:52:59] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:52:59] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:52:59] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:52:59] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:52:59] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:00] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:00] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:00] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:00] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:00] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:00] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:00] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:00] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:00] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:00] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:00] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:00] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:01] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:01] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:01] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:01] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:01] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:01] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:01] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:01] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:01] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:01] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:01] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:01] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:02] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:02] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:02] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:02] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:02] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:02] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:02] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:02] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:02] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:02] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:03] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:03] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:03] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:03] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:03] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:03] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:03] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:03] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:03] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:03] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:03] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:03] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:04] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:04] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:04] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:04] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:04] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:04] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:04] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:04] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:04] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:04] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:04] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:04] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:05] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:05] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:05] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:05] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:05] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:05] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:05] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:05] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:05] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:05] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:06] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:06] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:06] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:06] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:06] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-    ## [01:53:06] WARNING: amalgamation/../src/c_api/c_api.cc:785: `ntree_limit` is deprecated, use `iteration_range` instead.
-
     ##    user  system elapsed 
-    ## 481.991   9.197   7.828
+    ##   8.381   0.130   8.397
 
 Results contained in `my_xgbtree`.
 
@@ -1047,7 +836,7 @@ Session info
 
 Time built.
 
-    ## [1] "2022-12-20 01:53:07 UTC"
+    ## [1] "2022-12-23 07:08:27 UTC"
 
 Session info.
 
@@ -1068,13 +857,15 @@ Session info.
     ## [11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
     ## 
     ## attached base packages:
-    ## [1] stats     graphics  grDevices utils     datasets  methods   base     
+    ## [1] parallel  stats     graphics  grDevices utils     datasets  methods  
+    ## [8] base     
     ## 
     ## other attached packages:
-    ##  [1] xgboost_1.6.0.1 caret_6.0-92    lattice_0.20-45 mlbench_2.1-3  
-    ##  [5] gbm_2.1.8.1     forcats_0.5.1   stringr_1.4.0   dplyr_1.0.9    
-    ##  [9] purrr_0.3.4     readr_2.1.2     tidyr_1.2.0     tibble_3.1.7   
-    ## [13] ggplot2_3.3.6   tidyverse_1.3.1
+    ##  [1] doParallel_1.0.17 iterators_1.0.14  foreach_1.5.2     xgboost_1.6.0.1  
+    ##  [5] caret_6.0-92      lattice_0.20-45   mlbench_2.1-3     gbm_2.1.8.1      
+    ##  [9] forcats_0.5.1     stringr_1.4.0     dplyr_1.0.9       purrr_0.3.4      
+    ## [13] readr_2.1.2       tidyr_1.2.0       tibble_3.1.7      ggplot2_3.3.6    
+    ## [17] tidyverse_1.3.1  
     ## 
     ## loaded via a namespace (and not attached):
     ##  [1] nlme_3.1-157         fs_1.5.2             lubridate_1.8.0     
@@ -1093,16 +884,15 @@ Session info.
     ## [40] munsell_0.5.0        fansi_1.0.3          lifecycle_1.0.1     
     ## [43] pROC_1.18.0          stringi_1.7.6        yaml_2.3.5          
     ## [46] MASS_7.3-57          plyr_1.8.7           recipes_1.0.1       
-    ## [49] grid_4.2.1           parallel_4.2.1       listenv_0.8.0       
-    ## [52] crayon_1.5.1         haven_2.5.0          splines_4.2.1       
-    ## [55] hms_1.1.1            knitr_1.39           pillar_1.7.0        
-    ## [58] stats4_4.2.1         future.apply_1.9.0   reshape2_1.4.4      
-    ## [61] codetools_0.2-18     reprex_2.0.1         glue_1.6.2          
-    ## [64] evaluate_0.15        data.table_1.14.2    modelr_0.1.8        
-    ## [67] vctrs_0.4.1          tzdb_0.3.0           foreach_1.5.2       
-    ## [70] cellranger_1.1.0     gtable_0.3.0         future_1.26.1       
-    ## [73] assertthat_0.2.1     xfun_0.31            gower_1.0.0         
-    ## [76] prodlim_2019.11.13   broom_1.0.0          e1071_1.7-11        
-    ## [79] class_7.3-20         survival_3.3-1       timeDate_3043.102   
-    ## [82] iterators_1.0.14     hardhat_1.2.0        lava_1.6.10         
-    ## [85] globals_0.15.1       ellipsis_0.3.2       ipred_0.9-13
+    ## [49] grid_4.2.1           listenv_0.8.0        crayon_1.5.1        
+    ## [52] haven_2.5.0          splines_4.2.1        hms_1.1.1           
+    ## [55] knitr_1.39           pillar_1.7.0         stats4_4.2.1        
+    ## [58] future.apply_1.9.0   reshape2_1.4.4       codetools_0.2-18    
+    ## [61] reprex_2.0.1         glue_1.6.2           evaluate_0.15       
+    ## [64] data.table_1.14.2    modelr_0.1.8         vctrs_0.4.1         
+    ## [67] tzdb_0.3.0           cellranger_1.1.0     gtable_0.3.0        
+    ## [70] future_1.26.1        assertthat_0.2.1     xfun_0.31           
+    ## [73] gower_1.0.0          prodlim_2019.11.13   broom_1.0.0         
+    ## [76] e1071_1.7-11         class_7.3-20         survival_3.3-1      
+    ## [79] timeDate_3043.102    hardhat_1.2.0        lava_1.6.10         
+    ## [82] globals_0.15.1       ellipsis_0.3.2       ipred_0.9-13
