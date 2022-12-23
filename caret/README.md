@@ -382,7 +382,7 @@ the example below, we fit a boosted tree model via the `gbm` package.
     )
 
     ##    user  system elapsed 
-    ##  15.326   0.172  15.534
+    ##  15.360   0.295  15.692
 
     gbm_fit
 
@@ -482,7 +482,7 @@ defined in `fit_control`.
     )
 
     ##    user  system elapsed 
-    ##   2.846   6.526  46.759
+    ##   2.734   5.277  46.909
 
 If you want the seeds used to train the models, you can look in
 `control$seeds`.
@@ -598,7 +598,7 @@ Using area under the ROC curve as a performance metric.
     )
 
     ##    user  system elapsed 
-    ##   1.424   0.012   3.716
+    ##   1.533   0.045   3.883
 
 Best model according to area under the ROC.
 
@@ -709,7 +709,7 @@ Train using `xgbTree`.
     )
 
     ##    user  system elapsed 
-    ##   8.381   0.130   8.397
+    ##   7.807   0.147   8.442
 
 Results contained in `my_xgbtree`.
 
@@ -720,6 +720,22 @@ Results contained in `my_xgbtree`.
     ## [11] "finalModel"   "preProcess"   "trainingData" "ptype"        "resample"    
     ## [16] "resampledCM"  "perfNames"    "maximize"     "yLimits"      "times"       
     ## [21] "levels"       "terms"        "coefnames"    "xlevels"
+
+`xgbTree` uses the same trick as `gbm` (since both methods are boosting
+methods) and creates sub-models from a model trained with the highest
+number of rounds.
+
+    my_xgbtree$modelInfo$loop(xgb_grid)$loop
+
+    ##   eta max_depth gamma colsample_bytree min_child_weight subsample nrounds
+    ## 1 0.1         6     0              0.8                1       0.5      10
+    ## 2 0.1         6     0              0.8                1       1.0      10
+    ## 3 0.1         7     0              0.8                1       0.5      10
+    ## 4 0.1         7     0              0.8                1       1.0      10
+    ## 5 0.5         6     0              0.8                1       0.5      10
+    ## 6 0.5         6     0              0.8                1       1.0      10
+    ## 7 0.5         7     0              0.8                1       0.5      10
+    ## 8 0.5         7     0              0.8                1       1.0      10
 
 Check whether 80% of the data was used for training in the
 cross-validations.
@@ -836,7 +852,7 @@ Session info
 
 Time built.
 
-    ## [1] "2022-12-23 07:08:27 UTC"
+    ## [1] "2022-12-23 07:23:36 UTC"
 
 Session info.
 

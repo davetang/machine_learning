@@ -501,6 +501,12 @@ Results contained in `my_xgbtree`.
 names(my_xgbtree)
 ```
 
+`xgbTree` uses the same trick as `gbm` (since both methods are boosting methods) and creates sub-models from a model trained with the highest number of rounds.
+
+```{r xgbtree_loop}
+my_xgbtree$modelInfo$loop(xgb_grid)$loop
+```
+
 Check whether 80% of the data was used for training in the cross-validations.
 
 * `index` - a list with elements for each resampling iteration. Each list element is a vector of integers corresponding to the rows used for training at that iteration.
