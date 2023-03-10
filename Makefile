@@ -1,4 +1,4 @@
-all: template som ann tree hclust logit svm kmeans knn naive_bayes xgboost random_forest eval pca caret
+all: template som ann tree hclust logit svm kmeans knn naive_bayes xgboost random_forest eval pca caret tidymodels
 
 template: template/README.md
 som: som/README.md
@@ -15,6 +15,7 @@ random_forest: random_forest/README.md
 eval: evaluation/README.md
 pca: pca/README.md
 caret: caret/README.md
+tidymodels: tidymodels/README.md
 
 template/README.md: script/rmd_to_md.sh template/readme.Rmd
 	$^
@@ -59,4 +60,7 @@ pca/README.md: script/rmd_to_md.sh pca/readme.Rmd
 	$^
 
 caret/README.md: script/rmd_to_md.sh caret/readme.Rmd
+	$^
+
+tidymodels/README.md: script/rmd_to_md.sh tidymodels/readme.Rmd
 	$^

@@ -1,0 +1,175 @@
+---
+title: "Getting started with tidymodels"
+output:
+   md_document:
+      variant: markdown
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache = FALSE)
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.path = "img/")
+```
+
+## Setup
+
+Install packages.
+
+```{r load_packages, message=FALSE, warning=FALSE}
+my_packages <- c('tidyverse', 'tidymodels', 'randomForest')
+
+for (my_package in my_packages){
+   if(!require(my_package, character.only = TRUE)){
+      install.packages(my_package)
+   }
+  library(my_package, character.only = TRUE)
+}
+
+theme_set(theme_bw())
+```
+
+## Spam
+
+Use [spam data](https://archive.ics.uci.edu/ml/machine-learning-databases/spambase/spambase.names) to train a Random Forest model to illustrate evaluation measures. Class 0 and 1 are ham (non-spam) and spam, respectively.
+
+```{r load_spam}
+spam_data <- read.csv(file = "../data/spambase.csv")
+spam_data$class <- factor(spam_data$class)
+
+spam_data[c(1:3, (nrow(spam_data)-2):nrow(spam_data)), (ncol(spam_data)-2):ncol(spam_data)]
+```
+
+[Split data](https://www.tidymodels.org/start/resampling/#data-split) using [rsample](https://rsample.tidymodels.org/).
+
+The `initial_split()` function takes the original data and saves the information on how to make the partitions. The `strata` argument conducts a stratified split ensuring that our training and test data sets will keep roughly the same proportion of classes.
+
+```{r split_spam}
+set.seed(1984)
+spam_split <- initial_split(data = spam_data, prop = 0.8, strata = 'class')
+spam_train <- training(spam_split)
+spam_test <- testing(spam_split)
+```
+
+## `parsnip`
+
+The [parsnip package](https://parsnip.tidymodels.org/index.html) provides a tidy and unified interface to a range of models.
+
+```{r train_rf}
+my_mtry <- ceiling(sqrt(ncol(spam_data)))
+
+rf <- list()
+rand_forest(mtry = my_mtry, trees = 500) %>%
+  set_engine("randomForest") %>%
+  set_mode("classification") -> rf$model
+
+rf$model %>%
+  fit(class ~ ., data = spam_train) -> rf$fit
+
+rf$model
+```
+
+## `yardstick`
+
+The [yardstick package](https://yardstick.tidymodels.org/) provides a tidy interface to estimate how well models are performing.
+
+Example data to check how to prepare our data for use with `yardstick`.
+
+```{r two_class_example}
+data(two_class_example)
+str(two_class_example)
+```
+```{r}
+predict(rf$fit, spam_test, type = 'prob')
+```
+
+Predict and generate table in the format of `two_class_example`.
+
+```{r predict}
+predict_wrapper <- function(fit, test_data, pos, neg, type = 'prob'){
+  predict(fit, test_data, type = type) %>%
+    mutate(truth = ifelse(as.integer(test_data$class) == 2, pos, neg)) %>%
+    mutate(truth = factor(truth, levels = c(pos, neg))) %>%
+    rename(
+      ham = .pred_0,
+      spam = .pred_1
+    ) %>%
+    mutate(
+      predicted = ifelse(spam > 0.5, pos, neg)
+    ) %>%
+    mutate(
+      predicted = factor(predicted, levels = c(pos, neg))
+    ) %>%
+    select(truth, everything())
+}
+
+rf$predictions <- predict_wrapper(rf$fit, spam_test, 'spam', 'ham')
+rf$predictions
+```
+
+Confusion matrix.
+
+```{r confusion_matrix}
+cm <- table(rf$predictions$truth, rf$predictions$predicted)
+cm
+```
+
+Metrics.
+
+```{r}
+metrics(rf$predictions, truth, predicted)
+```
+
+[table_metrics](https://github.com/davetang/learning_r/blob/main/code/table_metrics.R).
+
+```{r table_metrics}
+source("https://raw.githubusercontent.com/davetang/learning_r/main/code/table_metrics.R")
+table_metrics(cm, 'spam', 'ham', 'row', sig_fig = 7)
+```
+
+Area under the PR curve.
+
+```{r pr_auc}
+pr_auc(rf$predictions, truth, spam)
+```
+
+[PR curve](https://yardstick.tidymodels.org/reference/pr_curve.html).
+
+```{r pr_curve}
+pr_curve(rf$predictions, truth, spam) %>%
+  ggplot(aes(x = recall, y = precision)) +
+  geom_path() +
+  coord_equal() +
+  ylim(c(0, 1)) +
+  ggtitle('PR curve')
+```
+
+Area under the ROC curve.
+
+```{r roc_auc}
+roc_auc(rf$predictions, truth, spam)
+```
+
+[ROC curve](https://yardstick.tidymodels.org/reference/roc_curve.html).
+
+```{r roc_curve}
+roc_curve(rf$predictions, truth, spam) %>%
+  ggplot(aes(x = 1 - specificity, y = sensitivity)) +
+  geom_path() +
+  geom_abline(lty = 3) +
+  coord_equal() +
+  ggtitle('ROC curve')
+```
+
+## Session info
+
+Time built.
+
+```{r time, echo=FALSE}
+Sys.time()
+```
+
+Session info.
+
+```{r session_info, echo=FALSE}
+sessionInfo()
+```
