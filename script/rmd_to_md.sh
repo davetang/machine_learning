@@ -45,7 +45,7 @@ SECONDS=0
 
 >&2 printf "[ %s %s ] Start job\n\n" $(now)
 
-r_version=4.2.1
+r_version=4.2.2
 docker_image=davetang/r_build:${r_version}
 package_dir=${HOME}/r_packages_${r_version}
 
@@ -60,12 +60,10 @@ docker run \
    -w $(pwd) \
    -u $(id -u):$(id -g) \
    ${docker_image} \
-   Rscript -e "rmarkdown::render('${infile}', output_file = '${outfile}')"
+   Rscript -e ".libPaths('/packages'); rmarkdown::render('${infile}', output_file = '${outfile}')"
 
 >&2 printf "\n[ %s %s ] Work complete\n" $(now)
 
 duration=$SECONDS
 >&2 echo "$(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."
-
 exit 0
-
