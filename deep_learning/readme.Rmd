@@ -1,5 +1,5 @@
 ---
-title: "MNIST"
+title: "Getting started with Keras"
 output:
    md_document:
       variant: markdown
@@ -13,7 +13,16 @@ knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_chunk$set(fig.path = "img/")
 ```
 
-## Introduction
+# Keras
+
+[Keras](https://keras.posit.co/) is a high-level neural networks API developed with a focus on enabling fast experimentation. Being able to go from idea to result with the least possible delay is key to doing good research. Keras has the following key features:
+
+* Allows the same code to run on CPU or on GPU, seamlessly.
+* User-friendly API which makes it easy to quickly prototype deep learning models.
+* Built-in support for convolutional networks (for computer vision), recurrent networks (for sequence processing), and any combination of both.
+* Supports arbitrary network architectures: multi-input or multi-output models, layer sharing, model sharing, etc. This means that Keras is appropriate for building essentially any deep learning model, from a memory network to a neural Turing machine.
+
+## Packages
 
 Install packages if missing and load.
 
@@ -41,50 +50,104 @@ reticulate::py_config()
 
 ## MNIST dataset
 
-```{r}
+[Simple example](https://keras.posit.co/articles/getting_started.html#mnist-example) of trying to recognise handwritten digits from the [MNIST](https://en.wikipedia.org/wiki/MNIST_database) dataset. MNIST consists of 28 x 28 grayscale images of handwritten digits.
+
+The MNIST dataset is included with Keras and can be accessed using the `dataset_mnist()` function.
+
+```{r load_data}
 mnist <- dataset_mnist()
-train_images <- mnist$train$x
-train_labels <- mnist$train$y
-test_images <- mnist$test$x
-test_labels <- mnist$test$y
+x_train <- mnist$train$x
+y_train <- mnist$train$y
+x_test <- mnist$test$x
+y_test <- mnist$test$y
 ```
 
-```{r}
-network <- keras_model_sequential() %>%
-   layer_dense(units = 512, activation = "relu", input_shape = c(28 * 28)) %>%
-   layer_dense(units = 10, activation = "softmax")
+The x data is a 3-d array (images, width, height) of grayscale values. To prepare the data for training we convert the 3-d arrays into matrices by reshaping width and height into a single dimension (28x28 images are flattened into length 784 vectors). Then, we convert the grayscale values from integers ranging between 0 to 255 into floating point values ranging between 0 and 1.
 
-network
+```{r}
+# reshape
+x_train <- array_reshape(x_train, c(nrow(x_train), 784))
+x_test <- array_reshape(x_test, c(nrow(x_test), 784))
+# rescale
+x_train <- x_train / 255
+x_test <- x_test / 255
 ```
 
+The y data is an integer vector with values ranging from 0 to 9. To prepare this data for training we one-hot encode the vectors into binary class matrices using the Keras `to_categorical()` function.
+
 ```{r}
-network %>% compile(
-   optimizer = "rmsprop",
-   loss = "categorical_crossentropy",
-   metrics = c("accuracy")
+y_train <- to_categorical(y_train, 10)
+y_test <- to_categorical(y_test, 10)
+```
+
+The core data structure of Keras is a model, a way to organise layers. The simplest type of model is the Sequential model, a linear stack of layers.
+
+We begin by creating a sequential model and then adding layers using the pipe (|>) operator.
+
+```{r}
+model <- keras_model_sequential(input_shape = c(784))
+model |>
+  layer_dense(units = 256, activation = 'relu') |>
+  layer_dropout(rate = 0.4) |>
+  layer_dense(units = 128, activation = 'relu') |>
+  layer_dropout(rate = 0.3) |>
+  layer_dense(units = 10, activation = 'softmax')
+```
+
+The input_shape argument to the first layer specifies the shape of the input data (a length 784 numeric vector representing a grayscale image). The final layer outputs a length 10 numeric vector (probabilities for each digit) using a softmax activation function.
+
+Use the `summary()` function to print the details of the model.
+
+```{r}
+summary(model)
+```
+
+Plot.
+
+```{r}
+plot(model)
+```
+
+Next, compile the model with appropriate loss function, optimiser, and metrics.
+
+```{r}
+model |> compile(
+  loss = 'categorical_crossentropy',
+  optimizer = optimizer_rmsprop(),
+  metrics = c('accuracy')
 )
 ```
 
+Use the `fit()` function to train the model for 30 epochs using batches of 128 images.
+
 ```{r}
-train_images <- array_reshape(train_images, c(60000, 28 * 28))
-train_images <- train_images / 255
-test_images <- array_reshape(test_images, c(10000, 28 * 28))
-test_images <- test_images / 255
-train_labels <- to_categorical(train_labels)
-test_labels <- to_categorical(test_labels)
+history <- model |> fit(
+  x_train, y_train,
+  epochs = 30, batch_size = 128,
+  validation_split = 0.2
+)
+```
+
+The history object returned by `fit()` includes loss and accuracy metrics which we can plot.
+
+```{r}
+plot(history)
+```
+
+Evaluate the model's performance on the test data.
+
+```{r}
+model |> evaluate(x_test, y_test)
+```
+
+Generate predictions on new data x.
+
+```{r}
+probs <- model |> predict(x_test)
 ```
 
 ```{r}
-network %>% fit(train_images, train_labels, epochs = 5, batch_size = 128)
-```
-
-```{r}
-metrics <- network %>% evaluate(test_images, test_labels)
-metrics
-```
-
-```{r eval=FALSE}
-network %>% predict(test_images[1:10,]) %>% k_argmax()
+max.col(probs) - 1L
 ```
 
 ## Fashion MNIST
