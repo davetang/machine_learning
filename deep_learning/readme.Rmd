@@ -19,7 +19,7 @@ Install packages if missing and load.
 
 ```{r load_package, message=FALSE, warning=FALSE}
 .libPaths('/packages')
-my_packages <- c('keras', 'tensorflow')
+my_packages <- c('keras3', 'tensorflow')
 
 for (my_package in my_packages){
    if(!require(my_package, character.only = TRUE)){
@@ -27,8 +27,16 @@ for (my_package in my_packages){
       library(my_package, character.only = TRUE)
    }
 }
+```
 
-# install_tensorflow()
+## Reticulate
+
+Use [reticulate](https://rstudio.github.io/reticulate/).
+
+```{r load_reticulate}
+library(reticulate)
+use_python("/usr/bin/python3")
+reticulate::py_config()
 ```
 
 ## MNIST dataset
@@ -45,6 +53,8 @@ test_labels <- mnist$test$y
 network <- keras_model_sequential() %>%
    layer_dense(units = 512, activation = "relu", input_shape = c(28 * 28)) %>%
    layer_dense(units = 10, activation = "softmax")
+
+network
 ```
 
 ```{r}
@@ -73,7 +83,7 @@ metrics <- network %>% evaluate(test_images, test_labels)
 metrics
 ```
 
-```{r}
+```{r eval=FALSE}
 network %>% predict(test_images[1:10,]) %>% k_argmax()
 ```
 
@@ -203,7 +213,7 @@ predictions[1, ]
 which.max(predictions[1, ])
 ```
 
-```{r}
+```{r eval=FALSE}
 class_pred <- model %>% predict(test_images) %>% k_argmax()
 
 class_pred[1:20]
