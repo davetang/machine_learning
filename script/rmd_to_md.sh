@@ -45,9 +45,9 @@ SECONDS=0
 
 >&2 printf "[ %s %s ] Start job\n\n" $(now)
 
-r_version=4.2.2
-docker_image=davetang/r_build:${r_version}
-package_dir=${HOME}/r_packages_${r_version}
+RVER=4.4.0
+docker_image=davetang/r_tensorflow:${RVER}
+package_dir=${HOME}/r_packages_${RVER}
 
 if [[ ! -d ${package_dir} ]]; then
    mkdir ${package_dir}
