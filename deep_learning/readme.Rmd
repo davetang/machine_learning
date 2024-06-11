@@ -1,6 +1,8 @@
 ---
 title: "Getting started with Keras"
-format: gfm
+output:
+  github_document:
+    html_preview: false
 ---
 
 ```{r setup, include=FALSE}
