@@ -56,7 +56,7 @@ system.time(rf <- randomForest(class ~ ., data = spam_data, importance=TRUE, pro
     ##   500:   4.59%  2.73%  7.45%
 
     ##    user  system elapsed 
-    ##  26.583   0.071  26.656
+    ##  26.514   0.104  26.619
 
 ## Classification measures
 
@@ -254,6 +254,47 @@ Depending on the application, different metrics can be more desirable
 than others. For example when detecting spam, it is more preferably to
 have a high specificity (detect all real emails) than to have a high
 sensitivity (detect all spam).
+
+### F1
+
+The F1 score is an evaluation metric that assesses the predictive skill
+of a model by elaborating on its **class-wise performance** rather than
+an overall performance as done by accuracy. F1 score combines the
+precision and recall scores of a model.
+
+Accuracy is calculated across the entire dataset and can be a reliable
+metric only if the dataset is class-balanced. For example, if a dataset
+has 90 and 10 samples in class 1 and class 2, respectively, a model that
+only predicts class 1, will still be 90% accurate.
+
+Precision and recall offer a trade-off, i.e., one metric comes at the
+cost of another. More precision involves a harsher classifier that
+doubts even the actual positive samples from the dataset, thus reducing
+the recall score. On the other hand, more recall entails a lax critic
+that allows any sample that resembles a positive class to pass, which
+makes border-case negative samples classified as positive, thus reducing
+the precision. Ideally, we want to maximize both precision and recall
+metrics to obtain the perfect classifier.
+
+The F1 score combines precision and recall using their harmonic mean,
+and maximising the F1 score implies simultaneously maximising both
+precision and recall.
+
+> The [harmonic mean](https://en.wikipedia.org/wiki/Harmonic_mean) can
+> be expressed as the reciprocal of the arithmetic mean of the
+> reciprocals of the given set of observations. As a simple example, the
+> harmonic mean of 1, 4, and 4 is
+
+$$ (\frac{ 1^{-1} + 4^{-1} + 4^{-1} }{3})^{-1} = \frac{3}{1/1 + 1/4 + 1/4} = \frac{3}{1.5} = 2$$
+
+The traditional F-measure or balanced F-score ([F1
+score](https://en.wikipedia.org/wiki/F-score)) is the harmonic mean of
+precision and recall:
+
+$$ F_1 = \frac{2}{recall^{-1} + precision^{-1}} = 2\frac{precision \times recall}{precision + recall} = \frac{2TP}{2TP + FP + FN} $$
+
+The macro-averaged F1 score of a model is just a simple average of the
+class-wise F1 scores obtained.
 
 ## Regression
 
@@ -522,7 +563,7 @@ system.time(rf <- randomForest(class ~ ., data = spam_data))
 ```
 
     ##    user  system elapsed 
-    ##   6.956   0.036   6.993
+    ##   6.846   0.017   6.862
 
 ``` r
 pred <- prediction(rf$votes[, 2], spam_data$class)
@@ -567,7 +608,7 @@ system.time(
 ```
 
     ##    user  system elapsed 
-    ##   9.311   0.000   9.311
+    ##   9.313   0.000   9.317
 
 ``` r
 legend("bottomright", bty="n", sprintf("Area Under the Curve (AUC) = %1.4f", auc))
@@ -598,7 +639,7 @@ legend('bottomleft', legend = paste('AUC = ', auc_value))
 
 Time built.
 
-    ## [1] "2024-06-19 00:54:23 UTC"
+    ## [1] "2024-06-19 07:20:53 UTC"
 
 Session info.
 
