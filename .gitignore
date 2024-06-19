@@ -15,3 +15,4 @@ clinvar.out*
 Pfeiffer.vcf
 *.out
 clinvar_*
+.Rproj.user
