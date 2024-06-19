@@ -51,6 +51,21 @@ system.time(rf <- randomForest(class ~ ., data = spam_data, importance=TRUE, pro
 
 ## Classification measures
 
+The metrics that are typically used are:
+
+* Sensitivity (a.k.a. recall) versus specificity
+* Precision versus recall
+
+Since I always forget what the metrics measure, I'll try and think of some way to link the terms and their inherent meanings with the performance measure that they are trying to capture.
+
+When I hear the word sensitivity, I immediately think of someone who is acute at picking up signals. For example, when talking with somebody, a sensitive person not only hears the words but can also detect signals from someone's body language. In this sense, I should try to remember sensitivity as picking up positive signals _regardless of mixed signals_; body language can be easily misinterpreted. The way it is calculated is by tallying the number of detected positive signals and dividing this by the total number of real/true positive signals.
+
+When I think of specificity, I think of subsetting. If we had a lot of marbles, a specific subset of marbles would be one with only blue marbles; a set with orange, yellow, and blue, marbles is not very specific. However, a non-specific set of marbles can still have a very high sensitivity because if a classifier's job is to pick out the blue marbles out of many different colours and it classifies everything as blue, it has detected all the true positives. Specificity is like sensitivity but it is concerned with true negatives, which are the marbles that are not blue. Therefore, try to remember specificity as the opposite of sensitivity: tallying the number of "detected" true negatives and dividing by the total number of true negatives.
+
+When I think of precision, I think about a surgeon making a precise surgical incision. It is important to make the correct incision for obvious reasons and therefore precision measures the ability to identify a positive case divided by all true positives plus all the false positives (e.g. incorrect locations). A surgeon needs to make an incision and needs to make a correct incision; they can't just be sensitive or specific.
+
+### Details
+
 Build confusion matrix and calculate accuracy, precision, and recall. Check out [this guide as well](https://www.dataschool.io/simple-guide-to-confusion-matrix-terminology/).
 
 ![Confusion matrix](img/confusion_matrix.png)
@@ -75,6 +90,7 @@ Accuracy is the easiest to remember; you take all the correct predictions and di
 
 (accuracy  <- sum(diag(spam_rf_table)) / sum(spam_rf_table))
 ```
+
 Precision or Positive Predictive Value (PPV) is concerned with all the _positive_ calls that were _predicted_ (column two of our table):
 
 * Precision or Positive Predictive Value (PPV) = TP / (TP + FP)

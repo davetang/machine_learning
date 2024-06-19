@@ -1,12 +1,11 @@
-Introduction
-------------
+## Introduction
 
 Different performance measures for evaluating predictive models and
 unsupervised clustering.
 
 Install packages if missing and load.
 
-``` {.r}
+``` r
 .libPaths('/packages')
 my_packages <- c('caret', 'clValid', 'dendextend', 'rpart', 'ROCR', 'randomForest', 'verification')
 
@@ -20,15 +19,14 @@ library(tidyverse)
 theme_set(theme_bw())
 ```
 
-Spam
-----
+## Spam
 
 Use [spam
 data](https://archive.ics.uci.edu/ml/machine-learning-databases/spambase/spambase.names)
 to train a Random Forest model to illustrate evaluation measures. Class
 0 and 1 are ham (non-spam) and spam, respectively.
 
-``` {.r}
+``` r
 spam_data <- read.csv(file = "../data/spambase.csv")
 spam_data$class <- factor(spam_data$class)
 
@@ -45,7 +43,7 @@ spam_data[c(1:3, (nrow(spam_data)-2):nrow(spam_data)), (ncol(spam_data)-2):ncol(
 
 Train model.
 
-``` {.r}
+``` r
 set.seed(31)
 system.time(rf <- randomForest(class ~ ., data = spam_data, importance=TRUE, proximity=TRUE, do.trace=100))
 ```
@@ -58,10 +56,49 @@ system.time(rf <- randomForest(class ~ ., data = spam_data, importance=TRUE, pro
     ##   500:   4.59%  2.73%  7.45%
 
     ##    user  system elapsed 
-    ##  30.247   0.682  31.004
+    ##  26.702   0.096  26.803
 
-Classification measures
------------------------
+## Classification measures
+
+The metrics that are typically used are:
+
+-   Sensitivity (a.k.a. recall) versus specificity
+-   Precision versus recall
+
+Since I always forget what the metrics measure, I'll try and think of
+some way to link the terms and their inherent meanings with the
+performance measure that they are trying to capture.
+
+When I hear the word sensitivity, I immediately think of someone who is
+acute at picking up signals. For example, when talking with somebody, a
+sensitive person not only hears the words but can also detect signals
+from someone's body language. In this sense, I should try to remember
+sensitivity as picking up positive signals *regardless of mixed
+signals*; body language can be easily misinterpreted. The way it is
+calculated is by tallying the number of detected positive signals and
+dividing this by the total number of real/true positive signals.
+
+When I think of specificity, I think of subsetting. If we had a lot of
+marbles, a specific subset of marbles would be one with only blue
+marbles; a set with orange, yellow, and blue, marbles is not very
+specific. However, a non-specific set of marbles can still have a very
+high sensitivity because if a classifier's job is to pick out the blue
+marbles out of many different colours and it classifies everything as
+blue, it has detected all the true positives. Specificity is like
+sensitivity but it is concerned with true negatives, which are the
+marbles that are not blue. Therefore, try to remember specificity as the
+opposite of sensitivity: tallying the number of "detected" true
+negatives and dividing by the total number of true negatives.
+
+When I think of precision, I think about a surgeon making a precise
+surgical incision. It is important to make the correct incision for
+obvious reasons and therefore precision measures the ability to identify
+a positive case divided by all true positives plus all the false
+positives (e.g. incorrect locations). A surgeon needs to make an
+incision and needs to make a correct incision; they can't just be
+sensitive or specific.
+
+### Details
 
 Build confusion matrix and calculate accuracy, precision, and recall.
 Check out [this guide as
@@ -78,7 +115,7 @@ positive). The second row and first column cell are spam cases predicted
 as non-spam (false negative). Finally, the second row and second column
 cell are cases that are spam and predicted as spam (true positive).
 
-``` {.r}
+``` r
 (spam_rf_table <- table(spam_data$class, rf$predicted))
 ```
 
@@ -87,7 +124,7 @@ cell are cases that are spam and predicted as spam (true positive).
     ##   0 2712   76
     ##   1  135 1678
 
-``` {.r}
+``` r
 TN <- spam_rf_table[1, 1]
 FP <- spam_rf_table[1, 2]
 FN <- spam_rf_table[2, 1]
@@ -99,13 +136,13 @@ predictions and divide by the total:
 
 -   Accuracy = (TP + TN) / (TP + FP + FN + TN)
 
-``` {.r}
+``` r
 (accuracy <- (TP + TN) / (TP + FN + FP + TN))
 ```
 
     ## [1] 0.9541404
 
-``` {.r}
+``` r
 (accuracy  <- sum(diag(spam_rf_table)) / sum(spam_rf_table))
 ```
 
@@ -116,7 +153,7 @@ Precision or Positive Predictive Value (PPV) is concerned with all the
 
 -   Precision or Positive Predictive Value (PPV) = TP / (TP + FP)
 
-``` {.r}
+``` r
 (precision <- TP / (TP + FP))
 ```
 
@@ -130,7 +167,7 @@ describes how sensitive a method is in detecting positive cases.
 -   Sensitivity or True Positive Rate (TPR) or Recall or Hit Rate = TP /
     (TP + FN)
 
-``` {.r}
+``` r
 (recall <- TP / (TP + FN))
 ```
 
@@ -142,7 +179,7 @@ sensitivity.
 
 -   Specificity or True Negative Rate (TNR) = TN / (TN + FP)
 
-``` {.r}
+``` r
 (specificity <- TN / (TN + FP))
 ```
 
@@ -151,13 +188,13 @@ sensitivity.
 -   Fall-out or False Positive Rate (FPR) = FP / (FP + TN) = 1 -
     specificity
 
-``` {.r}
+``` r
 (false_positive_rate <- FP / (FP + TN))
 ```
 
     ## [1] 0.02725968
 
-``` {.r}
+``` r
 (1 - specificity)
 ```
 
@@ -165,7 +202,7 @@ sensitivity.
 
 -   Negative Predictive Value (NPV) = TN / (TN + FN)
 
-``` {.r}
+``` r
 (npv <- TN / (TN + FN))
 ```
 
@@ -173,13 +210,13 @@ sensitivity.
 
 -   False Discovery Rate (FDR) = FP / (TP + FP) = 1 - PPV
 
-``` {.r}
+``` r
 (fdr <- FP / (TP + FP))
 ```
 
     ## [1] 0.04332953
 
-``` {.r}
+``` r
 (1 - precision)
 ```
 
@@ -187,13 +224,13 @@ sensitivity.
 
 -   False Negative Rate (FNR) = FN / (FN + TP) = 1 - TPR
 
-``` {.r}
+``` r
 (fnr <- FN / (FN + TP))
 ```
 
     ## [1] 0.07446222
 
-``` {.r}
+``` r
 (1 - recall)
 ```
 
@@ -204,8 +241,7 @@ than others. For example when detecting spam, it is more preferably to
 have a high specificity (detect all real emails) than to have a high
 sensitivity (detect all spam).
 
-Regression
-----------
+## Regression
 
 Root Mean Squared Error (RMSE), which is the mean distance between
 estimates and the regression line.
@@ -221,7 +257,7 @@ respectively. The RMSE sums all squared residuals, divides by all cases
 
 We can calculate the RMSE as per below.
 
-``` {.r}
+``` r
 # predict height from weight
 lm.fit <- lm(height ~ weight, data = women)
 h_pred <- predict(lm.fit, women)
@@ -230,19 +266,18 @@ h_pred <- predict(lm.fit, women)
 
     ## [1] 0.4096541
 
-Clustering
-----------
+## Clustering
 
 Measure the distance between points within a cluster and between
 clusters. Perform k-means to demonstrate.
 
-``` {.r}
+``` r
 km <- kmeans(iris[,-5], centers = 3, nstart = 1)
 ```
 
 Within Sum of Squares (WSS) measures the within cluster similarity
 
-``` {.r}
+``` r
 km$withinss
 ```
 
@@ -251,7 +286,7 @@ km$withinss
 Between cluster Sum of Squares (BSS) measures the between cluster
 similarity
 
-``` {.r}
+``` r
 km$betweenss
 ```
 
@@ -262,7 +297,7 @@ minimal intercluster distance (between cluster measurement) divided by
 the maximal diameter (within cluster measurement); a higher Dunn index
 indicates better clustering.
 
-``` {.r}
+``` r
 d  <- dist(iris[,-5])
 dunn(d, km$cluster)
 ```
@@ -272,7 +307,7 @@ dunn(d, km$cluster)
 Perform hierarchical clustering and cut dendrogram to form three
 clusters (example adapted from `clValid`).
 
-``` {.r}
+``` r
 data(mouse, package = "clValid")
 express <- mouse[1:25, -c(1,8)]
 rownames(express) <- mouse$ID[1:25]
@@ -286,7 +321,7 @@ dunn(express_dist, express_cluster)
 
 Hierarchical clustering.
 
-``` {.r}
+``` r
 plot(color_branches(express_hclust, k = 3))
 ```
 
@@ -294,7 +329,7 @@ plot(color_branches(express_hclust, k = 3))
 
 Not sure that a higher Dunn index indicates better clustering.
 
-``` {.r}
+``` r
 my_dunn <- vector()
 i <- 1
 min_k <- 3
@@ -315,8 +350,7 @@ barplot(
 
 ![](img/try_k-1.png)
 
-Cross validation
-----------------
+## Cross validation
 
 Instead of a single instance of train/test, cross validation carries out
 n-fold train/test evaluations. For example, the example below
@@ -329,7 +363,7 @@ you can specify which type of cross-validation and the number of
 cross-validation folds with the trainControl() function, which you pass
 to the trControl argument in train().
 
-``` {.r}
+``` r
 # using the diamonds data set from ggplot2
 # ggplot2 is automatically loaded with caret
 model <- train(
@@ -366,7 +400,7 @@ model <- train(
     ## Aggregating results
     ## Fitting final model on full training set
 
-``` {.r}
+``` r
 model
 ```
 
@@ -388,7 +422,7 @@ model
 Using the `caret` package, you can perform 5 x 5-fold cross validations
 by adding the `repeats` parameter.
 
-``` {.r}
+``` r
 model <- train(
   price ~ ., diamonds,
   method = "lm",
@@ -416,7 +450,7 @@ model <- train(
     ## Aggregating results
     ## Fitting final model on full training set
 
-``` {.r}
+``` r
 model
 ```
 
@@ -435,8 +469,7 @@ model
     ## 
     ## Tuning parameter 'intercept' was held constant at a value of TRUE
 
-Receiver Operator Characteristic Curve
---------------------------------------
+## Receiver Operator Characteristic Curve
 
 The
 [ROCR](https://cran.rstudio.com/web/packages/ROCR/vignettes/ROCR.html)
@@ -449,7 +482,7 @@ maximising the True Positive Rate at the lowest False Positive rate. We
 will use the spam data again and we will start with a random predictor
 to illustrate how a ROC curve looks with a random predictor.
 
-``` {.r}
+``` r
 spam_data <- read.csv(file = "../data/spambase.csv")
 spam_data$class <- factor(spam_data$class)
 
@@ -469,15 +502,15 @@ legend('bottomright', legend = paste('AUC = ', auc_value))
 
 Let's train a random forest model and use the votes as the probability.
 
-``` {.r}
+``` r
 set.seed(1984)
 system.time(rf <- randomForest(class ~ ., data = spam_data))
 ```
 
     ##    user  system elapsed 
-    ##   7.499   0.148   7.665
+    ##   6.989   0.015   7.005
 
-``` {.r}
+``` r
 pred <- prediction(rf$votes[, 2], spam_data$class)
 auc <- performance(pred, 'auc')
 auc_value <- round(auc@y.values[[1]], 4)
@@ -498,7 +531,7 @@ The [verification
 package](https://cran.r-project.org/web/packages/verification/index.html)
 can also be used to generate a (nicer looking) ROC curve.
 
-``` {.r}
+``` r
 labels <- as.integer(spam_data$class == 1)
 probs <- rf$votes[, 2]
 auc <- roc.area(labels, probs)$A
@@ -513,16 +546,16 @@ bootstrapping the observations and prediction, then calculating
 probability of detection yes (PODy) and probability of detection no
 (PODn) values. The default CI is 95%.
 
-``` {.r}
+``` r
 system.time(
   roc.plot(labels, probs, main="OOB ROC Curve", threshold = seq(0, 1, 0.1), CI = TRUE)
 )
 ```
 
     ##    user  system elapsed 
-    ##  10.159   0.095  10.279
+    ##   9.308   0.000   9.310
 
-``` {.r}
+``` r
 legend("bottomright", bty="n", sprintf("Area Under the Curve (AUC) = %1.4f", auc))
 ```
 
@@ -530,7 +563,7 @@ legend("bottomright", bty="n", sprintf("Area Under the Curve (AUC) = %1.4f", auc
 
 Precision (TP / \[TP + FP\]) Recall (TP / \[TP + FN\]).
 
-``` {.r}
+``` r
 pred <- prediction(rf$votes[, 2], spam_data$class)
 perf <- performance(pred, "prec", "rec")
 auc <- performance(pred, "aucpr")
@@ -547,22 +580,21 @@ legend('bottomleft', legend = paste('AUC = ', auc_value))
 
 ![](img/precision_recall-1.png)
 
-Session info
-------------
+## Session info
 
 Time built.
 
-    ## [1] "2022-11-04 07:37:42 UTC"
+    ## [1] "2024-06-19 00:44:43 UTC"
 
 Session info.
 
-    ## R version 4.2.1 (2022-06-23)
-    ## Platform: x86_64-pc-linux-gnu (64-bit)
-    ## Running under: Ubuntu 20.04.4 LTS
+    ## R version 4.4.0 (2024-04-24)
+    ## Platform: x86_64-pc-linux-gnu
+    ## Running under: Ubuntu 22.04.4 LTS
     ## 
     ## Matrix products: default
-    ## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3
-    ## LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/liblapack.so.3
+    ## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
+    ## LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.20.so;  LAPACK version 3.10.0
     ## 
     ## locale:
     ##  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
@@ -572,46 +604,44 @@ Session info.
     ##  [9] LC_ADDRESS=C               LC_TELEPHONE=C            
     ## [11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
     ## 
+    ## time zone: Etc/UTC
+    ## tzcode source: system (glibc)
+    ## 
     ## attached base packages:
     ## [1] stats     graphics  grDevices utils     datasets  methods   base     
     ## 
     ## other attached packages:
-    ##  [1] forcats_0.5.1        stringr_1.4.0        dplyr_1.0.9         
-    ##  [4] purrr_0.3.4          readr_2.1.2          tidyr_1.2.0         
-    ##  [7] tibble_3.1.7         tidyverse_1.3.1      verification_1.42   
-    ## [10] dtw_1.22-3           proxy_0.4-27         CircStats_0.2-6     
-    ## [13] MASS_7.3-57          boot_1.3-28          fields_14.0         
-    ## [16] viridis_0.6.2        viridisLite_0.4.0    spam_2.8-0          
-    ## [19] randomForest_4.7-1.1 ROCR_1.0-11          rpart_4.1.16        
-    ## [22] dendextend_1.16.0    clValid_0.7          cluster_2.1.3       
-    ## [25] caret_6.0-92         lattice_0.20-45      ggplot2_3.3.6       
+    ##  [1] lubridate_1.9.3      forcats_1.0.0        stringr_1.5.1       
+    ##  [4] dplyr_1.1.4          purrr_1.0.2          readr_2.1.5         
+    ##  [7] tidyr_1.3.1          tibble_3.2.1         tidyverse_2.0.0     
+    ## [10] verification_1.42    dtw_1.23-1           proxy_0.4-27        
+    ## [13] CircStats_0.2-6      MASS_7.3-60.2        boot_1.3-30         
+    ## [16] fields_15.2          viridisLite_0.4.2    spam_2.10-0         
+    ## [19] randomForest_4.7-1.1 ROCR_1.0-11          rpart_4.1.23        
+    ## [22] dendextend_1.17.1    clValid_0.7          cluster_2.1.6       
+    ## [25] caret_6.0-94         lattice_0.22-6       ggplot2_3.5.1       
     ## 
     ## loaded via a namespace (and not attached):
-    ##  [1] nlme_3.1-157         fs_1.5.2             lubridate_1.8.0     
-    ##  [4] httr_1.4.3           tools_4.2.1          backports_1.4.1     
-    ##  [7] utf8_1.2.2           R6_2.5.1             DBI_1.1.3           
-    ## [10] colorspace_2.0-3     nnet_7.3-17          withr_2.5.0         
-    ## [13] tidyselect_1.1.2     gridExtra_2.3        compiler_4.2.1      
-    ## [16] rvest_1.0.2          cli_3.3.0            xml2_1.3.3          
-    ## [19] scales_1.2.0         digest_0.6.29        rmarkdown_2.14      
-    ## [22] pkgconfig_2.0.3      htmltools_0.5.2      parallelly_1.32.0   
-    ## [25] highr_0.9            dbplyr_2.2.1         fastmap_1.1.0       
-    ## [28] maps_3.4.0           readxl_1.4.0         rlang_1.0.3         
-    ## [31] rstudioapi_0.13      generics_0.1.3       jsonlite_1.8.0      
-    ## [34] ModelMetrics_1.2.2.2 magrittr_2.0.3       dotCall64_1.0-1     
-    ## [37] Matrix_1.4-1         Rcpp_1.0.8.3         munsell_0.5.0       
-    ## [40] fansi_1.0.3          lifecycle_1.0.1      stringi_1.7.6       
-    ## [43] pROC_1.18.0          yaml_2.3.5           plyr_1.8.7          
-    ## [46] recipes_1.0.1        grid_4.2.1           parallel_4.2.1      
-    ## [49] listenv_0.8.0        crayon_1.5.1         haven_2.5.0         
-    ## [52] splines_4.2.1        hms_1.1.1            knitr_1.39          
-    ## [55] pillar_1.7.0         future.apply_1.9.0   reshape2_1.4.4      
-    ## [58] codetools_0.2-18     stats4_4.2.1         reprex_2.0.1        
-    ## [61] glue_1.6.2           evaluate_0.15        modelr_0.1.8        
-    ## [64] data.table_1.14.2    tzdb_0.3.0           vctrs_0.4.1         
-    ## [67] foreach_1.5.2        cellranger_1.1.0     gtable_0.3.0        
-    ## [70] future_1.26.1        assertthat_0.2.1     xfun_0.31           
-    ## [73] gower_1.0.0          prodlim_2019.11.13   broom_1.0.0         
-    ## [76] class_7.3-20         survival_3.3-1       timeDate_3043.102   
-    ## [79] iterators_1.0.14     hardhat_1.2.0        lava_1.6.10         
-    ## [82] globals_0.15.1       ellipsis_0.3.2       ipred_0.9-13
+    ##  [1] tidyselect_1.2.1     timeDate_4032.109    viridis_0.6.5       
+    ##  [4] fastmap_1.1.1        pROC_1.18.5          digest_0.6.35       
+    ##  [7] dotCall64_1.1-1      timechange_0.3.0     lifecycle_1.0.4     
+    ## [10] survival_3.5-8       magrittr_2.0.3       compiler_4.4.0      
+    ## [13] rlang_1.1.3          tools_4.4.0          utf8_1.2.4          
+    ## [16] yaml_2.3.8           data.table_1.15.4    knitr_1.46          
+    ## [19] plyr_1.8.9           withr_3.0.0          nnet_7.3-19         
+    ## [22] grid_4.4.0           stats4_4.4.0         fansi_1.0.6         
+    ## [25] colorspace_2.1-0     future_1.33.2        globals_0.16.3      
+    ## [28] scales_1.3.0         iterators_1.0.14     cli_3.6.2           
+    ## [31] rmarkdown_2.27       generics_0.1.3       future.apply_1.11.2 
+    ## [34] tzdb_0.4.0           reshape2_1.4.4       splines_4.4.0       
+    ## [37] maps_3.4.2           parallel_4.4.0       vctrs_0.6.5         
+    ## [40] hardhat_1.4.0        Matrix_1.7-0         hms_1.1.3           
+    ## [43] listenv_0.9.1        foreach_1.5.2        gower_1.0.1         
+    ## [46] recipes_1.0.10       glue_1.7.0           parallelly_1.37.1   
+    ## [49] codetools_0.2-20     stringi_1.8.3        gtable_0.3.5        
+    ## [52] munsell_0.5.1        pillar_1.9.0         htmltools_0.5.8.1   
+    ## [55] ipred_0.9-14         lava_1.8.0           R6_2.5.1            
+    ## [58] evaluate_0.23        highr_0.10           class_7.3-22        
+    ## [61] Rcpp_1.0.12          gridExtra_2.3        nlme_3.1-164        
+    ## [64] prodlim_2023.08.28   xfun_0.43            ModelMetrics_1.2.2.2
+    ## [67] pkgconfig_2.0.3
