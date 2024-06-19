@@ -64,6 +64,15 @@ When I think of specificity, I think of subsetting. If we had a lot of marbles, 
 
 When I think of precision, I think about a surgeon making a precise surgical incision. It is important to make the correct incision for obvious reasons and therefore precision measures the ability to identify a positive case divided by all true positives plus all the false positives (e.g. incorrect locations). A surgeon needs to make an incision and needs to make a correct incision; they can't just be sensitive or specific.
 
+When I think of recall, I think about a defective product that needs to be recalled. For example if a batch of medicine was found to defective, it is absolutely necessary to recall **every single defective project**. It doesn't matter that non-defective products (false positives) are also recalled because the focus is on identifying the true positives and it is fine if the manufacturer recalls every single product.
+
+Summary:
+
+* Sensitivity -> a sensitive person
+* Specificity -> a specific subset
+* Precision -> a surgeon making a precise incision
+* Recall -> recalling a defective product
+
 ### Details
 
 Build confusion matrix and calculate accuracy, precision, and recall. Check out [this guide as well](https://www.dataschool.io/simple-guide-to-confusion-matrix-terminology/).

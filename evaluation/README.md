@@ -56,7 +56,7 @@ system.time(rf <- randomForest(class ~ ., data = spam_data, importance=TRUE, pro
     ##   500:   4.59%  2.73%  7.45%
 
     ##    user  system elapsed 
-    ##  26.702   0.096  26.803
+    ##  26.583   0.071  26.656
 
 ## Classification measures
 
@@ -97,6 +97,20 @@ a positive case divided by all true positives plus all the false
 positives (e.g. incorrect locations). A surgeon needs to make an
 incision and needs to make a correct incision; they can't just be
 sensitive or specific.
+
+When I think of recall, I think about a defective product that needs to
+be recalled. For example if a batch of medicine was found to defective,
+it is absolutely necessary to recall **every single defective project**.
+It doesn't matter that non-defective products (false positives) are also
+recalled because the focus is on identifying the true positives and it
+is fine if the manufacturer recalls every single product.
+
+Summary:
+
+-   Sensitivity -\> a sensitive person
+-   Specificity -\> a specific subset
+-   Precision -\> a surgeon making a precise incision
+-   Recall -\> recalling a defective product
 
 ### Details
 
@@ -508,7 +522,7 @@ system.time(rf <- randomForest(class ~ ., data = spam_data))
 ```
 
     ##    user  system elapsed 
-    ##   6.989   0.015   7.005
+    ##   6.956   0.036   6.993
 
 ``` r
 pred <- prediction(rf$votes[, 2], spam_data$class)
@@ -553,7 +567,7 @@ system.time(
 ```
 
     ##    user  system elapsed 
-    ##   9.308   0.000   9.310
+    ##   9.311   0.000   9.311
 
 ``` r
 legend("bottomright", bty="n", sprintf("Area Under the Curve (AUC) = %1.4f", auc))
@@ -584,7 +598,7 @@ legend('bottomleft', legend = paste('AUC = ', auc_value))
 
 Time built.
 
-    ## [1] "2024-06-19 00:44:43 UTC"
+    ## [1] "2024-06-19 00:54:23 UTC"
 
 Session info.
 
