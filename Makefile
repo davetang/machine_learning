@@ -1,4 +1,4 @@
-all: template som ann tree hclust logit svm kmeans knn naive_bayes xgboost random_forest eval pca caret tidymodels deep_learning
+all: template som ann tree hclust logit svm kmeans knn naive_bayes xgboost random_forest eval pca caret tidymodels deep_learning tabnet
 
 template: template/README.md
 som: som/README.md
@@ -17,6 +17,7 @@ pca: pca/README.md
 caret: caret/README.md
 tidymodels: tidymodels/README.md
 deep_learning: deep_learning/README.md
+tabnet: tabnet/README.md
 
 template/README.md: script/rmd_to_md.sh template/readme.Rmd
 	$^
@@ -67,4 +68,7 @@ tidymodels/README.md: script/rmd_to_md.sh tidymodels/readme.Rmd
 	$^
 
 deep_learning/README.md: script/rmd_to_md.sh deep_learning/readme.Rmd
+	$^
+
+tabnet/README.md: script/rmd_to_md.sh tabnet/readme.Rmd
 	$^
