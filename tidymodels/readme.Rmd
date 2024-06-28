@@ -16,7 +16,7 @@ knitr::opts_chunk$set(fig.path = "img/")
 Install packages.
 
 ```{r load_packages, message=FALSE, warning=FALSE}
-my_packages <- c('tidyverse', 'tidymodels', 'randomForest')
+my_packages <- c('tidyverse', 'tidymodels', 'randomForest', 'ROCR')
 
 for (my_package in my_packages){
    if(!require(my_package, character.only = TRUE)){
@@ -110,12 +110,13 @@ Confusion matrix.
 
 ```{r confusion_matrix}
 cm <- table(rf$predictions$truth, rf$predictions$predicted)
-cm
+cm |>
+  prop.table()
 ```
 
 Metrics.
 
-```{r}
+```{r calculate_metrics}
 metrics(rf$predictions, truth, predicted)
 ```
 
@@ -158,6 +159,28 @@ roc_curve(rf$predictions, truth, spam) %>%
   geom_abline(lty = 3) +
   coord_equal() +
   ggtitle('ROC curve')
+```
+
+### Using ROCR
+
+Compare with [ROCR](https://cran.rstudio.com/web/packages/ROCR/vignettes/ROCR.html).
+
+Every classifier evaluation using {ROCR} starts with creating a prediction object.
+
+```{r pred}
+predictions <- rf$predictions$spam
+labels <- ifelse(rf$predictions$truth == "spam", 1, -1)
+pred <- prediction(predictions, labels)
+
+aucpr <- performance(pred, "aucpr")
+str(aucpr)
+```
+
+PR curve.
+
+```{r rocr_pr_curve}
+perf <- performance(pred, "prec", "rec")
+plot(perf, lwd= 1, main= "PR curve")
 ```
 
 ## Session info

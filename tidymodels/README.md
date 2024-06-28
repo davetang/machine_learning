@@ -1,10 +1,9 @@
-Setup
------
+## Setup
 
 Install packages.
 
-``` {.r}
-my_packages <- c('tidyverse', 'tidymodels', 'randomForest')
+``` r
+my_packages <- c('tidyverse', 'tidymodels', 'randomForest', 'ROCR')
 
 for (my_package in my_packages){
    if(!require(my_package, character.only = TRUE)){
@@ -16,15 +15,14 @@ for (my_package in my_packages){
 theme_set(theme_bw())
 ```
 
-Spam
-----
+## Spam
 
 Use [spam
 data](https://archive.ics.uci.edu/ml/machine-learning-databases/spambase/spambase.names)
 to train a Random Forest model to illustrate evaluation measures. Class
 0 and 1 are ham (non-spam) and spam, respectively.
 
-``` {.r}
+``` r
 spam_data <- read.csv(file = "../data/spambase.csv")
 spam_data$class <- factor(spam_data$class)
 
@@ -47,20 +45,19 @@ information on how to make the partitions. The `strata` argument
 conducts a stratified split ensuring that our training and test data
 sets will keep roughly the same proportion of classes.
 
-``` {.r}
+``` r
 set.seed(1984)
 spam_split <- initial_split(data = spam_data, prop = 0.8, strata = 'class')
 spam_train <- training(spam_split)
 spam_test <- testing(spam_split)
 ```
 
-`parsnip`
----------
+## `parsnip`
 
 The [parsnip package](https://parsnip.tidymodels.org/index.html)
 provides a tidy and unified interface to a range of models.
 
-``` {.r}
+``` r
 my_mtry <- ceiling(sqrt(ncol(spam_data)))
 
 rf <- list()
@@ -82,15 +79,14 @@ rf$model
     ## 
     ## Computational engine: randomForest
 
-`yardstick`
------------
+## `yardstick`
 
 The [yardstick package](https://yardstick.tidymodels.org/) provides a
 tidy interface to estimate how well models are performing.
 
 Example data to check how to prepare our data for use with `yardstick`.
 
-``` {.r}
+``` r
 data(two_class_example)
 str(two_class_example)
 ```
@@ -101,7 +97,7 @@ str(two_class_example)
     ##  $ Class2   : num  0.996 0.321 0.889 0.265 0.984 ...
     ##  $ predicted: Factor w/ 2 levels "Class1","Class2": 2 1 2 1 2 1 1 1 2 2 ...
 
-``` {.r}
+``` r
 predict(rf$fit, spam_test, type = 'prob')
 ```
 
@@ -118,11 +114,11 @@ predict(rf$fit, spam_test, type = 'prob')
     ##  8   0.012   0.988
     ##  9   0.022   0.978
     ## 10   0.06    0.94 
-    ## # … with 911 more rows
+    ## # ℹ 911 more rows
 
 Predict and generate table in the format of `two_class_example`.
 
-``` {.r}
+``` r
 predict_wrapper <- function(fit, test_data, pos, neg, type = 'prob'){
   predict(fit, test_data, type = type) %>%
     mutate(truth = ifelse(as.integer(test_data$class) == 2, pos, neg)) %>%
@@ -157,23 +153,24 @@ rf$predictions
     ##  8 spam  0.012 0.988 spam     
     ##  9 spam  0.022 0.978 spam     
     ## 10 spam  0.06  0.94  spam     
-    ## # … with 911 more rows
+    ## # ℹ 911 more rows
 
 Confusion matrix.
 
-``` {.r}
+``` r
 cm <- table(rf$predictions$truth, rf$predictions$predicted)
-cm
+cm |>
+  prop.table()
 ```
 
     ##       
-    ##        spam ham
-    ##   spam  334  29
-    ##   ham    24 534
+    ##              spam        ham
+    ##   spam 0.36264929 0.03148751
+    ##   ham  0.02605863 0.57980456
 
 Metrics.
 
-``` {.r}
+``` r
 metrics(rf$predictions, truth, predicted)
 ```
 
@@ -183,9 +180,9 @@ metrics(rf$predictions, truth, predicted)
     ## 1 accuracy binary         0.942
     ## 2 kap      binary         0.879
 
-[table\_metrics](https://github.com/davetang/learning_r/blob/main/code/table_metrics.R).
+[table_metrics](https://github.com/davetang/learning_r/blob/main/code/table_metrics.R).
 
-``` {.r}
+``` r
 source("https://raw.githubusercontent.com/davetang/learning_r/main/code/table_metrics.R")
 table_metrics(cm, 'spam', 'ham', 'row', sig_fig = 7)
 ```
@@ -228,7 +225,7 @@ table_metrics(cm, 'spam', 'ham', 'row', sig_fig = 7)
 
 Area under the PR curve.
 
-``` {.r}
+``` r
 pr_auc(rf$predictions, truth, spam)
 ```
 
@@ -239,7 +236,7 @@ pr_auc(rf$predictions, truth, spam)
 
 [PR curve](https://yardstick.tidymodels.org/reference/pr_curve.html).
 
-``` {.r}
+``` r
 pr_curve(rf$predictions, truth, spam) %>%
   ggplot(aes(x = recall, y = precision)) +
   geom_path() +
@@ -248,19 +245,11 @@ pr_curve(rf$predictions, truth, spam) %>%
   ggtitle('PR curve')
 ```
 
-    ## Warning: Returning more (or less) than 1 row per `summarise()` group was deprecated in
-    ## dplyr 1.1.0.
-    ## ℹ Please use `reframe()` instead.
-    ## ℹ When switching from `summarise()` to `reframe()`, remember that `reframe()`
-    ##   always returns an ungrouped data frame and adjust accordingly.
-    ## ℹ The deprecated feature was likely used in the yardstick package.
-    ##   Please report the issue at <https://github.com/tidymodels/yardstick/issues>.
-
 ![](img/pr_curve-1.png)
 
 Area under the ROC curve.
 
-``` {.r}
+``` r
 roc_auc(rf$predictions, truth, spam)
 ```
 
@@ -271,7 +260,7 @@ roc_auc(rf$predictions, truth, spam)
 
 [ROC curve](https://yardstick.tidymodels.org/reference/roc_curve.html).
 
-``` {.r}
+``` r
 roc_curve(rf$predictions, truth, spam) %>%
   ggplot(aes(x = 1 - specificity, y = sensitivity)) +
   geom_path() +
@@ -282,22 +271,56 @@ roc_curve(rf$predictions, truth, spam) %>%
 
 ![](img/roc_curve-1.png)
 
-Session info
-------------
+### Using ROCR
+
+Compare with
+[ROCR](https://cran.rstudio.com/web/packages/ROCR/vignettes/ROCR.html).
+
+Every classifier evaluation using {ROCR} starts with creating a
+prediction object.
+
+``` r
+predictions <- rf$predictions$spam
+labels <- ifelse(rf$predictions$truth == "spam", 1, -1)
+pred <- prediction(predictions, labels)
+
+aucpr <- performance(pred, "aucpr")
+str(aucpr)
+```
+
+    ## Formal class 'performance' [package "ROCR"] with 6 slots
+    ##   ..@ x.name      : chr "None"
+    ##   ..@ y.name      : chr "Area under the Precision/Recall curve"
+    ##   ..@ alpha.name  : chr "none"
+    ##   ..@ x.values    : list()
+    ##   ..@ y.values    :List of 1
+    ##   .. ..$ : num 0.987
+    ##   ..@ alpha.values: list()
+
+PR curve.
+
+``` r
+perf <- performance(pred, "prec", "rec")
+plot(perf, lwd= 1, main= "PR curve")
+```
+
+![](img/rocr_pr_curve-1.png)
+
+## Session info
 
 Time built.
 
-    ## [1] "2023-03-10 07:12:07 UTC"
+    ## [1] "2024-06-28 13:26:47 UTC"
 
 Session info.
 
-    ## R version 4.2.2 (2022-10-31)
-    ## Platform: x86_64-pc-linux-gnu (64-bit)
-    ## Running under: Ubuntu 22.04.2 LTS
+    ## R version 4.4.0 (2024-04-24)
+    ## Platform: x86_64-pc-linux-gnu
+    ## Running under: Ubuntu 22.04.4 LTS
     ## 
     ## Matrix products: default
-    ## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3
-    ## LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.20.so
+    ## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
+    ## LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.20.so;  LAPACK version 3.10.0
     ## 
     ## locale:
     ##  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
@@ -307,39 +330,43 @@ Session info.
     ##  [9] LC_ADDRESS=C               LC_TELEPHONE=C            
     ## [11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
     ## 
+    ## time zone: Etc/UTC
+    ## tzcode source: system (glibc)
+    ## 
     ## attached base packages:
     ## [1] stats     graphics  grDevices utils     datasets  methods   base     
     ## 
     ## other attached packages:
-    ##  [1] randomForest_4.7-1.1 yardstick_1.1.0      workflowsets_1.0.0  
-    ##  [4] workflows_1.1.3      tune_1.0.1           rsample_1.1.1       
-    ##  [7] recipes_1.0.5        parsnip_1.0.4        modeldata_1.1.0     
-    ## [10] infer_1.0.4          dials_1.1.0          scales_1.2.1        
-    ## [13] broom_1.0.3          tidymodels_1.0.0     lubridate_1.9.2     
-    ## [16] forcats_1.0.0        stringr_1.5.0        dplyr_1.1.0         
-    ## [19] purrr_1.0.1          readr_2.1.4          tidyr_1.3.0         
-    ## [22] tibble_3.2.0         ggplot2_3.4.1        tidyverse_2.0.0     
+    ##  [1] ROCR_1.0-11          randomForest_4.7-1.1 yardstick_1.3.1     
+    ##  [4] workflowsets_1.1.0   workflows_1.1.4      tune_1.2.1          
+    ##  [7] rsample_1.2.1        recipes_1.0.10       parsnip_1.2.1       
+    ## [10] modeldata_1.3.0      infer_1.0.7          dials_1.2.1         
+    ## [13] scales_1.3.0         broom_1.0.5          tidymodels_1.2.0    
+    ## [16] lubridate_1.9.3      forcats_1.0.0        stringr_1.5.1       
+    ## [19] dplyr_1.1.4          purrr_1.0.2          readr_2.1.5         
+    ## [22] tidyr_1.3.1          tibble_3.2.1         ggplot2_3.5.1       
+    ## [25] tidyverse_2.0.0     
     ## 
     ## loaded via a namespace (and not attached):
-    ##  [1] splines_4.2.2       foreach_1.5.2       prodlim_2019.11.13 
-    ##  [4] highr_0.10          GPfit_1.0-8         yaml_2.3.7         
-    ##  [7] globals_0.16.2      ipred_0.9-13        pillar_1.8.1       
-    ## [10] backports_1.4.1     lattice_0.20-45     glue_1.6.2         
-    ## [13] digest_0.6.31       hardhat_1.2.0       colorspace_2.1-0   
-    ## [16] htmltools_0.5.4     Matrix_1.5-1        timeDate_4022.108  
-    ## [19] pkgconfig_2.0.3     lhs_1.1.6           DiceDesign_1.9     
-    ## [22] listenv_0.9.0       gower_1.0.1         lava_1.7.2.1       
-    ## [25] tzdb_0.3.0          timechange_0.2.0    farver_2.1.1       
-    ## [28] generics_0.1.3      ellipsis_0.3.2      withr_2.5.0        
-    ## [31] furrr_0.3.1         nnet_7.3-18         cli_3.6.0          
-    ## [34] survival_3.4-0      magrittr_2.0.3      evaluate_0.20      
-    ## [37] future_1.32.0       fansi_1.0.4         parallelly_1.34.0  
-    ## [40] MASS_7.3-58.1       class_7.3-20        tools_4.2.2        
-    ## [43] hms_1.1.2           lifecycle_1.0.3     munsell_0.5.0      
-    ## [46] compiler_4.2.2      rlang_1.0.6         grid_4.2.2         
-    ## [49] rstudioapi_0.14     iterators_1.0.14    labeling_0.4.2     
-    ## [52] rmarkdown_2.20      gtable_0.3.1        codetools_0.2-18   
-    ## [55] R6_2.5.1            knitr_1.42          fastmap_1.1.1      
-    ## [58] future.apply_1.10.0 utf8_1.2.3          stringi_1.7.12     
-    ## [61] parallel_4.2.2      Rcpp_1.0.10         vctrs_0.5.2        
-    ## [64] rpart_4.1.19        tidyselect_1.2.0    xfun_0.37
+    ##  [1] tidyselect_1.2.1    timeDate_4032.109   farver_2.1.1       
+    ##  [4] fastmap_1.1.1       digest_0.6.35       rpart_4.1.23       
+    ##  [7] timechange_0.3.0    lifecycle_1.0.4     survival_3.5-8     
+    ## [10] magrittr_2.0.3      compiler_4.4.0      rlang_1.1.3        
+    ## [13] tools_4.4.0         utf8_1.2.4          yaml_2.3.8         
+    ## [16] data.table_1.15.4   knitr_1.46          labeling_0.4.3     
+    ## [19] DiceDesign_1.10     withr_3.0.0         nnet_7.3-19        
+    ## [22] grid_4.4.0          fansi_1.0.6         colorspace_2.1-0   
+    ## [25] future_1.33.2       globals_0.16.3      iterators_1.0.14   
+    ## [28] MASS_7.3-60.2       cli_3.6.2           rmarkdown_2.27     
+    ## [31] generics_0.1.3      rstudioapi_0.16.0   future.apply_1.11.2
+    ## [34] tzdb_0.4.0          splines_4.4.0       parallel_4.4.0     
+    ## [37] vctrs_0.6.5         hardhat_1.4.0       Matrix_1.7-0       
+    ## [40] hms_1.1.3           listenv_0.9.1       foreach_1.5.2      
+    ## [43] gower_1.0.1         glue_1.7.0          parallelly_1.37.1  
+    ## [46] codetools_0.2-20    stringi_1.8.3       gtable_0.3.5       
+    ## [49] munsell_0.5.1       GPfit_1.0-8         pillar_1.9.0       
+    ## [52] furrr_0.3.1         htmltools_0.5.8.1   ipred_0.9-14       
+    ## [55] lava_1.8.0          R6_2.5.1            lhs_1.1.6          
+    ## [58] evaluate_0.23       lattice_0.22-6      highr_0.10         
+    ## [61] backports_1.4.1     class_7.3-22        Rcpp_1.0.12        
+    ## [64] prodlim_2023.08.28  xfun_0.43           pkgconfig_2.0.3
