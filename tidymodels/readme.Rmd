@@ -30,12 +30,17 @@ theme_set(theme_bw())
 
 ## Spam
 
-Use [spam data](https://archive.ics.uci.edu/ml/machine-learning-databases/spambase/spambase.names) to train a Random Forest model to illustrate evaluation measures. Class 0 and 1 are ham (non-spam) and spam, respectively.
+Use [spam data](https://archive.ics.uci.edu/ml/machine-learning-databases/spambase/spambase.names) to train a Random Forest model to illustrate evaluation measures.
 
 ```{r load_spam}
 spam_data <- read.csv(file = "../data/spambase.csv")
-spam_data$class <- factor(spam_data$class)
+dim(spam_data)
+```
 
+Class 0 and 1 are ham (non-spam) and spam, respectively.
+ 
+```{r preview_spam}
+spam_data$class <- factor(spam_data$class)
 spam_data[c(1:3, (nrow(spam_data)-2):nrow(spam_data)), (ncol(spam_data)-2):ncol(spam_data)]
 ```
 
@@ -46,6 +51,7 @@ The `initial_split()` function takes the original data and saves the information
 ```{r split_spam}
 set.seed(1984)
 spam_split <- initial_split(data = spam_data, prop = 0.8, strata = 'class')
+spam_split
 spam_train <- training(spam_split)
 spam_test <- testing(spam_split)
 ```
@@ -58,14 +64,26 @@ The [parsnip package](https://parsnip.tidymodels.org/index.html) provides a tidy
 my_mtry <- ceiling(sqrt(ncol(spam_data)))
 
 rf <- list()
-rand_forest(mtry = my_mtry, trees = 500) %>%
-  set_engine("randomForest") %>%
+rand_forest(mtry = my_mtry, trees = 500) |>
+  set_engine("randomForest") |>
   set_mode("classification") -> rf$model
 
-rf$model %>%
+rf$model |>
   fit(class ~ ., data = spam_train) -> rf$fit
 
 rf$model
+```
+
+`rf` contains the model parameters, the model, and the predictions.
+
+```{r str_rf}
+str(rf, max.level = 2)
+```
+
+Predictions on the training data.
+
+```{r rf_predictions}
+head(rf$predictions)
 ```
 
 ## `yardstick`
@@ -78,27 +96,37 @@ Example data to check how to prepare our data for use with `yardstick`.
 data(two_class_example)
 str(two_class_example)
 ```
-```{r}
+
+Make predictions on the test data; `.pred_1` is the "probability" of spam.
+
+```{r pred_spam_test}
 predict(rf$fit, spam_test, type = 'prob')
 ```
 
-Predict and generate table in the format of `two_class_example`.
+Predict and generate table in the format of `two_class_example` using a wrapper function.
+
+* `fit` - model
+* `test_data` - test data
+* `pos` - class that the model is testing for
+* `neg` - the other class
+
+Since the model is testing for spam, `pos` is 'spam'.
 
 ```{r predict}
 predict_wrapper <- function(fit, test_data, pos, neg, type = 'prob'){
-  predict(fit, test_data, type = type) %>%
-    mutate(truth = ifelse(as.integer(test_data$class) == 2, pos, neg)) %>%
-    mutate(truth = factor(truth, levels = c(pos, neg))) %>%
+  predict(fit, test_data, type = type) |>
+    mutate(truth = ifelse(as.integer(test_data$class) == 2, pos, neg)) |>
+    mutate(truth = factor(truth, levels = c(pos, neg))) |>
     rename(
       ham = .pred_0,
       spam = .pred_1
-    ) %>%
+    ) |>
     mutate(
       predicted = ifelse(spam > 0.5, pos, neg)
-    ) %>%
+    ) |>
     mutate(
       predicted = factor(predicted, levels = c(pos, neg))
-    ) %>%
+    ) |>
     select(truth, everything())
 }
 
@@ -136,7 +164,7 @@ pr_auc(rf$predictions, truth, spam)
 [PR curve](https://yardstick.tidymodels.org/reference/pr_curve.html).
 
 ```{r pr_curve}
-pr_curve(rf$predictions, truth, spam) %>%
+pr_curve(rf$predictions, truth, spam) |>
   ggplot(aes(x = recall, y = precision)) +
   geom_path() +
   coord_equal() +
@@ -153,7 +181,7 @@ roc_auc(rf$predictions, truth, spam)
 [ROC curve](https://yardstick.tidymodels.org/reference/roc_curve.html).
 
 ```{r roc_curve}
-roc_curve(rf$predictions, truth, spam) %>%
+roc_curve(rf$predictions, truth, spam) |>
   ggplot(aes(x = 1 - specificity, y = sensitivity)) +
   geom_path() +
   geom_abline(lty = 3) +
@@ -167,13 +195,14 @@ Compare with [ROCR](https://cran.rstudio.com/web/packages/ROCR/vignettes/ROCR.ht
 
 Every classifier evaluation using {ROCR} starts with creating a prediction object.
 
-```{r pred}
-predictions <- rf$predictions$spam
-labels <- ifelse(rf$predictions$truth == "spam", 1, -1)
+```{r rocr_pred}
+predictions <- predict(rf$fit, spam_test, type = 'prob')$.pred_1
+labels <- spam_test$class
 pred <- prediction(predictions, labels)
-
 aucpr <- performance(pred, "aucpr")
+aucroc <- performance(pred, "auc")
 str(aucpr)
+str(aucroc)
 ```
 
 PR curve.
@@ -181,6 +210,13 @@ PR curve.
 ```{r rocr_pr_curve}
 perf <- performance(pred, "prec", "rec")
 plot(perf, lwd= 1, main= "PR curve")
+```
+
+ROC curve.
+
+```{r rocr_roc_curve}
+perf <- performance(pred, "tpr", "fpr")
+plot(perf, lwd= 1, main= "ROC curve")
 ```
 
 ## Session info

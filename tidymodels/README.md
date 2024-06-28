@@ -19,13 +19,19 @@ theme_set(theme_bw())
 
 Use [spam
 data](https://archive.ics.uci.edu/ml/machine-learning-databases/spambase/spambase.names)
-to train a Random Forest model to illustrate evaluation measures. Class
-0 and 1 are ham (non-spam) and spam, respectively.
+to train a Random Forest model to illustrate evaluation measures.
 
 ``` r
 spam_data <- read.csv(file = "../data/spambase.csv")
-spam_data$class <- factor(spam_data$class)
+dim(spam_data)
+```
 
+    ## [1] 4601   58
+
+Class 0 and 1 are ham (non-spam) and spam, respectively.
+
+``` r
+spam_data$class <- factor(spam_data$class)
 spam_data[c(1:3, (nrow(spam_data)-2):nrow(spam_data)), (ncol(spam_data)-2):ncol(spam_data)]
 ```
 
@@ -48,6 +54,13 @@ sets will keep roughly the same proportion of classes.
 ``` r
 set.seed(1984)
 spam_split <- initial_split(data = spam_data, prop = 0.8, strata = 'class')
+spam_split
+```
+
+    ## <Training/Testing/Total>
+    ## <3680/921/4601>
+
+``` r
 spam_train <- training(spam_split)
 spam_test <- testing(spam_split)
 ```
@@ -61,11 +74,11 @@ provides a tidy and unified interface to a range of models.
 my_mtry <- ceiling(sqrt(ncol(spam_data)))
 
 rf <- list()
-rand_forest(mtry = my_mtry, trees = 500) %>%
-  set_engine("randomForest") %>%
+rand_forest(mtry = my_mtry, trees = 500) |>
+  set_engine("randomForest") |>
   set_mode("classification") -> rf$model
 
-rf$model %>%
+rf$model |>
   fit(class ~ ., data = spam_train) -> rf$fit
 
 rf$model
@@ -78,6 +91,42 @@ rf$model
     ##   trees = 500
     ## 
     ## Computational engine: randomForest
+
+`rf` contains the model parameters, the model, and the predictions.
+
+``` r
+str(rf, max.level = 2)
+```
+
+    ## List of 2
+    ##  $ model:List of 7
+    ##   ..$ args                 :List of 3
+    ##   ..$ eng_args             : Named list()
+    ##   .. ..- attr(*, "class")= chr [1:2] "quosures" "list"
+    ##   ..$ mode                 : chr "classification"
+    ##   ..$ user_specified_mode  : logi TRUE
+    ##   ..$ method               : NULL
+    ##   ..$ engine               : chr "randomForest"
+    ##   ..$ user_specified_engine: logi TRUE
+    ##   ..- attr(*, "class")= chr [1:2] "rand_forest" "model_spec"
+    ##  $ fit  :List of 6
+    ##   ..$ lvl         : chr [1:2] "0" "1"
+    ##   ..$ spec        :List of 7
+    ##   .. ..- attr(*, "class")= chr [1:2] "rand_forest" "model_spec"
+    ##   ..$ fit         :List of 18
+    ##   .. ..- attr(*, "class")= chr "randomForest"
+    ##   ..$ preproc     :List of 4
+    ##   ..$ elapsed     :List of 1
+    ##   ..$ censor_probs: list()
+    ##   ..- attr(*, "class")= chr [1:2] "_randomForest" "model_fit"
+
+Predictions on the training data.
+
+``` r
+head(rf$predictions)
+```
+
+    ## NULL
 
 ## `yardstick`
 
@@ -96,6 +145,9 @@ str(two_class_example)
     ##  $ Class1   : num  0.00359 0.67862 0.11089 0.73516 0.01624 ...
     ##  $ Class2   : num  0.996 0.321 0.889 0.265 0.984 ...
     ##  $ predicted: Factor w/ 2 levels "Class1","Class2": 2 1 2 1 2 1 1 1 2 2 ...
+
+Make predictions on the test data; `.pred_1` is the "probability" of
+spam.
 
 ``` r
 predict(rf$fit, spam_test, type = 'prob')
@@ -116,23 +168,31 @@ predict(rf$fit, spam_test, type = 'prob')
     ## 10   0.06    0.94 
     ## # ℹ 911 more rows
 
-Predict and generate table in the format of `two_class_example`.
+Predict and generate table in the format of `two_class_example` using a
+wrapper function.
+
+-   `fit` - model
+-   `test_data` - test data
+-   `pos` - class that the model is testing for
+-   `neg` - the other class
+
+Since the model is testing for spam, `pos` is 'spam'.
 
 ``` r
 predict_wrapper <- function(fit, test_data, pos, neg, type = 'prob'){
-  predict(fit, test_data, type = type) %>%
-    mutate(truth = ifelse(as.integer(test_data$class) == 2, pos, neg)) %>%
-    mutate(truth = factor(truth, levels = c(pos, neg))) %>%
+  predict(fit, test_data, type = type) |>
+    mutate(truth = ifelse(as.integer(test_data$class) == 2, pos, neg)) |>
+    mutate(truth = factor(truth, levels = c(pos, neg))) |>
     rename(
       ham = .pred_0,
       spam = .pred_1
-    ) %>%
+    ) |>
     mutate(
       predicted = ifelse(spam > 0.5, pos, neg)
-    ) %>%
+    ) |>
     mutate(
       predicted = factor(predicted, levels = c(pos, neg))
-    ) %>%
+    ) |>
     select(truth, everything())
 }
 
@@ -237,7 +297,7 @@ pr_auc(rf$predictions, truth, spam)
 [PR curve](https://yardstick.tidymodels.org/reference/pr_curve.html).
 
 ``` r
-pr_curve(rf$predictions, truth, spam) %>%
+pr_curve(rf$predictions, truth, spam) |>
   ggplot(aes(x = recall, y = precision)) +
   geom_path() +
   coord_equal() +
@@ -261,7 +321,7 @@ roc_auc(rf$predictions, truth, spam)
 [ROC curve](https://yardstick.tidymodels.org/reference/roc_curve.html).
 
 ``` r
-roc_curve(rf$predictions, truth, spam) %>%
+roc_curve(rf$predictions, truth, spam) |>
   ggplot(aes(x = 1 - specificity, y = sensitivity)) +
   geom_path() +
   geom_abline(lty = 3) +
@@ -280,11 +340,11 @@ Every classifier evaluation using {ROCR} starts with creating a
 prediction object.
 
 ``` r
-predictions <- rf$predictions$spam
-labels <- ifelse(rf$predictions$truth == "spam", 1, -1)
+predictions <- predict(rf$fit, spam_test, type = 'prob')$.pred_1
+labels <- spam_test$class
 pred <- prediction(predictions, labels)
-
 aucpr <- performance(pred, "aucpr")
+aucroc <- performance(pred, "auc")
 str(aucpr)
 ```
 
@@ -297,6 +357,19 @@ str(aucpr)
     ##   .. ..$ : num 0.987
     ##   ..@ alpha.values: list()
 
+``` r
+str(aucroc)
+```
+
+    ## Formal class 'performance' [package "ROCR"] with 6 slots
+    ##   ..@ x.name      : chr "None"
+    ##   ..@ y.name      : chr "Area under the ROC curve"
+    ##   ..@ alpha.name  : chr "none"
+    ##   ..@ x.values    : list()
+    ##   ..@ y.values    :List of 1
+    ##   .. ..$ : num 0.991
+    ##   ..@ alpha.values: list()
+
 PR curve.
 
 ``` r
@@ -306,11 +379,20 @@ plot(perf, lwd= 1, main= "PR curve")
 
 ![](img/rocr_pr_curve-1.png)
 
+ROC curve.
+
+``` r
+perf <- performance(pred, "tpr", "fpr")
+plot(perf, lwd= 1, main= "ROC curve")
+```
+
+![](img/rocr_roc_curve-1.png)
+
 ## Session info
 
 Time built.
 
-    ## [1] "2024-06-28 13:26:47 UTC"
+    ## [1] "2024-06-28 13:51:16 UTC"
 
 Session info.
 
