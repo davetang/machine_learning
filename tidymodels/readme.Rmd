@@ -74,16 +74,10 @@ rf$model |>
 rf$model
 ```
 
-`rf` contains the model parameters, the model, and the predictions.
+`rf` contains the model parameters and the model.
 
 ```{r str_rf}
 str(rf, max.level = 2)
-```
-
-Predictions on the training data.
-
-```{r rf_predictions}
-head(rf$predictions)
 ```
 
 ## `yardstick`

@@ -92,7 +92,7 @@ rf$model
     ## 
     ## Computational engine: randomForest
 
-`rf` contains the model parameters, the model, and the predictions.
+`rf` contains the model parameters and the model.
 
 ``` r
 str(rf, max.level = 2)
@@ -119,14 +119,6 @@ str(rf, max.level = 2)
     ##   ..$ elapsed     :List of 1
     ##   ..$ censor_probs: list()
     ##   ..- attr(*, "class")= chr [1:2] "_randomForest" "model_fit"
-
-Predictions on the training data.
-
-``` r
-head(rf$predictions)
-```
-
-    ## NULL
 
 ## `yardstick`
 
@@ -392,7 +384,7 @@ plot(perf, lwd= 1, main= "ROC curve")
 
 Time built.
 
-    ## [1] "2024-06-28 13:51:16 UTC"
+    ## [1] "2024-06-28 13:55:30 UTC"
 
 Session info.
 
