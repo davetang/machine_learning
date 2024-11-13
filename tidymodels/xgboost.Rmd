@@ -213,49 +213,6 @@ perf <- performance(pred, "tpr", "fpr")
 plot(perf, lwd= 1, main= "ROC curve")
 ```
 
-### Class imbalance
-
-Difference in area under the ROC curve and area under the precision recall curve.
-
-```{r class_imbalance}
-set.seed(1984)
-
-n <- 1000
-p_positive <- 0.05
-
-y <- factor(rbinom(n, 1, p_positive))
-x <- rnorm(n, mean = ifelse(y == 1, 2, 0), sd = 1)
-
-fit <- glm(y ~ x, family = binomial)
-probs <- predict(fit, type = "response")
-
-data.frame(
-  truth = ifelse(y == 1, 'DA', 'NotDA'),
-  NotDA = 1 - probs,
-  DA = probs
-) |>
-  dplyr::mutate(predicted = ifelse(probs > 0.5, 'DA', 'NotDA')) |>
-  dplyr::mutate(truth = factor(truth, levels = c('DA', 'NotDA'))) -> toy_data
-```
-
-Area under the ROC curve.
-
-```{r class_imbalance_roc_auc}
-roc_auc(toy_data, truth, DA)
-```
-
-Area under the precision recall curve.
-
-```{r class_imbalance_pr_auc}
-pr_auc(toy_data, truth, DA)
-```
-
-Table.
-
-```{r class_imbalance_table}
-table(toy_data$truth, toy_data$predicted)
-```
-
 ## Session info
 
 Time built.

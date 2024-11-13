@@ -380,11 +380,70 @@ plot(perf, lwd= 1, main= "ROC curve")
 
 ![](img/rocr_roc_curve-1.png)
 
+### Class imbalance
+
+Difference in area under the ROC curve and area under the precision
+recall curve.
+
+``` r
+set.seed(1984)
+
+n <- 1000
+p_positive <- 0.05
+
+y <- factor(rbinom(n, 1, p_positive))
+x <- rnorm(n, mean = ifelse(y == 1, 2, 0), sd = 1)
+
+fit <- glm(y ~ x, family = binomial)
+probs <- predict(fit, type = "response")
+
+data.frame(
+  truth = ifelse(y == 1, 'DA', 'NotDA'),
+  NotDA = 1 - probs,
+  DA = probs
+) |>
+  dplyr::mutate(predicted = ifelse(probs > 0.5, 'DA', 'NotDA')) |>
+  dplyr::mutate(truth = factor(truth, levels = c('DA', 'NotDA'))) -> toy_data
+```
+
+Area under the ROC curve.
+
+``` r
+roc_auc(toy_data, truth, DA)
+```
+
+    ## # A tibble: 1 × 3
+    ##   .metric .estimator .estimate
+    ##   <chr>   <chr>          <dbl>
+    ## 1 roc_auc binary         0.928
+
+Area under the precision recall curve.
+
+``` r
+pr_auc(toy_data, truth, DA)
+```
+
+    ## # A tibble: 1 × 3
+    ##   .metric .estimator .estimate
+    ##   <chr>   <chr>          <dbl>
+    ## 1 pr_auc  binary         0.552
+
+Table.
+
+``` r
+table(toy_data$truth, toy_data$predicted)
+```
+
+    ##        
+    ##          DA NotDA
+    ##   DA     19    36
+    ##   NotDA  11   934
+
 ## Session info
 
 Time built.
 
-    ## [1] "2024-06-28 13:55:30 UTC"
+    ## [1] "2024-11-13 07:34:33 UTC"
 
 Session info.
 
