@@ -402,48 +402,61 @@ data.frame(
   NotDA = 1 - probs,
   DA = probs
 ) |>
-  dplyr::mutate(predicted = ifelse(probs > 0.5, 'DA', 'NotDA')) |>
   dplyr::mutate(truth = factor(truth, levels = c('DA', 'NotDA'))) -> toy_data
 ```
 
-Area under the ROC curve.
+Identify most `DA` (\>96%) but a lot of `NotDA` (\>43%) are also
+predicted as `DA`, i.e., false positives.
 
 ``` r
-roc_auc(toy_data, truth, DA)
+toy_data |>
+  dplyr::mutate(
+    predicted = factor(ifelse(DA > 0.01, 'DA', 'NotDA'), levels = c('DA', 'NotDA'))
+  ) |>
+  dplyr::select(truth, predicted) |>
+  table() |>
+  prop.table(margin = 1)
 ```
 
-    ## # A tibble: 1 × 3
-    ##   .metric .estimator .estimate
-    ##   <chr>   <chr>          <dbl>
-    ## 1 roc_auc binary         0.928
+    ##        predicted
+    ## truth           DA      NotDA
+    ##   DA    0.96363636 0.03636364
+    ##   NotDA 0.43703704 0.56296296
 
-Area under the precision recall curve.
+Area under the ROC curve (high if we can rank positives higher than
+negatives)
 
 ``` r
-pr_auc(toy_data, truth, DA)
+roc_curve(toy_data, truth, DA) |>
+  ggplot(aes(x = 1 - specificity, y = sensitivity)) +
+  geom_path() +
+  geom_abline(lty = 3) +
+  coord_equal() +
+  ggtitle(round(roc_auc(toy_data, truth, DA)$.estimate, 5)) +
+  theme_minimal()
 ```
 
-    ## # A tibble: 1 × 3
-    ##   .metric .estimator .estimate
-    ##   <chr>   <chr>          <dbl>
-    ## 1 pr_auc  binary         0.552
+![](img/imbalance_roc_curve-1.png)
 
-Table.
+Area under the precision recall curve (sensitive to false positives)
 
 ``` r
-table(toy_data$truth, toy_data$predicted)
+pr_curve(toy_data, truth, DA) |>
+  ggplot(aes(x = recall, y = precision)) +
+  geom_path() +
+  coord_equal() +
+  ylim(c(0, 1)) +
+  ggtitle(round(pr_auc(toy_data, truth, DA)$.estimate, 5)) +
+  theme_minimal()
 ```
 
-    ##        
-    ##          DA NotDA
-    ##   DA     19    36
-    ##   NotDA  11   934
+![](img/imbalance_pr_curve-1.png)
 
 ## Session info
 
 Time built.
 
-    ## [1] "2024-11-13 07:34:33 UTC"
+    ## [1] "2024-11-13 09:29:21 UTC"
 
 Session info.
 

@@ -234,26 +234,43 @@ data.frame(
   NotDA = 1 - probs,
   DA = probs
 ) |>
-  dplyr::mutate(predicted = ifelse(probs > 0.5, 'DA', 'NotDA')) |>
   dplyr::mutate(truth = factor(truth, levels = c('DA', 'NotDA'))) -> toy_data
 ```
 
-Area under the ROC curve.
-
-```{r class_imbalance_roc_auc}
-roc_auc(toy_data, truth, DA)
-```
-
-Area under the precision recall curve.
-
-```{r class_imbalance_pr_auc}
-pr_auc(toy_data, truth, DA)
-```
-
-Table.
+Identify most `DA` (>96%) but a lot of `NotDA` (>43%) are also predicted as `DA`, i.e., false positives.
 
 ```{r class_imbalance_table}
-table(toy_data$truth, toy_data$predicted)
+toy_data |>
+  dplyr::mutate(
+    predicted = factor(ifelse(DA > 0.01, 'DA', 'NotDA'), levels = c('DA', 'NotDA'))
+  ) |>
+  dplyr::select(truth, predicted) |>
+  table() |>
+  prop.table(margin = 1)
+```
+
+Area under the ROC curve (high if we can rank positives higher than negatives)
+
+```{r imbalance_roc_curve}
+roc_curve(toy_data, truth, DA) |>
+  ggplot(aes(x = 1 - specificity, y = sensitivity)) +
+  geom_path() +
+  geom_abline(lty = 3) +
+  coord_equal() +
+  ggtitle(round(roc_auc(toy_data, truth, DA)$.estimate, 5)) +
+  theme_minimal()
+```
+
+Area under the precision recall curve (sensitive to false positives)
+
+```{r imbalance_pr_curve}
+pr_curve(toy_data, truth, DA) |>
+  ggplot(aes(x = recall, y = precision)) +
+  geom_path() +
+  coord_equal() +
+  ylim(c(0, 1)) +
+  ggtitle(round(pr_auc(toy_data, truth, DA)$.estimate, 5)) +
+  theme_minimal()
 ```
 
 ## Session info
