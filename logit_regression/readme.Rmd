@@ -15,7 +15,9 @@ knitr::opts_chunk$set(fig.path = "img/")
 
 ## Introduction
 
-Logistic regression is a regression model where the dependent variable (DV) is categorical. Example from Wikipedia: "Logistic regression may be used to predict whether a patient has a given disease (e.g. diabetes; coronary heart disease), based on observed characteristics of the patient (age, sex, body mass index, results of various blood tests, etc.)."
+Logistic regression is a regression model where the dependent variable (DV) is categorical. Example from Wikipedia:
+
+> "Logistic regression may be used to predict whether a patient has a given disease (e.g. diabetes; coronary heart disease), based on observed characteristics of the patient (age, sex, body mass index, results of various blood tests, etc.)."
 
 Install packages if missing and load.
 
@@ -30,6 +32,33 @@ for (my_package in my_packages){
    }
 }
 ```
+
+## mtcars
+
+The data `mtcars` was extracted from the 1974 Motor Trend US magazine, and comprises fuel consumption and 10 aspects of automobile design and performance for 32 automobiles (1973–74 models). 
+
+For this example, we’ll predict whether a car has high or low miles per gallon (MPG) based on gross horsepower; if `mpg` is higher than the median, we'll use a 1 to indicate that it is high and a 0 otherwise.
+
+```{r mpg_high}
+mtcars$mpg_high <- factor(with(mtcars, ifelse(mpg > median(mpg), 1, 0)))
+head(mtcars)
+```
+
+Miles/(US) gallon versus gross horsepower.
+
+```{r mpg_vs_hp}
+boxplot(hp ~ mpg_high, data = mtcars)
+```
+
+
+Use `glm()` to fit a logistic regression model that predicts `mpg_high` using `hp`.
+
+```{r mtcars_fit}
+fit <- glm(mpg_high ~ hp, data = mtcars, family = binomial)
+summary(fit)
+```
+
+The negative coefficient for `hp` (-0.05901) suggests that as horsepower (hp) increases, the likelihood of high MPG decreases.
 
 ## Hours of study
 
